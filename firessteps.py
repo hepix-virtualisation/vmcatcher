@@ -11,7 +11,11 @@ users_table = Table('users', metadata,
 )
 metadata.create_all(engine)
 
-class User(object):
+
+class Imagelist(object):
+    def __init__(self, uid , fullname, password):
+
+class Image(object):
     def __init__(self, name, fullname, password):
         self.name = name
         self.fullname = fullname
@@ -19,6 +23,9 @@ class User(object):
 
     def __repr__(self):
         return "<User('%s','%s', '%s')>" % (self.name, self.fullname, self.password)
+
+
+
 mapper(User, users_table)
 ed_user = User('ed', 'Ed Jones', 'edspassword')
 print ed_user.name

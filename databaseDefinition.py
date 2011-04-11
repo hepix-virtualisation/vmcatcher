@@ -35,7 +35,7 @@ Imagelist_table = Table('imagelist', metadata,
         Column('identifier', String(50),unique=True),
         Column('endorsed', String(50)),
         Column('url', String(100)),
-        Column('endorser', Integer, ForeignKey('endorser.id')),
+        Column('endorser', Integer, ForeignKey('endorser.id', onupdate="CASCADE", ondelete="CASCADE")),
     )
 
 
@@ -57,11 +57,12 @@ class Endorser(object):
 
 class Imagelist(object):
     __tablename__ = 'imagelist'
-    def __init__(self, uid ,endorsedmetadata,url):
+    def __init__(self, uid ,endorsed,url, endorser):
         id = Column(Integer, primary_key=True)
         self.Identifier = uid
-        self.endorsedmetadata = endorsedmetadata
+        self.endorsed = endorsed
         self.url = url
+        self.endorser = endorser
 class Image(object):
     __tablename__ = 'image'
     id = Column(Integer, primary_key=True)

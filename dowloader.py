@@ -21,6 +21,6 @@ def https_read(url):
 def main():
     url = "https://particle.phys.uvic.ca/~igable/hepix/hepix_signed_image_list"    
     message = https_read(url)
-
+    print message
 if __name__ == "__main__":
     main()

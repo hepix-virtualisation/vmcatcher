@@ -25,8 +25,8 @@ class User(Base):
 Session = sessionmaker(bind=engine)
 Session.configure(bind=engine)  # once engine is available
 session = Session()
-our_user = session.query(User).filter_by(name='ed').first() 
-print our_user
+#our_user = session.query(User).filter_by(name='ed').first() 
+#print our_user
 session.add_all([
     User('wendy', 'Wendy Williams', 'foobar'),
     User('mary', 'Mary Contrary', 'xxg527'),
