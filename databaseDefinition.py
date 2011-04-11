@@ -1,5 +1,5 @@
 from sqlalchemy import create_engine
-from sqlalchemy import Table, Column, Integer, String, MetaData, ForeignKey
+from sqlalchemy import Table, Column, Integer, String, MetaData, ForeignKey, Boolean
 from sqlalchemy.orm import mapper
 
 from sqlalchemy import ForeignKey
@@ -19,7 +19,8 @@ metadata = MetaData()
 Column('id', Integer, Sequence('endorser_id_seq'), primary_key=True)
 Column('id', Integer, Sequence('imagelist_id_seq'), primary_key=True)
 Column('id', Integer, Sequence('image_id_seq'), primary_key=True)
-
+Column('id', Integer, Sequence('subscription_seq'), primary_key=True)
+Column('id', Integer, Sequence('subscription_auth_seq'), primary_key=True)
 
 
 
@@ -51,6 +52,19 @@ Image_table = Table('image', metadata,
 
 
 
+Subscription_table = Table('subscription', metadata,
+        Column('id', Integer, Sequence('subscription_seq'), primary_key=True),
+        Column('uuid', String(50)),
+        Column('description', String(50)),
+    )
+
+Subscriptionauth_table = Table('subscription_auth', metadata,
+        Column('id', Integer, Sequence('subscription_auth_seq'), primary_key=True),
+        Column('endorser', Integer, ForeignKey('endorser.id', onupdate="CASCADE", ondelete="CASCADE")),
+        Column('subscription', Integer, ForeignKey('subscription.id', onupdate="CASCADE", ondelete="CASCADE")),
+        Column('authorised', Boolean),
+    )
+
 class Endorser(object):
     __tablename__ = 'endorser'
     def __init__(self, dc_creator,hv_ca,hv_dn):
@@ -79,9 +93,32 @@ class Image(object):
     def __repr__(self):
         return "<Image('%s','%s', '%s')>" % (self.identifier, self.referanceimage, self.imagelist)
 
+class Subscription(object):
+    __tablename__ = 'subscription'
+    id = Column(Integer, primary_key=True)
+    def __init__(self,uuid,description =''):
+        self.uuid = uuid
+        self.description = description
+    def __repr__(self):
+        return "<Image('%s','%s', '%s')>" % (self.identifier, self.referanceimage, self.imagelist)
+
+class SubscriptionAuth(object):
+    __tablename__ = 'subscription_auth'
+    id = Column(Integer, primary_key=True)
+    def __init__(self,uuid,endorser):
+        self.uuid = uuid
+        self.description = description
+    def __repr__(self):
+        return "<Image('%s','%s', '%s')>" % (self.identifier, self.referanceimage, self.imagelist)
+
+
+
 def init(engine):
     metadata.create_all(engine)
     Session = sessionmaker(bind=engine)
     mapper(Endorser, Endorser_table)
     mapper(Imagelist, Imagelist_table)
     mapper(Image, Image_table)
+    mapper(Subscription,Subscription_table)
+    mapper(SubscriptionAuth,Subscriptionauth_table)
+    
