@@ -4,8 +4,8 @@ import databaseView
 
 import logging
 import optparse
-import loadcanamespace
-
+import smimeX509validation.loadcanamespace as loadcanamespace
+import sys
 def main():
     p = optparse.OptionParser()
     p.add_option('-m', '--message', action ='append', 

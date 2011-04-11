@@ -3,8 +3,12 @@ from sqlalchemy import Table, Column, Integer, String, MetaData, ForeignKey
 from sqlalchemy.orm import mapper
 
 from sqlalchemy import ForeignKey
-from sqlalchemy.orm import relationship, backref
 
+from sqlalchemy.orm import backref
+try:
+    from sqlalchemy.orm import relationship
+except:
+    from sqlalchemy.orm import relation as relationship
 
 
 from sqlalchemy import Sequence
