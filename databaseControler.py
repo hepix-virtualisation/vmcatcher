@@ -42,7 +42,8 @@ if __name__ == "__main__":
         u'dc:source':"https://particle.phys.uvic.ca/~igable/hepix/hepix_signed_image_list",
         u'hv:version':5,
         u'hv:uri':"https://particle.phys.uvic.ca/~igable/hepix/hepix_signed_image_list",
-        u'hv:dn':'/C=CA/O=Grid/OU=phys.uvic.ca/CN=Ian Gable'
+        u'hv:dn':'/C=CA/O=Grid/OU=phys.uvic.ca/CN=Ian Gable',
+        u"hv:ca": "/C=CA/O=Grid/CN=Grid Canada Certificate Authority",
     }
     subscription = db.ImageListSubscribe(subbuilder)
 
