@@ -7,3 +7,5 @@ dist/
 MANIFEST
 *.egg-info
 tutorial.db
+hepixvmitrust
+smimeX509validation
