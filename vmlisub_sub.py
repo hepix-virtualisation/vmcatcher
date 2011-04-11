@@ -33,10 +33,7 @@ class db_actions(hepixvmlis.databaseView.DatabaseQuerys):
         metadata = {}
         metadata.update(vmilist.metadata)
         metadata.update(vmilist.endorser.metadata)
-        print metadata
         self.subscription_create(metadata,authorised=True)
-        print metadata
-
 
     def subscriptions_lister(self,formatter2 = formatter):
         output = ''
@@ -84,7 +81,7 @@ def main():
     
     # 1.1 Initate DB
     engine = create_engine(options.database, echo=False)
-    databaseView.init(engine)
+    model.init(engine)
     SessionFactory = sessionmaker(bind=engine)
 
     if 'subscribe' in actions:
