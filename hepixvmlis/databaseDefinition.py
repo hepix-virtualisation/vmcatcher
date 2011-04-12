@@ -68,6 +68,7 @@ Imagelist_table = Table('imagelist', metadata,
         Column('url', String(100)),
         Column('sub_auth', Integer, ForeignKey('subscription_auth.id', onupdate="CASCADE", ondelete="CASCADE")),
         Column('data', String(1000)),
+        Column('data_hash', String(128)),
     )
 
 
@@ -86,7 +87,6 @@ Image_table = Table('image', metadata,
         Column('size', Integer),
         Column('title', String(100)),
         Column('comments', String(100)),
-        
         Column('imagelist', Integer, ForeignKey('imagelist.id')),
     )
 
@@ -155,6 +155,7 @@ class Imagelist(object):
         self.url = metadata[u'hv:uri']
         self.sub_auth = sub_auth
         self.data = metadata[u'data']
+        self.data_hash = metadata[u'data-hash']
 class Image(object):
     __tablename__ = 'image'
     id = Column(Integer, primary_key=True)

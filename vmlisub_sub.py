@@ -13,7 +13,7 @@ import hepixvmlis
 import urllib2
 import urllib
 import json
-
+import hashlib
 from hepixvmitrust.vmitrustlib import VMimageListDecoder as VMimageListDecoder
 
 def formatter(filename):
@@ -111,6 +111,33 @@ class db_actions():
             req = urllib2.Request(url=subscription.url)
             f = urllib2.urlopen(req)
             update_unprocessed = f.read()
+            messagehash = hashlib.sha512(update_unprocessed).hexdigest()
+            jsontext = json.loads(data)
+            vmilist = VMimageListDecoder(jsontext)
+            if vmilist.endorser.metadata[u'hv:dn'] != dn:
+                self.log.error('Endorser DN does not match signature')
+                continue
+            if vmilist.endorser.metadata[u'hv:ca'] != ca:
+                self.log.error( 'list hv:ca does not match signature')
+                continue
+            if vmilist.metadata[u'hv:uri'] != subscription.url:
+                self.log.error('list hv:uri does not match subscription uri')
+                continue
+            if vmilist.metadata[u'dc:identifier'] != subscription.uuid:
+                self.log.error('list dc:identifier does not match subscription uuid')
+                continue
+            metadata = vmilist.metadata
+            metadata[u'data'] = update_unprocessed
+            metadata[u'data-hash'] = messagehash
+            
+            messagehash_q = self.session.query(model.Imagelist).\
+                filter(model.Imagelist.data_hash==messagehash)
+            count = messagehash_q.count()
+            if count != 0:
+                self.log.error('Hash already found')
+                continue
+                
+           
             validated_data = anchor.validate_text(update_unprocessed)
             data = validated_data['data']
             dn = validated_data['signer_dn']
@@ -129,24 +156,7 @@ class db_actions():
                 self.log.error('Endorser not authorised on subscription')
                 continue
             authsub = subauthq.one()
-            jsontext = json.loads(data)
-
-            vmilist = VMimageListDecoder(jsontext)
-            if vmilist.endorser.metadata[u'hv:dn'] != dn:
-                self.log.error('Endorser DN does not match signature')
-                continue
-            if vmilist.endorser.metadata[u'hv:ca'] != ca:
-                self.log.error( 'list hv:ca does not match signature')
-                continue
-            if vmilist.metadata[u'hv:uri'] != subscription.url:
-                self.log.error('list hv:uri does not match subscription uri')
-                continue
-            if vmilist.metadata[u'dc:identifier'] != subscription.uuid:
-                self.log.error('list dc:identifier does not match subscription uuid')
-                continue
             
-            metadata = vmilist.metadata
-            metadata[u'data'] = update_unprocessed
             imagelist = model.Imagelist(authsub.id,metadata)
             self.session.add(imagelist)
             self.session.commit()
