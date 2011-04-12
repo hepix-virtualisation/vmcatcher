@@ -149,7 +149,7 @@ class Imagelist(object):
     __tablename__ = 'imagelist'
     def __init__(self, sub_auth, metadata):
         id = Column(Integer, primary_key=True)
-        print metadata
+        #print metadata
         self.Identifier = metadata[u'dc:identifier']
         self.endorsed = metadata[u'hv:uri']
         self.url = metadata[u'hv:uri']
