@@ -1,6 +1,16 @@
 I will be updating this code base in stages to make it a consumer and verify of imagelists.
 
 
+To add a subscription
+~~~~~~~~~~~~~~~~~~~~~
+
 python vmlisub_sub.py  -s file:////`pwd`/imagelist.json
 
 python vmlisub_sub.py  -s https://particle.phys.uvic.ca/~igable/hepix/hepix_signed_image_list
+
+To list subscriptions
+~~~~~~~~~~~~~~~~~~~~~
+
+python vmlisub_sub.py  -l
+
+

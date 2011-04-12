@@ -14,6 +14,7 @@ import urllib2
 import urllib
 import json
 import hashlib
+import datetime
 from hepixvmitrust.vmitrustlib import VMimageListDecoder as VMimageListDecoder
 
 def formatter(filename):
@@ -86,7 +87,7 @@ class db_actions():
         self.subscription_create(metadata,authorised=True)
 
     def subscriptions_lister(self,formatter2 = formatter):
-        output = ''
+        outputlist = []
 
         subauthq = self.session.query(model.SubscriptionAuth).all()
 
@@ -94,13 +95,9 @@ class db_actions():
         #print self.session.query(model.SubscriptionAuth).count()
         subauthq = self.session.query(model.Subscription).all()
         for item in subauthq:
-            obj = {u'dc:identifier' : str(item.uuid),
-                    u'dc:description' : str(item.description),
-                    u'hv:uri' : str(item.url),
-                    u'authorised' : str(item.authorised),
-                    }
-            output += json.dumps(obj, sort_keys=True, indent=4)
-        return output
+            outputlist.append(str(item.uuid))
+        seperator = '\n'
+        return seperator.join(outputlist)
 
 
     def subscriptions_update(self,anchor):
@@ -112,6 +109,10 @@ class db_actions():
             f = urllib2.urlopen(req)
             update_unprocessed = f.read()
             messagehash = hashlib.sha512(update_unprocessed).hexdigest()
+            validated_data = anchor.validate_text(update_unprocessed)
+            data = validated_data['data']
+            dn = validated_data['signer_dn']
+            ca = validated_data['issuer_dn']
             jsontext = json.loads(data)
             vmilist = VMimageListDecoder(jsontext)
             if vmilist.endorser.metadata[u'hv:dn'] != dn:
@@ -138,10 +139,7 @@ class db_actions():
                 continue
                 
            
-            validated_data = anchor.validate_text(update_unprocessed)
-            data = validated_data['data']
-            dn = validated_data['signer_dn']
-            ca = validated_data['issuer_dn']
+            
             # Now we know the data better check the SubscriptionAuth
             subauthq = self.session.query(model.SubscriptionAuth).\
                 filter(model.Endorser.id==model.EndorserPrincible.id).\
@@ -164,25 +162,36 @@ class db_actions():
                 imageDb = model.Image(imagelist.id,imageObj.metadata)
                 self.session.add(imageDb)
                 self.session.commit()
+            if subscription.imagelist_latest != None:
+                oldimagelist_q = self.session.query(model.Imagelist).\
+                    filter(model.Imagelist.id==imagelist_latest)
+                for imagelist in oldimagelist_q:
+                    imagelist.expired = datetime(now)
+                
+            subscription.imagelist_latest = imagelist.id
+            self.session.commit()
             
-
 def main():
+    log = logging.getLogger("vmlisub_sub.main")
     """Runs program and handles command line options"""
-    actions = set([])
-    anchor = loadcanamespace.ViewTrustAnchor()
-    anchor_needed = False
-    dbinitiation_default = 'sqlite:///tutorial.db'
     p = optparse.OptionParser(version = "%prog " + version)
-    p.add_option('-l', '--list', action ='store_true',help='list subscriptions', metavar='OUTPUTFILE')
+    p.add_option('-l', '--list', action ='store_true',help='list subscriptions')
     p.add_option('-d', '--database', action ='store', help='Database Initiation string',
         default='sqlite:///tutorial.db')
     p.add_option('-s', '--subscribe', action ='append',help='Subscribe', metavar='INPUTFILE')
-    p.add_option('-c', '--cert-dir', action ='store',help='Subscribe', metavar='INPUTFILE',
+    p.add_option('-c', '--cert-dir', action ='store',help='Subscribe', metavar='INPUTDIR',
         default='/etc/grid-security/certificates/')
     p.add_option('-u', '--update', action ='store_true',help='update subscriptions')
+    p.add_option('-i', '--uuid', action ='append',help='Select subscription', metavar='UUID')
+    p.add_option('-m', '--message', action ='append',help='Export latest message from subscription', metavar='OUTPUTFILE')
+    p.add_option('-j', '--json', action ='append',help='Export latest json from subscription', metavar='OUTPUTFILE')
+    
+    
     options, arguments = p.parse_args()
+    anchor_needed = False
     anchor =  loadcanamespace.ViewTrustAnchor()
-
+    actions = set([])
+    subscriptions_selected = set([])
     subscription_url_list = []
     if options.list:
         actions.add('list')
@@ -195,7 +204,17 @@ def main():
         actions.add('subscribe')
         for subscriptions_ui in options.subscribe:
             subscription_url_list.append(subscriptions_ui)
-        
+    if options.uuid:
+        actions.add('select')
+        subscriptions_selected = set(options.uuid)
+    if options.message:
+        actions.add('dump')
+        actions.add('message')
+        dump_messages_path = set(options.message)
+    if options.json:
+        actions.add('dump')
+        actions.add('json')
+        json_messages_path = set(options.json)
     if len(actions) == 0:
         return
     # 1 So we have some actions to process
@@ -212,8 +231,7 @@ def main():
         Session = SessionFactory()
         db = db_actions(Session)
         for uri in subscription_url_list:
-            db.subscribe_file(anchor,uri)
-            
+            db.subscribe_file(anchor,uri)         
     if 'list' in actions:
         Session = SessionFactory()
         db = db_actions(Session)
@@ -222,6 +240,9 @@ def main():
         Session = SessionFactory()
         db = db_actions(Session)
         db.subscriptions_update(anchor)
+    if 'dump' in actions:
+        if not 'select' in actions:
+            log.error('No subscriptions selected.')
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     main()

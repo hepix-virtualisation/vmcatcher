@@ -1,5 +1,5 @@
 from sqlalchemy import create_engine
-from sqlalchemy import Table, Column, Integer, String, MetaData, ForeignKey, Boolean
+from sqlalchemy import Table, Column, Integer, String, MetaData, ForeignKey, Boolean, DateTime
 from sqlalchemy.orm import mapper
 
 from sqlalchemy import ForeignKey
@@ -51,6 +51,7 @@ Subscription_table = Table('subscription', metadata,
         Column('description', String(200)),
         Column('url', String(200),nullable = False,unique=True),
         Column('authorised', Boolean,nullable = False),
+        Column('imagelist_latest', Integer, ForeignKey('subscription.id')),
     )
 
 Subscriptionauth_table = Table('subscription_auth', metadata,
@@ -69,6 +70,7 @@ Imagelist_table = Table('imagelist', metadata,
         Column('sub_auth', Integer, ForeignKey('subscription_auth.id', onupdate="CASCADE", ondelete="CASCADE")),
         Column('data', String(1000)),
         Column('data_hash', String(128)),
+        Column('expired', DateTime),
     )
 
 
