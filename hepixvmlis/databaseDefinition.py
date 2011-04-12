@@ -50,13 +50,13 @@ Subscription_table = Table('subscription', metadata,
         Column('uuid', String(50),nullable = False,unique=True),
         Column('description', String(200)),
         Column('url', String(200),nullable = False,unique=True),
+        Column('authorised', Boolean,nullable = False),
     )
 
 Subscriptionauth_table = Table('subscription_auth', metadata,
         Column('id', Integer, Sequence('subscription_auth_seq'), primary_key=True),
         Column('subscription', Integer, ForeignKey('subscription.id', onupdate="CASCADE", ondelete="CASCADE")),
         Column('endorser', Integer, ForeignKey('endorser.id', onupdate="CASCADE", ondelete="CASCADE"),nullable = False),
-        Column('authorised', Boolean,nullable = False),
     )
 
 
@@ -124,10 +124,11 @@ class EndorserPrincible(object):
 class Subscription(object):
     __tablename__ = 'subscription'
     id = Column(Integer, primary_key=True)
-    def __init__(self,details):
+    def __init__(self,details, authorised = False):
         self.uuid = details[u'dc:identifier']
         self.description = details[u'dc:description']
         self.url = details[u'hv:uri']
+        self.authorised = authorised
     def __repr__(self):
         return "<Subscription('%s','%s', '%s')>" % (self.uuid, self.url, self.description)
 

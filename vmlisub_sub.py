@@ -47,6 +47,7 @@ class db_actions(hepixvmlis.databaseView.DatabaseQuerys):
             obj = {u'dc:identifier' : str(item.uuid),
                     u'dc:description' : str(item.description),
                     u'hv:uri' : str(item.url),
+                    u'authorised' : str(item.authorised),
                     }
             output += json.dumps(obj, sort_keys=True, indent=4)
         return output
