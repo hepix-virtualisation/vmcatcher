@@ -170,7 +170,13 @@ class db_actions():
                 
             subscription.imagelist_latest = imagelist.id
             self.session.commit()
-            
+    def subscriptions_delete(self,uuid):
+        subscriptionlist = self.session.query(model.Subscription).\
+            filter(model.Subscription.uuid==uuid)
+        for item in subscriptionlist:
+            self.session.delete(item)
+        self.session.commit()
+        return
 def main():
     log = logging.getLogger("vmlisub_sub.main")
     """Runs program and handles command line options"""
@@ -185,6 +191,7 @@ def main():
     p.add_option('-i', '--uuid', action ='append',help='Select subscription', metavar='UUID')
     p.add_option('-m', '--message', action ='append',help='Export latest message from subscription', metavar='OUTPUTFILE')
     p.add_option('-j', '--json', action ='append',help='Export latest json from subscription', metavar='OUTPUTFILE')
+    p.add_option('-D', '--delete', action ='store_true',help='Delete subscription', metavar='OUTPUTFILE')
     
     
     options, arguments = p.parse_args()
@@ -215,6 +222,8 @@ def main():
         actions.add('dump')
         actions.add('json')
         json_messages_path = set(options.json)
+    if options.delete:
+        actions.add('delete')
     if len(actions) == 0:
         return
     # 1 So we have some actions to process
@@ -240,6 +249,14 @@ def main():
         Session = SessionFactory()
         db = db_actions(Session)
         db.subscriptions_update(anchor)
+    if 'delete' in actions:
+        if not 'select' in actions:
+            log.error('No subscriptions selected.')
+        Session = SessionFactory()
+        db = db_actions(Session)
+        for selection_uuid in subscriptions_selected:
+            db.subscriptions_delete(selection_uuid)
+        Session.commit()
     if 'dump' in actions:
         if not 'select' in actions:
             log.error('No subscriptions selected.')
