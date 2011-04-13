@@ -96,6 +96,7 @@ class db_actions():
         subauthq = self.session.query(model.Subscription).all()
         for item in subauthq:
             outputlist.append(str(item.uuid))
+            print dir(item)
         seperator = '\n'
         return seperator.join(outputlist)
 
@@ -174,6 +175,10 @@ class db_actions():
         subscriptionlist = self.session.query(model.Subscription).\
             filter(model.Subscription.uuid==uuid)
         for item in subscriptionlist:
+            imagelists_q = self.session.query(model.Imagelist).\
+                filter(model.Imagelist.sub_auth==item.id)
+            for imagelist in imagelists_q:
+                self.session.delete(imagelist)
             self.session.delete(item)
         self.session.commit()
         return

@@ -89,7 +89,7 @@ Image_table = Table('image', metadata,
         Column('size', Integer),
         Column('title', String(100)),
         Column('comments', String(100)),
-        Column('imagelist', Integer, ForeignKey('imagelist.id')),
+        Column('imagelist', Integer, ForeignKey('imagelist.id', onupdate="CASCADE", ondelete="CASCADE")),
     )
 
 
@@ -137,6 +137,7 @@ class Subscription(object):
 class SubscriptionAuth(object):
     __tablename__ = 'subscription_auth'
     id = Column(Integer, primary_key=True)
+    subscription = relationship(Subscription, backref=backref('subscription_auth', order_by=id))
     def __init__(self,subscription,endorser,authorised=False):
         self.subscription = subscription
         self.endorser = endorser
@@ -149,8 +150,10 @@ class SubscriptionAuth(object):
 
 class Imagelist(object):
     __tablename__ = 'imagelist'
+    id = Column(Integer, primary_key=True)
+    sub_auth = relationship(SubscriptionAuth, backref=backref('imagelist', order_by=id))
     def __init__(self, sub_auth, metadata):
-        id = Column(Integer, primary_key=True)
+        
         #print metadata
         self.Identifier = metadata[u'dc:identifier']
         self.endorsed = metadata[u'hv:uri']
@@ -161,6 +164,7 @@ class Imagelist(object):
 class Image(object):
     __tablename__ = 'image'
     id = Column(Integer, primary_key=True)
+    imagelist = relationship(Imagelist, backref=backref('image', order_by=id))
     def __init__(self, Imagelist,metadata):
         self.identifier = metadata[u'dc:identifier']
         self.description = metadata[u'dc:description']
@@ -185,8 +189,9 @@ def init(engine):
     mapper(Endorser, Endorser_table)
     mapper(EndorserPrincible,Endorserprincible_table)
     mapper(Subscription,Subscription_table)
+    #mapper(SubscriptionAuth,Subscriptionauth_table,
+    #    properties={'subscription':relationship(Subscription, backref='user', cascade="all, delete, delete-orphan")})
     mapper(SubscriptionAuth,Subscriptionauth_table)
- 
     mapper(Imagelist, Imagelist_table)
     mapper(Image, Image_table)
    

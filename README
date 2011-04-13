@@ -13,4 +13,7 @@ To list subscriptions
 
 python vmlisub_sub.py  -l
 
+To delete a subscription
+~~~~~~~~~~~~~~~~~~~~~~~~
 
+python vmlisub_sub.py  -D  -i 63175437-7d59-4851-b333-c96cb6545a86
