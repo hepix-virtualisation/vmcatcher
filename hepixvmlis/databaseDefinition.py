@@ -22,13 +22,12 @@ class Endorser(Base):
     __tablename__ = 'endorser'
     id = Column(Integer, primary_key=True)
     identifier = Column(String(50))
+    princibles = relationship("EndorserPrincible", backref="Endorser",cascade='all, delete')
     def __init__(self, metadata):
         identifier = ''
         identifier_str = u'dc:identifier'
         if identifier_str in metadata.keys():
             identifier = metadata[identifier_str]
-        
-        
         self.identifier = identifier
 
 class EndorserPrincible(Base):
@@ -37,8 +36,7 @@ class EndorserPrincible(Base):
     hv_dn = Column(String(50),unique=True,nullable = False)
     hv_ca = Column(String(50),nullable = False)
     ca_pubkey = Column(String(50))
-    endorser = Column(Integer, ForeignKey(Endorser.id), onupdate="CASCADE", ondelete="CASCADE"))
-    
+    endorser = Column(Integer, ForeignKey(Endorser.id, ondelete="CASCADE", onupdate="CASCADE"))
     
     def __init__(self, endorser, metadata):
         hv_dn = None
@@ -64,6 +62,7 @@ class Subscription(Base):
     authorised = Column( Boolean,nullable = False)
     # Line woudl be but for inconsitancy #imagelist_latest =Column(Integer, ForeignKey('imagelist.id'))
     imagelist_latest =Column(Integer)
+    orm_auth = relationship("SubscriptionAuth", backref="Subscription",cascade='all, delete')
     def __init__(self,details, authorised = False):
         self.uuid = details[u'dc:identifier']
         self.description = details[u'dc:description']
@@ -79,6 +78,7 @@ class SubscriptionAuth(Base):
     subscription2 = relationship(Subscription, backref=backref('auth', order_by=id, cascade="all,delete"))
     endorser = Column(Integer, ForeignKey(Endorser.id, onupdate="CASCADE", ondelete="CASCADE"))
     authorised = Column(Boolean,nullable = False)
+    orm_imagelist = relationship("Imagelist", backref="SubscriptionAuth",cascade='all, delete')
     def __init__(self,subscription,endorser,authorised=False):
         self.subscription = subscription
         self.endorser = endorser
@@ -99,6 +99,8 @@ class Imagelist(Base):
     data_hash = Column(String(128))
     expired = Column(DateTime)
     sub_auth = Column(Integer, ForeignKey(SubscriptionAuth.id, onupdate="CASCADE", ondelete="CASCADE"))
+    orm_image = relationship("Image", backref="Imagelist", passive_updates=False)
+    
     def __init__(self, sub_auth, metadata):
         
         #print metadata
