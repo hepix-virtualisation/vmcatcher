@@ -175,10 +175,8 @@ class db_actions():
         subscriptionlist = self.session.query(model.Subscription).\
             filter(model.Subscription.uuid==uuid)
         for item in subscriptionlist:
-            imagelists_q = self.session.query(model.Imagelist).\
-                filter(model.Imagelist.sub_auth==item.id)
-            for imagelist in imagelists_q:
-                self.session.delete(imagelist)
+            print dir(item)
+            #print item.SubscriptionAuth
             self.session.delete(item)
         self.session.commit()
         return
