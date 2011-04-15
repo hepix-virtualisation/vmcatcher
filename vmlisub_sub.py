@@ -96,7 +96,6 @@ class db_actions():
         subauthq = self.session.query(model.Subscription).all()
         for item in subauthq:
             outputlist.append(str(item.uuid))
-            print dir(item)
         seperator = '\n'
         return seperator.join(outputlist)
 
@@ -175,7 +174,6 @@ class db_actions():
         subscriptionlist = self.session.query(model.Subscription).\
             filter(model.Subscription.uuid==uuid)
         for item in subscriptionlist:
-            print dir(item)
             #print item.SubscriptionAuth
             self.session.delete(item)
         self.session.commit()
@@ -187,8 +185,8 @@ def main():
     p.add_option('-l', '--list', action ='store_true',help='list subscriptions')
     p.add_option('-d', '--database', action ='store', help='Database Initiation string',
         default='sqlite:///tutorial.db')
-    p.add_option('-s', '--subscribe', action ='append',help='Subscribe', metavar='INPUTFILE')
-    p.add_option('-c', '--cert-dir', action ='store',help='Subscribe', metavar='INPUTDIR',
+    p.add_option('-s', '--subscribe', action ='append',help='Subscribe to URL', metavar='INPUTURL')
+    p.add_option('-c', '--cert-dir', action ='store',help='Certificate directory.', metavar='INPUTDIR',
         default='/etc/grid-security/certificates/')
     p.add_option('-u', '--update', action ='store_true',help='update subscriptions')
     p.add_option('-i', '--uuid', action ='append',help='Select subscription', metavar='UUID')
