@@ -54,6 +54,8 @@ class db_actions():
         endorser_list = self.endorser_create(metadata)
         endorser = endorser_list.one()
         new_subscription = model.Subscription(metadata)
+        # We will make the new subscription enabled by default
+        new_subscription.authorised = True
         self.session.add(new_subscription)
         self.session.commit()
         new_auth = model.SubscriptionAuth(new_subscription.id,endorser.id,authorised)
