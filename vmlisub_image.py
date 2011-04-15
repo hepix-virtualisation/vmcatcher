@@ -16,7 +16,7 @@ import json
 import hashlib
 import datetime
 from hepixvmitrust.vmitrustlib import VMimageListDecoder as VMimageListDecoder
-
+from M2Crypto import SMIME, X509, BIO
 class db_actions():
     
     def __init__(self,session):
@@ -37,7 +37,55 @@ class db_actions():
         
         seperator = '\n'
         return seperator.join(outputlist)
+    
+    def image_by_sha512_writefile_imagelist(self,sha512,path):
+        query_image = self.session.query(model.Imagelist).\
+            filter(model.Image.sha512 == sha512)
+        if query_image.count() == 0:
+            self.log.warning('Message not found')
+            return False
+        fp = open(path,'w')
+        for image in query_image:
+            
+            fp.write(image.data)
+        fp.close()
+        
+    def json_message(self,sha512,path):
+        query_image = self.session.query(model.Imagelist).\
+            filter(model.Image.sha512 == sha512)
+        if query_image.count() == 0:
+            self.log.warning('Message not found')
+            return False
+        fp = open(path,'w')
+        for image in query_image:
+            buf = BIO.MemoryBuffer(str(image.data))
+            sk = X509.X509_Stack()
+            p7, data = SMIME.smime_load_pkcs7_bio(buf)
+            data_str = data.read()
+            fp.write(data_str)
+        fp.close()
+        
+# User interface
 
+def pairsNnot(list_a,list_b):
+    len_generate_list = len(list_a)
+    len_image_list = len(list_b)
+    ocupies_generate_list = set(range(len_generate_list))
+    ocupies_image_list = set(range(len_image_list))
+    ocupies_pairs = ocupies_image_list.intersection(ocupies_generate_list)
+    diff_a = ocupies_generate_list.difference(ocupies_image_list)
+    diff_b = ocupies_image_list.difference(ocupies_generate_list)
+    arepairs = []
+    for i in ocupies_pairs:
+        arepairs.append([list_a[i],list_b[i]])
+    notpairs_a = []
+    for i in diff_a:
+        notpairs_a.append(list_a[i])
+    notpairs_b = []
+    for i in diff_b:
+        notpairs_b.append(list_b[i])
+    
+    return arepairs,notpairs_a,notpairs_b
 
 
 def main():
@@ -49,7 +97,8 @@ def main():
         default='sqlite:///tutorial.db')
     p.add_option('-c', '--cert-dir', action ='store',help='Certificate directory.', metavar='INPUTDIR',
         default='/etc/grid-security/certificates/')
-    p.add_option('-i', '--uuid', action ='append',help='Select subscription', metavar='UUID')
+    p.add_option('--sha512', action ='append',help='Select images by identifier. Typically a UUID', metavar='UUID')
+    
     p.add_option('-m', '--message', action ='append',help='Export latest message from subscription', metavar='OUTPUTFILE')
     p.add_option('-j', '--json', action ='append',help='Export latest json from subscription', metavar='OUTPUTFILE')
     p.add_option('-D', '--delete', action ='store_true',help='Delete subscription', metavar='OUTPUTFILE')
@@ -59,21 +108,23 @@ def main():
     anchor_needed = False
     anchor =  loadcanamespace.ViewTrustAnchor()
     actions = set([])
-    subscriptions_selected = set([])
+    uuid_selected = []
+    messages_path = []
     subscription_url_list = []
+    
     if options.list:
         actions.add('list')
-    if options.uuid:
+    if options.sha512:
         actions.add('select')
-        subscriptions_selected = set(options.uuid)
+        uuid_selected = options.sha512
     if options.message:
         actions.add('dump')
         actions.add('message')
-        dump_messages_path = set(options.message)
+        messages_path = options.message
     if options.json:
         actions.add('dump')
         actions.add('json')
-        json_messages_path = set(options.json)
+        messages_path = options.json
     if options.delete:
         actions.add('delete')
     if len(actions) == 0:
@@ -107,12 +158,42 @@ def main():
             log.error('No subscriptions selected.')
         Session = SessionFactory()
         db = db_actions(Session)
-        for selection_uuid in subscriptions_selected:
+        for selection_uuid in uuid_selected:
             db.subscriptions_delete(selection_uuid)
         Session.commit()
+        sys.exit(0)
     if 'dump' in actions:
         if not 'select' in actions:
             log.error('No subscriptions selected.')
+        if 'json' in actions:
+            pairs, extra_uuid ,extra_paths = pairsNnot(uuid_selected,messages_path)
+            if len(extra_paths) > 0:
+                log.warning('Extra paths will be ignored.')
+                for path in extra_paths:
+                    log.info('ignoring path %s' % (path))
+            if len(extra_uuid) > 0:
+                log.warning('sha512 ignored.')
+                for path in extra_uuid:
+                    log.info('ignoring sha512 %s' % (path))
+            Session = SessionFactory()
+            db = db_actions(Session)
+            for item in pairs:
+                db.json_message(item[0],item[1])
+        if 'message' in actions:
+            pairs, extra_uuid ,extra_paths = pairsNnot(uuid_selected,messages_path)
+            if len(extra_paths) > 0:
+                log.warning('Extra paths will be ignored.')
+                for path in extra_paths:
+                    log.info('ignoring path %s' % (path))
+            if len(extra_uuid) > 0:
+                log.warning('sha512 ignored.')
+                for path in extra_uuid:
+                    log.info('Ignoring sha512 %s' % (path))
+            
+            Session = SessionFactory()
+            db = db_actions(Session)
+            for item in pairs:
+                db.image_by_sha512_writefile_imagelist(item[0],item[1])
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     main()
