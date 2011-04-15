@@ -50,7 +50,7 @@ class db_actions():
             fp.write(image.data)
         fp.close()
         
-    def json_message(self,sha512,path):
+    def image_by_sha512_writefile_json(self,sha512,path):
         query_image = self.session.query(model.Imagelist).\
             filter(model.Image.sha512 == sha512)
         if query_image.count() == 0:
@@ -64,6 +64,7 @@ class db_actions():
             data_str = data.read()
             fp.write(data_str)
         fp.close()
+
         
 # User interface
 
@@ -178,7 +179,7 @@ def main():
             Session = SessionFactory()
             db = db_actions(Session)
             for item in pairs:
-                db.json_message(item[0],item[1])
+                db.image_by_sha512_writefile_json(item[0],item[1])
         if 'message' in actions:
             pairs, extra_uuid ,extra_paths = pairsNnot(uuid_selected,messages_path)
             if len(extra_paths) > 0:
