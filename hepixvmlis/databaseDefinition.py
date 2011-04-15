@@ -67,6 +67,7 @@ class Subscription(Base):
         self.uuid = details[u'dc:identifier']
         self.description = details[u'dc:description']
         self.url = details[u'hv:uri']
+        self.imagelist_latest = None
         self.authorised = authorised
     def __repr__(self):
         return "<Subscription('%s','%s', '%s')>" % (self.uuid, self.url, self.description)
@@ -143,7 +144,7 @@ class Image(Base):
         self.comments = metadata[u'sl:comments']
         self.imagelist = Imagelist
     def __repr__(self):
-        return "<Image('%s','%s', '%s')>" % (self.identifier, self.referanceimage, self.imagelist)
+        return "<Image('%s','%s', '%s')>" % (self.identifier, self.description,self.uri)
 
 
 def init(engine):
