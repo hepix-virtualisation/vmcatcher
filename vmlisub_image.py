@@ -27,31 +27,36 @@ class db_actions():
     def image_lister(self):
         outputlist = []
 
-        subauthq = self.session.query(model.Image).\
+        subauthq = self.session.query(model.Image,model.Subscription).\
             filter(model.Subscription.imagelist_latest == model.Imagelist.id).\
             filter(model.Subscription.authorised == True).\
             filter(model.Image.imagelist == model.Imagelist.id)
             
-        for item in subauthq:
-            outputlist.append("%s\t%s" % (item.identifier,  item.uri))
+        for q_result in subauthq:
+            image = q_result[0]
+            subscription = q_result[1]
+            
+            outputlist.append("%s\t%s\t%s" % (image.identifier,subscription.uuid,image.sha512))
         
         seperator = '\n'
         return seperator.join(outputlist)
     
-    def image_by_sha512_writefile_imagelist(self,sha512,path):
-        query_image = self.session.query(model.Imagelist).\
-            filter(model.Image.sha512 == sha512)
+    def image_by_sha512_writefile_imagelist(self,treess,sha512,path):
+        query_image = self.session.query(model.Image).\
+            filter(model.Image.imagelist == model.Imagelist.id).\
+            filter(model.Image.sha512 == str(sha512))
         if query_image.count() == 0:
             self.log.warning('Message not found')
             return False
         fp = open(path,'w')
         for image in query_image:
-            
             fp.write(image.data)
         fp.close()
+        return True
         
-    def image_by_sha512_writefile_json(self,sha512,path):
-        query_image = self.session.query(model.Imagelist).\
+        
+    def image_by_sha512_writefile_json(self,treess,sha512,path):
+        query_image = self.session.query(model.Image).\
             filter(model.Image.sha512 == sha512)
         if query_image.count() == 0:
             self.log.warning('Message not found')
@@ -64,6 +69,38 @@ class db_actions():
             data_str = data.read()
             fp.write(data_str)
         fp.close()
+    def image_by_sha512_display_info(self,ancore,sha512):
+        output = []
+        query_image = self.session.query(model.Image).\
+            filter(model.Image.imagelist == model.Imagelist.id).\
+            filter(model.Image.sha512 == str(sha512))
+        if query_image.count() == 0:
+            self.log.warning('Message not found')
+            return False
+        for image in query_image:
+            print ('dc:identifier=%s' % (image.identifier))
+            print ('dc:description=%s' % (image.description))
+            print ('hv:hypervisor=%s' % (image.hypervisor))
+            print ('sl:checksum:sha512=%s' % (image.sha512))
+            print ('hv:uri=%s' % (image.uri))
+            print ('sl:os=%s' % (image.os))
+            print ('sl:osversion=%s' % (image.osversion ))
+            print ('sl:arch=%s' % (image.arch))
+            print ('hv:version=%s' % (image.version))
+            print ('hv:size=%s' % (image.size))
+            print ('dc:title=%s' % (image.title))
+            print ('sl:comments=%s' % (image.comments))
+            #validated_data = ancore.validate_text(str(image.data))
+            #data = validated_data['data']
+            #dn = validated_data['signer_dn']
+            #ca = validated_data['issuer_dn']
+        return True
+
+
+def controler():
+    def __init__(self,session):
+        self.session = session
+        self.log = logging.getLogger("vmlisub_sub.controler")
 
         
 # User interface
@@ -103,6 +140,7 @@ def main():
     p.add_option('-m', '--message', action ='append',help='Export latest message from subscription', metavar='OUTPUTFILE')
     p.add_option('-j', '--json', action ='append',help='Export latest json from subscription', metavar='OUTPUTFILE')
     p.add_option('-D', '--delete', action ='store_true',help='Delete subscription', metavar='OUTPUTFILE')
+    p.add_option('-i', '--info', action ='store_true',help='Info on selected images')
     
     
     options, arguments = p.parse_args()
@@ -126,6 +164,9 @@ def main():
         actions.add('dump')
         actions.add('json')
         messages_path = options.json
+    if options.info:
+        actions.add('info')
+        anchor_needed = True
     if options.delete:
         actions.add('delete')
     if len(actions) == 0:
@@ -179,7 +220,7 @@ def main():
             Session = SessionFactory()
             db = db_actions(Session)
             for item in pairs:
-                db.image_by_sha512_writefile_json(item[0],item[1])
+                db.image_by_sha512_writefile_json(anchor,item[0],item[1])
         if 'message' in actions:
             pairs, extra_uuid ,extra_paths = pairsNnot(uuid_selected,messages_path)
             if len(extra_paths) > 0:
@@ -194,7 +235,12 @@ def main():
             Session = SessionFactory()
             db = db_actions(Session)
             for item in pairs:
-                db.image_by_sha512_writefile_imagelist(item[0],item[1])
+                db.image_by_sha512_writefile_imagelist(anchor,item[0],item[1])
+    if 'info' in actions:
+        Session = SessionFactory()
+        db = db_actions(Session)
+        for item in uuid_selected:
+            db.image_by_sha512_display_info(anchor,item)
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     main()
