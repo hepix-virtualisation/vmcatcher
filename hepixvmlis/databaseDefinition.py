@@ -114,29 +114,29 @@ class Imagelist(Base):
 class Image(Base):
     __tablename__ = 'image'
     id = Column(Integer, primary_key=True)
-    identifier = Column(String(50))
-    description = Column(String(50))
-    hypervisor = Column(String(50))
-    sha512 = Column(String(128))
-    uri = Column(String(128))
-    os = Column(String(50))
-    osversion = Column(String(50))
-    arch = Column(String(50))
-    version = Column(String(50))
-    size = Column(Integer)
-    title = Column(String(100))
+    identifier = Column(String(50),nullable = False)
+    description = Column(String(50),nullable = False)
+    hypervisor = Column(String(50),nullable = False)
+    sha512 = Column(String(128),nullable = False)
+    uri = Column(String(128),nullable = False)
+    os = Column(String(50),nullable = False)
+    osversion = Column(String(50),nullable = False)
+    arch = Column(String(50),nullable = False)
+    version = Column(String(50),nullable = False)
+    size = Column(Integer,nullable = False)
+    title = Column(String(100),nullable = False)
     comments = Column(String(100))
     
     
     imagelist = Column(Integer, ForeignKey(Imagelist.id, onupdate="CASCADE", ondelete="CASCADE"))
     def __init__(self, Imagelist,metadata):
-        self.identifier = metadata[u'dc:identifier']
+        self.identifier = str(metadata[u'dc:identifier'])
         self.description = metadata[u'dc:description']
         self.hypervisor = metadata[u'hv:hypervisor']
         self.sha512 = metadata[u'sl:checksum:sha512']
         self.uri = metadata[u'hv:uri']
-        self.os = metadata[u'sl:os']
-        self.osversion = metadata[ u'sl:osversion']
+        self.os = str(metadata[u'sl:os'])
+        self.osversion = str(metadata[ u'sl:osversion'])
         self.arch = metadata[u'sl:arch']
         self.version = metadata[ u'hv:version']
         self.size = metadata[u'hv:size']
