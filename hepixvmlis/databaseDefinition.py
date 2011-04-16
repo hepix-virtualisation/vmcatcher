@@ -14,7 +14,7 @@ except:
 from sqlalchemy import Sequence
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
-
+import datetime
 Base = declarative_base()
 
 
@@ -63,6 +63,7 @@ class Subscription(Base):
     # Line woudl be but for inconsitancy #imagelist_latest =Column(Integer, ForeignKey('imagelist.id'))
     imagelist_latest =Column(Integer)
     orm_auth = relationship("SubscriptionAuth", backref="Subscription",cascade='all, delete')
+    updated = Column(DateTime)
     def __init__(self,details, authorised = False):
         self.uuid = details[u'dc:identifier']
         self.description = details[u'dc:description']
@@ -101,6 +102,9 @@ class Imagelist(Base):
     expired = Column(DateTime)
     sub_auth = Column(Integer, ForeignKey(SubscriptionAuth.id, onupdate="CASCADE", ondelete="CASCADE"))
     orm_image = relationship("Image", backref="Imagelist", passive_updates=False)
+    imported = Column(DateTime,nullable = False)
+    created = Column(DateTime,nullable = False)
+    expires = Column(DateTime,nullable = False)
     
     def __init__(self, sub_auth, metadata):
         
@@ -111,6 +115,12 @@ class Imagelist(Base):
         self.sub_auth = sub_auth
         self.data = metadata[u'data']
         self.data_hash = metadata[u'data-hash']
+        # All times are in UTC at all times.
+        self.imported = datetime.datetime.utcnow()
+        self.created = metadata[u'dc:date:created']
+        
+        self.expires = metadata[u'dc:date:expires']
+        
 class Image(Base):
     __tablename__ = 'image'
     id = Column(Integer, primary_key=True)
