@@ -97,7 +97,7 @@ class db_actions():
         #print self.session.query(model.SubscriptionAuth).count()
         subauthq = self.session.query(model.Subscription).all()
         for item in subauthq:
-            outputlist.append(str(item.uuid))
+            outputlist.append("%s\t%s\t%s" % (item.uuid,item.authorised,item.url))
         seperator = '\n'
         return seperator.join(outputlist)
 
@@ -137,7 +137,7 @@ class db_actions():
                 filter(model.Imagelist.data_hash==messagehash)
             count = messagehash_q.count()
             if count != 0:
-                self.log.error('Hash already found')
+                self.log.debug('Hash already found')
                 continue
                 
            
