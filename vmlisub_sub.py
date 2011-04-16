@@ -17,9 +17,8 @@ import hashlib
 import datetime
 from hepixvmitrust.vmitrustlib import VMimageListDecoder as VMimageListDecoder
 
-def formatter(filename):
-    print filename
-    pass
+
+
 class db_actions():
     
     def __init__(self,session):
@@ -88,7 +87,7 @@ class db_actions():
             
         self.subscription_create(metadata,authorised=True)
 
-    def subscriptions_lister(self,formatter2 = formatter):
+    def subscriptions_lister(self):
         outputlist = []
 
         subauthq = self.session.query(model.SubscriptionAuth).all()
@@ -105,12 +104,20 @@ class db_actions():
     def subscriptions_update(self,anchor):
         
         subscriptionlist = self.session.query(model.Subscription).all()
-        for subscription in subscriptionlist:
+        for subscription in subscriptionlist:            
             self.log.info("Updating:%s" % (subscription.uuid))
             req = urllib2.Request(url=subscription.url)
             f = urllib2.urlopen(req)
             update_unprocessed = f.read()
+            # Now we have the update lets first check its hash 
             messagehash = hashlib.sha512(update_unprocessed).hexdigest()
+            messagehash_q = self.session.query(model.Imagelist).\
+                filter(model.Imagelist.data_hash==messagehash)
+            count = messagehash_q.count()
+            if count != 0:
+                self.log.debug('Hash already found')
+                continue
+            #Now we check its authenticity
             validated_data = anchor.validate_text(update_unprocessed)
             data = validated_data['data']
             dn = validated_data['signer_dn']
@@ -129,16 +136,19 @@ class db_actions():
             if vmilist.metadata[u'dc:identifier'] != subscription.uuid:
                 self.log.error('list dc:identifier does not match subscription uuid')
                 continue
+            now = datetime.datetime.utcnow()
+            if now < vmilist.metadata[u'dc:date:created']:
+                self.log.error('Invalide creation date:%s' % (subscription.uuid))
+                continue
+            if now > vmilist.metadata[u'dc:date:expires']:
+                self.log.error('Image list has expired:%s' % (subscription.uuid))
             metadata = vmilist.metadata
             metadata[u'data'] = update_unprocessed
             metadata[u'data-hash'] = messagehash
             
-            messagehash_q = self.session.query(model.Imagelist).\
-                filter(model.Imagelist.data_hash==messagehash)
-            count = messagehash_q.count()
-            if count != 0:
-                self.log.debug('Hash already found')
-                continue
+            
+            
+            
                 
            
             
@@ -169,7 +179,8 @@ class db_actions():
                     filter(model.Imagelist.id==imagelist_latest)
                 for imagelist in oldimagelist_q:
                     imagelist.expired = datetime(now)
-                
+
+            subscription.updated = datetime.datetime.utcnow()   
             subscription.imagelist_latest = imagelist.id
             self.session.commit()
     def subscriptions_delete(self,uuid):
