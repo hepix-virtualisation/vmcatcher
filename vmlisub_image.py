@@ -16,6 +16,7 @@ import json
 import hashlib
 import datetime
 from hepixvmitrust.vmitrustlib import VMimageListDecoder as VMimageListDecoder
+from hepixvmitrust.vmitrustlib import time_format_definition as time_format_definition
 from M2Crypto import SMIME, X509, BIO
 class db_actions():
     
@@ -71,13 +72,16 @@ class db_actions():
         fp.close()
     def image_by_sha512_display_info(self,ancore,sha512):
         output = []
-        query_image = self.session.query(model.Image).\
+        query_image = self.session.query(model.Image,model.Imagelist).\
             filter(model.Image.imagelist == model.Imagelist.id).\
             filter(model.Image.sha512 == str(sha512))
         if query_image.count() == 0:
             self.log.warning('Message not found')
             return False
-        for image in query_image:
+        for query_row in query_image:
+            image = query_row[0]
+            imagelist = query_row[1]
+            
             print ('dc:identifier=%s' % (image.identifier))
             print ('dc:description=%s' % (image.description))
             print ('hv:hypervisor=%s' % (image.hypervisor))
@@ -90,6 +94,9 @@ class db_actions():
             print ('hv:size=%s' % (image.size))
             print ('dc:title=%s' % (image.title))
             print ('sl:comments=%s' % (image.comments))
+            print ('dc:date:imported=%s' % (imagelist.imported.strftime(time_format_definition)))
+            print ('dc:date:created=%s' % (imagelist.created.strftime(time_format_definition)))
+            print ('dc:date:expires=%s' % (imagelist.expires.strftime(time_format_definition)))
             #validated_data = ancore.validate_text(str(image.data))
             #data = validated_data['data']
             #dn = validated_data['signer_dn']
