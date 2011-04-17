@@ -184,7 +184,7 @@ class db_actions():
 
 
 
-class cmdline_queryby():
+class queryby_base():
     """"Base class for querying subscriptions"""
     def __init__(self,session):
         self.session = session
@@ -192,11 +192,14 @@ class cmdline_queryby():
         subscriptionlist = self.session.query(model.Subscription).\
                 filter(model.Subscription.id==private_id)
         return subscriptionlist
-    def cmdline_queryby_uri(self,url):
+    def subscription_by_uri(self,url):
         subscriptionlist = self.session.query(model.Subscription).\
                 filter(model.Subscription.url==url)
         return subscriptionlist
-    
+    def subscription_by_uuid(self,uuid):
+        subscriptionlist = self.session.query(model.Subscription).\
+                filter(model.Subscription.uuid==uuid)
+        return subscriptionlist
     def imagelist_by_id(self,private_id):
         subscriptionlist = self.session.query(model.Imagelist).\
                 filter(model.Imagelist.id==private_id)
@@ -207,18 +210,16 @@ class cmdline_queryby():
         return self.subscription_by_id(private_id)
     
     
-class cmdline_queryby_uri(cmdline_queryby):
+class queryby_uri(queryby_base):
     def subscription_get(self,url):
-        return self.cmdline_queryby_uri(private_id)
+        return self.subscription_by_uri(url)
 
-class cmdline_queryby_uuid(cmdline_queryby):
+class queryby_uuid(queryby_base):
     def subscription_get(self,uuid):
-        subscriptionlist = self.session.query(model.Subscription).\
-                filter(model.Subscription.uuid==uuid)
-        return subscriptionlist
+        return self.subscription_by_uuid(uuid)
 
 
-class cmdline_view():
+class output_driver_base():
     def __init__(self,file_pointer,session,anchor):
         self.session = session
         self.log = logging.getLogger("db_actions")
@@ -232,15 +233,9 @@ class cmdline_view():
         
         return True
     def display_subscription(self,subscription):
-        self.file_pointer.write ('dc:identifier=%s\n' % (subscription.uuid))
-        self.file_pointer.write ('subscription.dc:description=%s\n' % (subscription.description))
-        self.file_pointer.write ('subscription.sl:authorised=%s\n' % (subscription.authorised))
-        self.file_pointer.write ('subscription.hv:uri=%s\n' % (subscription.url))
-        self.file_pointer.write ('subscription.dc:date:updated=%s\n' % (subscription.updated.strftime(time_format_definition)))
-        return True
+        pass
     def display_imagelist(self,imagelist):
-        self.file_pointer.write ('imagelist.dc:date:imported=%s\n' % (imagelist.imported.strftime(time_format_definition)))
-        self.file_pointer.write ('imagelist.dc:date:created=%s\n' % (imagelist.created.strftime(time_format_definition)))
+        pass
     def subscriptions_lister(self):
         outputlist = []
 
@@ -254,13 +249,13 @@ class cmdline_view():
         seperator = '\n'
         return seperator.join(outputlist)
 
-class output_driver_smime(cmdline_view):
+class output_driver_smime(output_driver_base):
     def display_subscription(self,subscription):
         pass
     def display_imagelist(self,imagelist):
         self.file_pointer.write (imagelist.data)
 
-class output_driver_message(cmdline_view):
+class output_driver_message(output_driver_base):
     def display_subscription(self,subscription):
         pass
     def display_imagelist(self,imagelist):
@@ -268,6 +263,21 @@ class output_driver_message(cmdline_view):
         validated_data = self.anchor.validate_text(str(imagelist.data))
         self.file_pointer.write (validated_data['data'])
 
+class output_driver_lines(output_driver_base):
+    def display_subscription(self,subscription):
+        self.file_pointer.write ('dc:identifier=%s\n' % (subscription.uuid))
+        self.file_pointer.write ('subscription.dc:description=%s\n' % (subscription.description))
+        self.file_pointer.write ('subscription.sl:authorised=%s\n' % (subscription.authorised))
+        self.file_pointer.write ('subscription.hv:uri=%s\n' % (subscription.url))
+        self.file_pointer.write ('subscription.dc:date:updated=%s\n' % (subscription.updated.strftime(time_format_definition)))
+        return True
+    def display_imagelist(self,imagelist):
+        
+        validated_data = self.anchor.validate_text(str(imagelist.data))
+        self.file_pointer.write (validated_data['data'])
+    def display_imagelist(self,imagelist):
+        self.file_pointer.write ('imagelist.dc:date:imported=%s\n' % (imagelist.imported.strftime(time_format_definition)))
+        self.file_pointer.write ('imagelist.dc:date:created=%s\n' % (imagelist.created.strftime(time_format_definition)))
 
 class db_controler():
     def __init__(self,dboptions):
@@ -480,8 +490,8 @@ def main():
     if selectors_types_len == 1:
         selector_str = selectors_types.pop()
     
-    mapper = {'uuid' : cmdline_queryby_uuid,
-            'url' : cmdline_queryby_uri,
+    mapper = {'uuid' : queryby_uuid,
+            'url' : queryby_uri,
         }
         
     database.setup_selector_factory(mapper[selector_str])
@@ -496,7 +506,7 @@ def main():
     selector_str = 'SMIME'
     if outputformats_selections_len == 1:
         selector_str = outputformats_selections.pop()
-    mapper = {'lines' : cmdline_view,
+    mapper = {'lines' : output_driver_lines,
         'SMIME' : output_driver_smime,
         'message' : output_driver_message,    
     }
