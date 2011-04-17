@@ -278,7 +278,7 @@ class output_driver_lines(output_driver_base):
     def display_imagelist(self,imagelist):
         self.file_pointer.write ('imagelist.dc:date:imported=%s\n' % (imagelist.imported.strftime(time_format_definition)))
         self.file_pointer.write ('imagelist.dc:date:created=%s\n' % (imagelist.created.strftime(time_format_definition)))
-
+        self.file_pointer.write ('imagelist.dc:date:expires=%s\n' % (imagelist.expires.strftime(time_format_definition)))
 class db_controler():
     def __init__(self,dboptions):
         self.log = logging.getLogger("db_controler")
@@ -310,7 +310,7 @@ class db_controler():
     def sessions_list(self,file_pointer):
         Session = self.SessionFactory()
         db = db_actions(Session)
-        view = cmdline_view(file_pointer,Session)
+        view = output_driver_base(file_pointer,Session,self.anchor)
         return view.subscriptions_lister()
     def subscriptions_update(self):
         if self.anchor == None:
