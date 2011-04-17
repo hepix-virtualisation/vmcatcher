@@ -1,19 +1,108 @@
-I will be updating this code base in stages to make it a consumer and verify of imagelists.
+# hepixvmlis README
 
+
+Introduction
+---------------------------------------
+
+This application attempts to be the equivalent of a modern Linux package update manager but for lists of 
+virtual machines signed with x509. It uses a database back end, and caches available image lists. This 
+application provides no control over what virtual machines are 
+
+This set of applications are designed to provide a similar command line from each perspective to the imagelist
+archive.
+
+vmlisub_image.py - Image details.
+vmlisub_sub.py - Subscription list details.
+vmlisub_auth.py -Subscription list authorization details.
+
+They work in conjunction with a database to ease navigation, a local cache of image list subscriptions. The database 
+is message format agnostic, but it authenticates and validates all messages in import. Because these are just caches 
+of imagelists they are meant to be used the majority of the time without intervention.
+
+If you are signing a list using the hepix image list signer, you should also install this application and
+subscribe to your current image. 
+
+It is intended to with a couple of cron scripts to be informed at any time if your local images are 
+matching signatures in the image list.
+
+Anyone curious about this application should consider this application a software application similar to Debian's 
+'aptitude' or redhats 'yum', but rather for virtual machines, authenticated by the x509 signatures.
+
+Basic usage
+---------------------------------------
+
+
+To get a complete list of available commands do:
+
+    $ vmilisttool --help
+
+Formats
+---------------------------------------
+
+Three formats exist SMIME, message, lines. SMIME for applications that wish to process the signature as if from the 
+endorser directly. "message" for applications that have no interest in processing the SMIME signature. "lines" for 
+human users of this application.
+
+Examples
+---------------------------------------
+
+To get a complete list of available commands do:
+
+    $ vmilisttool --help
+
+*vmlisub_sub.py*
 
 To add a subscription
-~~~~~~~~~~~~~~~~~~~~~
 
-python vmlisub_sub.py  -s file:////`pwd`/imagelist.json
+    $ python vmlisub_sub.py  -s https://particle.phys.uvic.ca/~igable/hepix/hepix_signed_image_list
 
-python vmlisub_sub.py  -s https://particle.phys.uvic.ca/~igable/hepix/hepix_signed_image_list
+    $ python vmlisub_sub.py  -s file:////`pwd`/hepix_signed_image_list
+
+To update your subscriptions
+
+    $ python vmlisub_sub.py  -U
 
 To list subscriptions
-~~~~~~~~~~~~~~~~~~~~~
 
-python vmlisub_sub.py  -l
+    $ python vmlisub_sub.py  -l
+63175437-7d59-4851-b333-c96cb6545a86    True    https://particle.phys.uvic.ca/~igable/hepix/hepix_signed_image_list
+
+Getting Information on a subscription:
+
+    $ python vmlisub_sub.py  -i --uuid=63175437-7d59-4851-b333-c96cb6545a86
+dc:identifier=63175437-7d59-4851-b333-c96cb6545a86
+subscription.dc:description=HEPiX Image Exchange Testing
+subscription.sl:authorised=True
+subscription.hv:uri=https://particle.phys.uvic.ca/~igable/hepix/hepix_signed_image_list
+subscription.dc:date:updated=2011-04-16T19:23:19Z
+imagelist.dc:date:imported=2011-04-16T19:23:18Z
+imagelist.dc:date:created=2011-03-16T00:15:07Z
+imagelist.dc:date:expires=2011-04-13T00:15:07Z
+
+you can also select on the basis of url:
+
+    $ python vmlisub_sub.py  -i -r https://particle.phys.uvic.ca/~igable/hepix/hepix_signed_image_list
+dc:identifier=63175437-7d59-4851-b333-c96cb6545a86
+subscription.dc:description=HEPiX Image Exchange Testing
+subscription.sl:authorised=True
+subscription.hv:uri=https://particle.phys.uvic.ca/~igable/hepix/hepix_signed_image_list
+subscription.dc:date:updated=2011-04-17T19:04:35Z
+imagelist.dc:date:imported=2011-04-17T19:04:34Z
+imagelist.dc:date:created=2011-03-16T00:15:07Z
+imagelist.dc:date:expires=2011-04-13T00:15:07Z
+
+Change the output format:
+
+    $ python vmlisub_sub.py  -i --uuid=63175437-7d59-4851-b333-c96cb6545a86 -f message
+
 
 To delete a subscription
-~~~~~~~~~~~~~~~~~~~~~~~~
 
-python vmlisub_sub.py  -D  -i 63175437-7d59-4851-b333-c96cb6545a86
+    $ python vmlisub_sub.py  -D  --uuid=63175437-7d59-4851-b333-c96cb6545a86
+
+*vmlisub_image.py*
+
+    $python vmlisub_image.py -l
+42d7acdf-2e31-4ec0-9d96-1fc8c997f995    63175437-7d59-4851-b333-c96cb6545a86    de637ecd52464fdee45848cf317330edf2df8b02594ab53cbd98acac53154f3e4355bdbee2c7484249e5f398fa68f9dd2af740e98b96e6f8f106f2e46ba2dc0a
+9f2334cb-688f-4189-9c54-c1e5511f7455    63175437-7d59-4851-b333-c96cb6545a86    c018fe33c4bd05b0c882fc0956cdf306ba10890e9b2a4e41fc9a681a9219e17e3c8f2285a233f15c294df7b47b9288fabe9a185bd10454e5bdb5ee93062d19f1
+da42ca85-179b-4873-b12e-32d549bf02b6    63175437-7d59-4851-b333-c96cb6545a86    63db1023085334560d974572f34e8b97ab15dd66fc661c8a7aa34ec8e7d24a93ba2fee7e6372b1e90b971070b6e56ef82be176beb0ad20a42b6bf92377f22a3c
