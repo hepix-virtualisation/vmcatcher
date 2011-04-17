@@ -237,17 +237,7 @@ class output_driver_base():
     def display_imagelist(self,imagelist):
         pass
     def subscriptions_lister(self):
-        outputlist = []
-
-        subauthq = self.session.query(model.SubscriptionAuth).all()
-
-
-        #print self.session.query(model.SubscriptionAuth).count()
-        subauthq = self.session.query(model.Subscription).all()
-        for item in subauthq:
-            outputlist.append("%s\t%s\t%s" % (item.uuid,item.authorised,item.url))
-        seperator = '\n'
-        return seperator.join(outputlist)
+        pass
 
 class output_driver_smime(output_driver_base):
     def display_subscription(self,subscription):
@@ -265,7 +255,7 @@ class output_driver_message(output_driver_base):
 
 class output_driver_lines(output_driver_base):
     def display_subscription(self,subscription):
-        self.file_pointer.write ('dc:identifier=%s\n' % (subscription.uuid))
+        self.file_pointer.write ('subscription.dc:identifier=%s\n' % (subscription.uuid))
         self.file_pointer.write ('subscription.dc:description=%s\n' % (subscription.description))
         self.file_pointer.write ('subscription.sl:authorised=%s\n' % (subscription.authorised))
         self.file_pointer.write ('subscription.hv:uri=%s\n' % (subscription.url))
@@ -279,6 +269,12 @@ class output_driver_lines(output_driver_base):
         self.file_pointer.write ('imagelist.dc:date:imported=%s\n' % (imagelist.imported.strftime(time_format_definition)))
         self.file_pointer.write ('imagelist.dc:date:created=%s\n' % (imagelist.created.strftime(time_format_definition)))
         self.file_pointer.write ('imagelist.dc:date:expires=%s\n' % (imagelist.expires.strftime(time_format_definition)))
+    def subscriptions_lister(self):
+        
+        subauthq = self.session.query(model.Subscription).all()
+        for item in subauthq:
+            self.file_pointer.write ("%s\t%s\t%s\n" % (item.uuid,item.authorised,item.url))
+            
 class db_controler():
     def __init__(self,dboptions):
         self.log = logging.getLogger("db_controler")
@@ -288,6 +284,7 @@ class db_controler():
         self.anchor = None
         self.factory_selector = None
         self.factory_view = None
+
     def setup_trust_anchor(self,directory):
         self.anchor = loadcanamespace.ViewTrustAnchor()
         self.anchor.update_ca_list(directory)
@@ -295,7 +292,16 @@ class db_controler():
         self.factory_selector = factory
     def setup_view_factory(self,factory):
         self.factory_view = factory
-    
+        
+    # Utility functions
+    def check_factories(self):
+        if self.factory_view == None:
+            self.log.warning("factory_view not available.")
+            return False
+        if self.factory_selector == None:
+            self.log.warning("selector not available.")
+            return False
+        return True    
     def unsigned_message_by_identifier_tofilepath(self,instructions):
         
         
@@ -307,11 +313,12 @@ class db_controler():
         for selection_uuid in subscriptions_selected:
             db.sdsdsd(selection_uuid)
         Session.commit()
-    def sessions_list(self,file_pointer):
+    def sessions_list(self):
         Session = self.SessionFactory()
-        db = db_actions(Session)
-        view = output_driver_base(file_pointer,Session,self.anchor)
-        return view.subscriptions_lister()
+        selector = self.factory_selector(Session)
+        view = self.factory_view(sys.stdout,Session,self.anchor)
+        view.subscriptions_lister()
+        return True
     def subscriptions_update(self):
         if self.anchor == None:
             self.log.warning("No enabled certificates, check your x509 dir.")
@@ -335,17 +342,13 @@ class db_controler():
     
             
     def subscriptions_info(self,subscriptions_selected,outputfiles):
-        if self.factory_view == None:
-            self.log.warning("factory_view not available.")
-            return False
-        if self.factory_selector == None:
-            self.log.warning("selector not available.")
+        if not self.check_factories():
             return False
         pairs, extra_selectors ,extra_paths = pairsNnot(subscriptions_selected,outputfiles)
         
         for item in extra_selectors:
             pairs.append([item,None])
-        
+            
         errorhappened = False
         Session = self.SessionFactory()
         selector = self.factory_selector(Session)
@@ -356,14 +359,16 @@ class db_controler():
             if output_file_name != None:
                 output_fileptr = open(output_file_name,'w+')
                 output_fileptr.flush()
-            query_subscription = selector.subscription_get(selector_filter)
             
+            query_subscription = selector.subscription_get(selector_filter)
             view = self.factory_view(output_fileptr,Session,self.anchor)
-            for subscript in query_subscription:
-                view.display_subscription(subscript)
-                query_imagelist = selector.imagelist_by_id(subscript.imagelist_latest)
+            
+            for item in query_subscription:
+                view.display_subscription(item)
+                query_imagelist = selector.imagelist_by_id(item.imagelist_latest)
                 for imagelist in query_imagelist:
                     view.display_imagelist(imagelist)
+                    
             if output_file_name != None:
                 output_fileptr.close()
                         
@@ -411,6 +416,7 @@ def main():
     p.add_option('-o', '--output', action ='append',help='Export File.', metavar='OUTPUTFILE')
     options, arguments = p.parse_args()
     anchor_needed = False
+    format_needed = False
     actions = set([])
     subscriptions_selected = []
     subscription_url_list = []
@@ -432,11 +438,9 @@ def main():
         actions.add('subscribe')
         subscription_url_list = options.subscribe
     if options.uuid:
-        actions.add('select')
         subscriptions_selected = options.uuid
         input_format_selected.add('uuid')
     if options.uri:
-        actions.add('select')
         subscriptions_selected = options.uri
         input_format_selected.add('url')
     
@@ -450,13 +454,20 @@ def main():
     if options.delete:
         actions.add('delete')
     if options.info:
+        format_needed = True
         actions.add('info')
     if options.output:
+        format_needed = True
         outputfiles = options.output
     
+    # 1 So we have some command line validation
+    
     if len(actions) == 0:
-        return
-    # 1 So we have some actions to process
+        log.error("No actions selected")
+        sys.exit(1)
+    if format_needed and len(output_format_selected) == 0:
+        log.error("No output format selected")
+        sys.exit(1)
     
     # 1.1 Initate DB
     database = db_controler(options.database)
@@ -503,7 +514,7 @@ def main():
     if outputformats_selections_len > 1:
         log.error('Conflicting output formats.')
         sys.exit(1)
-    selector_str = 'SMIME'
+    selector_str = 'lines'
     if outputformats_selections_len == 1:
         selector_str = outputformats_selections.pop()
     mapper = {'lines' : output_driver_lines,
@@ -515,12 +526,10 @@ def main():
     if 'subscribe' in actions:
         database.subscriptions_subscribe(subscription_url_list)
     if 'list' in actions:
-        print database.sessions_list(sys.stdout)
+        database.sessions_list()
     if 'update' in actions:
         database.subscriptions_update()
     if 'delete' in actions:
-        if not 'select' in actions:
-            log.error('No subscriptions selected.')
         database.subscriptions_delete(subscriptions_selected)
     if 'dump' in actions:
         if not 'select' in actions:
@@ -528,7 +537,7 @@ def main():
         database.message_files(subscriptions_selected,outputfiles)
     if 'json' in actions:   
         database.dumpfiles(subscriptions_selected,outputfiles)
-    if 'info' in actions:   
+    if 'info' in actions:
         database.subscriptions_info(subscriptions_selected,outputfiles)
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
