@@ -113,6 +113,9 @@ class db_actions():
             ca = validated_data['issuer_dn']
             jsontext = json.loads(data)
             vmilist = VMimageListDecoder(jsontext)
+            
+            removeauthorsiation = False
+            
             if vmilist.endorser.metadata[u'hv:dn'] != dn:
                 self.log.error('Endorser DN does not match signature')
                 continue
@@ -130,16 +133,13 @@ class db_actions():
                 self.log.error('Invalide creation date:%s' % (subscription.uuid))
                 continue
             if now > vmilist.metadata[u'dc:date:expires']:
-                self.log.error('Image list has expired:%s' % (subscription.uuid))
+                self.log.warning('Image list has expired:%s' % (subscription.uuid))
+                removeauthorsiation = True
             metadata = vmilist.metadata
             metadata[u'data'] = update_unprocessed
             metadata[u'data-hash'] = messagehash
-            
-            
-            
-            
-                
-           
+            if removeauthorsiation:
+                metadata[u'authorised'] = False
             
             # Now we know the data better check the SubscriptionAuth
             subauthq = self.session.query(model.SubscriptionAuth).\
@@ -153,7 +153,7 @@ class db_actions():
             count = subauthq.count()
             if count == 0:
                 self.log.error('Endorser not authorised on subscription')
-                continue
+                return False
             authsub = subauthq.one()
             
             imagelist = model.Imagelist(authsub.id,metadata)
@@ -167,7 +167,7 @@ class db_actions():
                 oldimagelist_q = self.session.query(model.Imagelist).\
                     filter(model.Imagelist.id==imagelist_latest)
                 for imagelist in oldimagelist_q:
-                    imagelist.expired = datetime(now)
+                    imagelist.authorised = False
 
             subscription.updated = datetime.datetime.utcnow()   
             subscription.imagelist_latest = imagelist.id
@@ -259,7 +259,10 @@ class output_driver_lines(output_driver_base):
         self.file_pointer.write ('subscription.dc:description=%s\n' % (subscription.description))
         self.file_pointer.write ('subscription.sl:authorised=%s\n' % (subscription.authorised))
         self.file_pointer.write ('subscription.hv:uri=%s\n' % (subscription.url))
-        self.file_pointer.write ('subscription.dc:date:updated=%s\n' % (subscription.updated.strftime(time_format_definition)))
+        if subscription.updated:
+            self.file_pointer.write ('subscription.dc:date:updated=%s\n' % (subscription.updated.strftime(time_format_definition)))
+        else:
+            self.file_pointer.write ('subscription.dc:date:updated=%s\n'% (False))
         return True
     def display_imagelist(self,imagelist):
         
@@ -269,6 +272,7 @@ class output_driver_lines(output_driver_base):
         self.file_pointer.write ('imagelist.dc:date:imported=%s\n' % (imagelist.imported.strftime(time_format_definition)))
         self.file_pointer.write ('imagelist.dc:date:created=%s\n' % (imagelist.created.strftime(time_format_definition)))
         self.file_pointer.write ('imagelist.dc:date:expires=%s\n' % (imagelist.expires.strftime(time_format_definition)))
+        self.file_pointer.write ('imagelist.authorised=%s\n' % (imagelist.authorised))
     def subscriptions_lister(self):
         
         subauthq = self.session.query(model.Subscription).all()
@@ -464,6 +468,9 @@ def main():
     
     if len(actions) == 0:
         log.error("No actions selected")
+        sys.exit(1)
+    if len(actions) > 1:
+        log.error("More than one action selected.")
         sys.exit(1)
     if format_needed and len(output_format_selected) == 0:
         log.error("No output format selected")

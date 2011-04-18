@@ -105,7 +105,7 @@ class Imagelist(Base):
     imported = Column(DateTime,nullable = False)
     created = Column(DateTime,nullable = False)
     expires = Column(DateTime,nullable = False)
-    
+    authorised = Column( Boolean,nullable = False)
     def __init__(self, sub_auth, metadata):
         
         #print metadata
@@ -117,10 +117,12 @@ class Imagelist(Base):
         self.data_hash = metadata[u'data-hash']
         # All times are in UTC at all times.
         self.imported = datetime.datetime.utcnow()
-        self.created = metadata[u'dc:date:created']
-        
+        self.created = metadata[u'dc:date:created']       
         self.expires = metadata[u'dc:date:expires']
-        
+        if u'authorised' in metadata.keys():
+            self.authorised = metadata[u'authorised']
+        else:
+            self.authorised = True
 class Image(Base):
     __tablename__ = 'image'
     id = Column(Integer, primary_key=True)
