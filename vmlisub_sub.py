@@ -12,14 +12,16 @@ from sqlalchemy.orm import sessionmaker
 import hepixvmlis
 import urllib2
 import urllib
-import json
 import hashlib
 import datetime
 from hepixvmitrust.vmitrustlib import VMimageListDecoder as VMimageListDecoder
 from hepixvmitrust.vmitrustlib import time_format_definition as time_format_definition
+try:
+    import json
+except:
+    import simplejson
 
-
-class db_actions():
+class db_actions:
     
     def __init__(self,session):
         self.session = session
@@ -184,7 +186,7 @@ class db_actions():
 
 
 
-class queryby_base():
+class queryby_base:
     """"Base class for querying subscriptions"""
     def __init__(self,session):
         self.session = session
@@ -219,7 +221,7 @@ class queryby_uuid(queryby_base):
         return self.subscription_by_uuid(uuid)
 
 
-class output_driver_base():
+class output_driver_base:
     def __init__(self,file_pointer,session,anchor):
         self.session = session
         self.log = logging.getLogger("db_actions")
@@ -279,7 +281,7 @@ class output_driver_lines(output_driver_base):
         for item in subauthq:
             self.file_pointer.write ("%s\t%s\t%s\n" % (item.uuid,item.authorised,item.url))
             
-class db_controler():
+class db_controler:
     def __init__(self,dboptions):
         self.log = logging.getLogger("db_controler")
         self.engine = create_engine(dboptions, echo=False)
