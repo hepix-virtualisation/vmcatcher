@@ -57,14 +57,17 @@ class db_actions():
         
         
     def image_by_sha512_writefile_json(self,treess,sha512,path):
-        query_image = self.session.query(model.Image).\
+        query_image = self.session.query(model.Image,model.Imagelist).\
+            filter(model.Image.imagelist == model.Imagelist.id).\
             filter(model.Image.sha512 == sha512)
         if query_image.count() == 0:
             self.log.warning('Message not found')
             return False
         fp = open(path,'w')
-        for image in query_image:
-            buf = BIO.MemoryBuffer(str(image.data))
+        for touple_set in query_image:
+            image = touple_set[0]
+            image_list = touple_set[1]
+            buf = BIO.MemoryBuffer(str(image_list.data))
             sk = X509.X509_Stack()
             p7, data = SMIME.smime_load_pkcs7_bio(buf)
             data_str = data.read()
