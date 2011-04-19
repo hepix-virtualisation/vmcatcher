@@ -11,7 +11,7 @@ else:
         	from setuptools import setup, find_packages
 
 
-setup(name='hepixvmlis',
+setup(name='hepixvmilsubscriber',
     version=version,
     description="VM Image list subscribing tool.",
     author="O M Synge",
@@ -19,7 +19,7 @@ setup(name='hepixvmlis',
     install_requires=[
        "M2Crypto>=0.16",
         ],
-    url = 'https://github.com/hepix-virtualisation/hepixvmlis',
+    url = 'https://github.com/hepix-virtualisation/hepixvmilsubscriber',
     packages = ['hepixvmlis'],
     classifiers=[
         'Development Status :: 3 - Alpha',
@@ -32,5 +32,5 @@ setup(name='hepixvmlis',
         ],
     
     scripts=['vmlisub_image','vmlisub_sub'],
-    data_files=[('/usr/share/doc/hepixvmlis',['README'])]
+    data_files=[('/usr/share/doc/hepixvmilsubscriber',['README'])]
     )
