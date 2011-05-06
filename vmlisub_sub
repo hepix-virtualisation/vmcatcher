@@ -416,7 +416,7 @@ def main():
     p.add_option('-U', '--update', action ='store_true',help='update subscriptions')
     p.add_option('-u', '--uuid', action ='append',help='Select subscription', metavar='UUID')
     p.add_option('-r', '--uri', action ='append',help='Select subscription', metavar='URL')
-    p.add_option('-f', '--format', action ='store',help='Sets teh output format')
+    p.add_option('-f', '--format', action ='store',help='Sets the output format')
     p.add_option('-D', '--delete', action ='store_true',help='Delete subscription')
     p.add_option('-i', '--info', action ='store_true',help='Information on subscription')
     p.add_option('-o', '--output', action ='append',help='Export File.', metavar='OUTPUTFILE')
