@@ -130,6 +130,11 @@ class queryby_base:
     def subscription_get(self,by_id):
         return self.subscription_by_id(private_id)
     
+    def image_by_uuid(self,uuid):
+        imagelist = self.session.query(model.Image).\
+                filter(model.Image.identifier==uuid)
+        return imagelist
+    
     
 class queryby_sha512(queryby_base):
     def subscription_get(self,url):
@@ -137,7 +142,7 @@ class queryby_sha512(queryby_base):
 
 class queryby_uuid(queryby_base):
     def subscription_get(self,uuid):
-        return self.subscription_by_uuid(uuid)
+        return self.image_by_uuid(uuid)
 
 class output_driver_base:
     def __init__(self,file_pointer,session,anchor):
@@ -174,15 +179,10 @@ class output_driver_message(output_driver_base):
         self.file_pointer.write (validated_data['data'])
 
 class output_driver_lines(output_driver_base):
-    def display_subscription(self,subscription):
-        self.file_pointer.write ('subscription.dc:identifier=%s\n' % (subscription.uuid))
-        self.file_pointer.write ('subscription.dc:description=%s\n' % (subscription.description))
-        self.file_pointer.write ('subscription.sl:authorised=%s\n' % (subscription.authorised))
-        self.file_pointer.write ('subscription.hv:uri=%s\n' % (subscription.url))
-        if subscription.updated:
-            self.file_pointer.write ('subscription.dc:date:updated=%s\n' % (subscription.updated.strftime(time_format_definition)))
-        else:
-            self.file_pointer.write ('subscription.dc:date:updated=%s\n'% (False))
+    def display_subscription(self,image):
+        self.file_pointer.write ('image.dc:identifier=%s\n' % (image.identifier))
+        self.file_pointer.write ('image.dc:description=%s\n' % (image.description))
+        self.file_pointer.write ('image.hv:uri=%s\n' % (image.uri))
         return True
     def display_imagelist(self,imagelist):
         
@@ -213,10 +213,33 @@ class db_controler:
     def setup_view_factory(self,factory):
         self.factory_view = factory
     def images_info(self,images_selected,outputfiles):
+        
+        pairs, extra_selectors ,extra_paths = pairsNnot(images_selected,outputfiles)
+        
+        for item in extra_selectors:
+            pairs.append([item,None])
+            
+        errorhappened = False
         Session = self.SessionFactory()
-        db = db_actions(Session)
-        for item in images_selected:
-            db.image_by_sha512_display_info(self.anchor,item)
+        selector = self.factory_selector(Session)
+        for pair in pairs:
+            selector_filter = pair[0]
+            output_file_name = pair[1]        
+            output_fileptr = sys.stdout
+            if output_file_name != None:
+                output_fileptr = open(output_file_name,'w+')
+                output_fileptr.flush()
+            
+            query_subscription = selector.subscription_get(selector_filter)
+            print query_subscription.count()
+            view = self.factory_view(output_fileptr,Session,self.anchor)
+            
+            for item in query_subscription:
+                view.display_subscription(item)
+                
+                    
+            if output_file_name != None:
+                output_fileptr.close()
     def image_subscription_delete(self,images_selected):
         Session = self.SessionFactory()
         db = db_actions(Session)
@@ -342,7 +365,6 @@ def main():
     mapper = {'uuid' : queryby_uuid,
             'sha512' : queryby_sha512,
         }
-        
     database.setup_selector_factory(mapper[selector_str])
     # Handle the output_view
     
