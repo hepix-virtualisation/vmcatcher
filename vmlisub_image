@@ -130,9 +130,10 @@ class queryby_base:
     def subscription_get(self,by_id):
         return self.subscription_by_id(private_id)
     
-    def image_by_uuid(self,uuid):
-        imagelist = self.session.query(model.Image).\
-                filter(model.Image.identifier==uuid)
+    def imagelistImage_by_imageUuid(self,uuid):
+        imagelist = self.session.query(model.Imagelist,model.Image).\
+                filter(model.Imagelist.id==model.Image.imagelist).\
+                filter(model.Image.identifier == uuid)
         return imagelist
     
     
@@ -142,7 +143,7 @@ class queryby_sha512(queryby_base):
 
 class queryby_uuid(queryby_base):
     def subscription_get(self,uuid):
-        return self.image_by_uuid(uuid)
+        return self.imagelistImage_by_imageUuid(uuid)
 
 class output_driver_base:
     def __init__(self,file_pointer,session,anchor):
@@ -188,11 +189,15 @@ class output_driver_lines(output_driver_base):
         
         validated_data = self.anchor.validate_text(str(imagelist.data))
         self.file_pointer.write (validated_data['data'])
-    def display_imagelist(self,imagelist):
+    def display_imagelistImage(self,imagelist,image):
+        self.file_pointer.write ('imagelist.dc:identifier=%s\n' % (imagelist.identifier))
         self.file_pointer.write ('imagelist.dc:date:imported=%s\n' % (imagelist.imported.strftime(time_format_definition)))
         self.file_pointer.write ('imagelist.dc:date:created=%s\n' % (imagelist.created.strftime(time_format_definition)))
         self.file_pointer.write ('imagelist.dc:date:expires=%s\n' % (imagelist.expires.strftime(time_format_definition)))
         self.file_pointer.write ('imagelist.authorised=%s\n' % (imagelist.authorised))
+        self.file_pointer.write ('image.dc:identifier=%s\n' % (image.identifier))
+        self.file_pointer.write ('image.sl:checksum:sha512=%s\n' % (image.sha512))
+        
     def subscriptions_lister(self):
         
         subauthq = self.session.query(model.Subscription).all()
@@ -231,11 +236,12 @@ class db_controler:
                 output_fileptr.flush()
             
             query_subscription = selector.subscription_get(selector_filter)
-            print query_subscription.count()
             view = self.factory_view(output_fileptr,Session,self.anchor)
             
             for item in query_subscription:
-                view.display_subscription(item)
+                imagelist = item[0]
+                image = item[1]
+                view.display_imagelistImage(imagelist,image)
                 
                     
             if output_file_name != None:
