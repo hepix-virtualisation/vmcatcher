@@ -170,7 +170,9 @@ class output_driver_smime(output_driver_base):
         pass
     def display_imagelist(self,imagelist):
         self.file_pointer.write (imagelist.data)
-
+    def display_imagelistImage(self,imagelist,image):
+        self.display_imagelist(imagelist)
+    
 class output_driver_message(output_driver_base):
     def display_subscription(self,subscription):
         pass
@@ -178,6 +180,8 @@ class output_driver_message(output_driver_base):
         
         validated_data = self.anchor.validate_text(str(imagelist.data))
         self.file_pointer.write (validated_data['data'])
+    def display_imagelistImage(self,imagelist,image):
+        self.display_imagelist(imagelist)
 
 class output_driver_lines(output_driver_base):
     def display_subscription(self,image):
