@@ -128,21 +128,26 @@ class queryby_base:
     
         # Now the virtual class
     def subscription_get(self,by_id):
-        return self.subscription_by_id(private_id)
+        return self.subscription_by_id(by_id)
     
     def imagelistImage_by_imageUuid(self,uuid):
-        imagelist = self.session.query(model.Imagelist,model.Image).\
+        imagelistImage = self.session.query(model.Imagelist,model.Image).\
                 filter(model.Imagelist.id==model.Image.imagelist).\
                 filter(model.Image.identifier == uuid)
-        return imagelist
+        return imagelistImage
+    def imagelistImage_by_imageSha512(self,sha512):
+        imagelistImage = self.session.query(model.Imagelist,model.Image).\
+                filter(model.Imagelist.id==model.Image.imagelist).\
+                filter(model.Image.sha512 == sha512)
+        return imagelistImage
     
     
 class queryby_sha512(queryby_base):
-    def subscription_get(self,url):
-        return self.subscription_by_uri(url)
+    def imagelistImage_get(self,sha512):
+        return self.imagelistImage_by_imageSha512(sha512)
 
 class queryby_uuid(queryby_base):
-    def subscription_get(self,uuid):
+    def imagelistImage_get(self,uuid):
         return self.imagelistImage_by_imageUuid(uuid)
 
 class output_driver_base:
@@ -239,7 +244,7 @@ class db_controler:
                 output_fileptr = open(output_file_name,'w+')
                 output_fileptr.flush()
             
-            query_subscription = selector.subscription_get(selector_filter)
+            query_subscription = selector.imagelistImage_get(selector_filter)
             view = self.factory_view(output_fileptr,Session,self.anchor)
             
             for item in query_subscription:
