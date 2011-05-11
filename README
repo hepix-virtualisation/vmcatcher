@@ -28,6 +28,72 @@ matching signatures in the image list.
 Anyone curious about this application should consider this application a software application similar to Debian's 
 'aptitude' or redhats 'yum', but rather for virtual machines, authenticated by the x509 signatures.
 
+Instalation
+---------------------------------------
+
+Instalation on SL6
+---------------------------------------
+
+Install EPEL for dependacies.
+
+rpm -i http://download.fedora.redhat.com/pub/epel/6/x86_64/epel-release-6-5.noarch.rpm
+
+Install DESY yum repository.
+
+cat /etc/yum.repos.d/desyvirt.repo 
+[desyvirt]
+name=owen
+baseurl=http://grid.desy.de/vm/repo/yum/sl6/noarch/RPMS.stable/
+enabled=1
+gpgcheck=0
+
+
+Install the Grid CA repository
+
+wget http://grid-deployment.web.cern.ch/grid-deployment/glite/repos/3.1/lcg-CA.repo
+mv lcg-CA.repo /etc/yum.repos.d/
+
+
+install the lcg-CA
+
+yum install lcg-CA
+
+Install the hepix image list subscriber.
+
+yum install hepixvmilsubscriber
+
+Add a subscription, Insecure method.
+
+/usr/bin/vmlisub_sub \
+     -s https://particle.phys.uvic.ca/~igable/hepix/hepix_signed_image_list
+
+Add a subscription, Secure method.
+
+/usr/bin/vmlisub_sub -s file:////`pwd`/hepix_signed_image_list 
+WARNING:db_actions:list hv:uri does not match subscription uri
+
+Then the by hand configuration for your master DB
+
+useradd vmlisub
+mkdir /var/lib/vmlisub/
+chown vmlisub:vmlisub /var/lib/vmlisub/
+sudo -u vmlisub /usr/bin/vmlisub_sub \
+    -s https://particle.phys.uvic.ca/~igable/hepix/hepix_signed_image_list \
+    -d sqlite:////var/lib/vmlisub/vmlisub.db
+
+make a cron job
+
+[root@vmic-virt-grid ~]# cat   /etc/cron.d/vmlisub
+50 */6 * * *    vmlisub /usr/bin/vmlisub_sub -d sqlite:////var/lib/vmlisub/vmlisub.db -U 2>> /var/log/vmlisub.log
+
+So the script is exexuted every 6 hours shortly after fetch CRL.
+
+Now at any time all users can get a list of valid images.
+
+vmlisub_image -l -d sqlite:////var/lib/vmlisub/vmlisub.db
+
+
+
 Basic usage
 ---------------------------------------
 
