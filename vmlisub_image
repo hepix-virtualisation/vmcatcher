@@ -128,21 +128,27 @@ class queryby_base:
     
         # Now the virtual class
     def subscription_get(self,by_id):
-        return self.subscription_by_id(private_id)
+        return self.subscription_by_id(by_id)
     
-    def image_by_uuid(self,uuid):
-        imagelist = self.session.query(model.Image).\
-                filter(model.Image.identifier==uuid)
-        return imagelist
+    def imagelistImage_by_imageUuid(self,uuid):
+        imagelistImage = self.session.query(model.Imagelist,model.Image).\
+                filter(model.Imagelist.id==model.Image.imagelist).\
+                filter(model.Image.identifier == uuid)
+        return imagelistImage
+    def imagelistImage_by_imageSha512(self,sha512):
+        imagelistImage = self.session.query(model.Imagelist,model.Image).\
+                filter(model.Imagelist.id==model.Image.imagelist).\
+                filter(model.Image.sha512 == sha512)
+        return imagelistImage
     
     
 class queryby_sha512(queryby_base):
-    def subscription_get(self,url):
-        return self.subscription_by_uri(url)
+    def imagelistImage_get(self,sha512):
+        return self.imagelistImage_by_imageSha512(sha512)
 
 class queryby_uuid(queryby_base):
-    def subscription_get(self,uuid):
-        return self.image_by_uuid(uuid)
+    def imagelistImage_get(self,uuid):
+        return self.imagelistImage_by_imageUuid(uuid)
 
 class output_driver_base:
     def __init__(self,file_pointer,session,anchor):
@@ -169,7 +175,9 @@ class output_driver_smime(output_driver_base):
         pass
     def display_imagelist(self,imagelist):
         self.file_pointer.write (imagelist.data)
-
+    def display_imagelistImage(self,imagelist,image):
+        self.display_imagelist(imagelist)
+    
 class output_driver_message(output_driver_base):
     def display_subscription(self,subscription):
         pass
@@ -177,6 +185,8 @@ class output_driver_message(output_driver_base):
         
         validated_data = self.anchor.validate_text(str(imagelist.data))
         self.file_pointer.write (validated_data['data'])
+    def display_imagelistImage(self,imagelist,image):
+        self.display_imagelist(imagelist)
 
 class output_driver_lines(output_driver_base):
     def display_subscription(self,image):
@@ -188,11 +198,15 @@ class output_driver_lines(output_driver_base):
         
         validated_data = self.anchor.validate_text(str(imagelist.data))
         self.file_pointer.write (validated_data['data'])
-    def display_imagelist(self,imagelist):
+    def display_imagelistImage(self,imagelist,image):
+        self.file_pointer.write ('imagelist.dc:identifier=%s\n' % (imagelist.identifier))
         self.file_pointer.write ('imagelist.dc:date:imported=%s\n' % (imagelist.imported.strftime(time_format_definition)))
         self.file_pointer.write ('imagelist.dc:date:created=%s\n' % (imagelist.created.strftime(time_format_definition)))
         self.file_pointer.write ('imagelist.dc:date:expires=%s\n' % (imagelist.expires.strftime(time_format_definition)))
         self.file_pointer.write ('imagelist.authorised=%s\n' % (imagelist.authorised))
+        self.file_pointer.write ('image.dc:identifier=%s\n' % (image.identifier))
+        self.file_pointer.write ('image.sl:checksum:sha512=%s\n' % (image.sha512))
+        
     def subscriptions_lister(self):
         
         subauthq = self.session.query(model.Subscription).all()
@@ -230,12 +244,13 @@ class db_controler:
                 output_fileptr = open(output_file_name,'w+')
                 output_fileptr.flush()
             
-            query_subscription = selector.subscription_get(selector_filter)
-            print query_subscription.count()
+            query_subscription = selector.imagelistImage_get(selector_filter)
             view = self.factory_view(output_fileptr,Session,self.anchor)
             
             for item in query_subscription:
-                view.display_subscription(item)
+                imagelist = item[0]
+                image = item[1]
+                view.display_imagelistImage(imagelist,image)
                 
                     
             if output_file_name != None:

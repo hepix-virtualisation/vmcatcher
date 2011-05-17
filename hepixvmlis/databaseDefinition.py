@@ -109,7 +109,7 @@ class Imagelist(Base):
     def __init__(self, sub_auth, metadata):
         
         #print metadata
-        self.Identifier = metadata[u'dc:identifier']
+        self.identifier = metadata[u'dc:identifier']
         self.endorsed = metadata[u'hv:uri']
         self.url = metadata[u'hv:uri']
         self.sub_auth = sub_auth
