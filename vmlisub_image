@@ -220,7 +220,7 @@ class db_controler:
         self.SessionFactory = sessionmaker(bind=self.engine)
         self.anchor = None
     def setup_trust_anchor(self,directory):
-        self.anchor = loadcanamespace.ViewTrustAnchor()
+        self.anchor = loadcanamespace.TrustAnchor()
         self.anchor.update_ca_list(directory)
     def setup_selector_factory(self,factory):
         self.factory_selector = factory
@@ -310,7 +310,7 @@ def main():
     options, arguments = p.parse_args()
     anchor_needed = False
     format_needed = False
-    anchor =  loadcanamespace.ViewTrustAnchor()
+    anchor =  loadcanamespace.TrustAnchor()
     actions = set([])
     images_selected = []
     messages_path = []

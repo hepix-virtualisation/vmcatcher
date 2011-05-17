@@ -292,7 +292,7 @@ class db_controler:
         self.factory_view = None
 
     def setup_trust_anchor(self,directory):
-        self.anchor = loadcanamespace.ViewTrustAnchor()
+        self.anchor = loadcanamespace.TrustAnchor()
         self.anchor.update_ca_list(directory)
     def setup_selector_factory(self,factory):
         self.factory_selector = factory
