@@ -106,7 +106,11 @@ class db_actions:
                 filter(model.Imagelist.data_hash==messagehash)
             count = messagehash_q.count()
             if count != 0:
+                now = datetime.datetime.utcnow()
                 self.log.debug('Hash already found')
+                for message in messagehash_q:
+                    if now > message.expires:
+                        self.log.warning("Image list '%s' has expired on: '%s'" % (message.identifier,message.expires))
                 continue
             #Now we check its authenticity
             validated_data = anchor.validate_text(update_unprocessed)
@@ -167,7 +171,7 @@ class db_actions:
                 self.session.commit()
             if subscription.imagelist_latest != None:
                 oldimagelist_q = self.session.query(model.Imagelist).\
-                    filter(model.Imagelist.id==imagelist_latest)
+                    filter(model.Imagelist.id == subscription.imagelist_latest)
                 for imagelist in oldimagelist_q:
                     imagelist.authorised = False
 
