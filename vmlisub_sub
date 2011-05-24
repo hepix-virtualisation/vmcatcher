@@ -29,9 +29,9 @@ import datetime
 from hepixvmitrust.vmitrustlib import VMimageListDecoder as VMimageListDecoder
 from hepixvmitrust.vmitrustlib import time_format_definition as time_format_definition
 try:
-    import json
+    import simplejson as json
 except:
-    import simplejson
+    import json
 
 class db_actions:
     

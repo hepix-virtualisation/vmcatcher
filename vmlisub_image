@@ -25,12 +25,16 @@ from sqlalchemy.orm import sessionmaker
 import hepixvmlis
 import urllib2
 import urllib
-import json
 import hashlib
 import datetime
 from hepixvmitrust.vmitrustlib import VMimageListDecoder as VMimageListDecoder
 from hepixvmitrust.vmitrustlib import time_format_definition as time_format_definition
 from M2Crypto import SMIME, X509, BIO
+try:
+    import simplejson as json
+except:
+    import json
+
 class db_actions():
     
     def __init__(self,session):
