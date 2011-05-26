@@ -7,20 +7,30 @@ if sys.version_info < (2, 4):
 if sys.version_info < (2, 5):
     import site
     import os.path
-    sqlalchemy_dir = "/usr/lib/python2.4/site-packages/SQLAlchemy-0.5.5-py2.4.egg"
-    if os.path.isdir(sqlalchemy_dir):
-        site.addsitedir(sqlalchemy_dir) 
-    else:
+    from distutils.sysconfig import get_python_lib
+    found = False
+    module_dir = get_python_lib()
+    for name in os.listdir(module_dir):
+        lowername = name.lower()
+        if lowername[0:10] == 'sqlalchemy' and 'egg' in lowername:
+            sqlalchemy_dir = os.path.join(module_dir, name) 
+            if os.path.isdir(sqlalchemy_dir):
+                site.addsitedir(sqlalchemy_dir) 
+                found = True
+                break
+    if not found:
         print "Could not find SQLAlchemy installed."
         sys.exit(1)
+
 from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
 import hepixvmlis.databaseDefinition as model
 
 import logging
 import optparse
 import smimeX509validation.loadcanamespace as loadcanamespace
 from hepixvmlis.__version__ import version
-from sqlalchemy.orm import sessionmaker
 import hepixvmlis
 import urllib2
 import urllib
