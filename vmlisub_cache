@@ -38,14 +38,19 @@ import hashlib
 import datetime
 from hepixvmitrust.vmitrustlib import VMimageListDecoder as VMimageListDecoder
 from hepixvmitrust.vmitrustlib import time_format_definition as time_format_definition
+from hepixvmitrust.vmitrustlib import file_extract_metadata as file_extract_metadata
+
 try:
     import simplejson as json
 except:
     import json
-
+from urlparse import urlparse
 
 class cache_manager(object):
-    def __init__(self,dir_cache, dir_partial, dir_expired):
+    def __init__(self,SessionFactory, dir_cache, dir_partial, dir_expired):
+        self.log = logging.getLogger("db_controler")
+        self.SessionFactory = SessionFactory
+        
         self.dir_cache = dir_cache
         self.dir_partial = dir_partial
         self.dir_expired = dir_expired
@@ -78,10 +83,40 @@ class cache_manager(object):
         for filename in files_to_delete:
             filepath = os.path.join(self.dir_cache,filename)
             os.remove(filepath)
-            
-        
-
-
+    def download_images(self):
+        Session = self.SessionFactory()
+        query_image = Session.query(model.Subscription,model.Imagelist,model.Image).\
+                filter(model.Subscription.authorised == True).\
+                filter(model.Subscription.imagelist_latest == model.Imagelist.id).\
+                filter(model.Image.imagelist == model.Imagelist.id)
+                #.\
+                #filter(model.Imagelist.authorised == True)
+        for touple in query_image:
+            subscription, imagelist, image = touple
+            downloadneeded = True
+            for path in self.files.keys():
+                downloaded_hash = self.files[path]
+                if downloaded_hash == image.sha512:
+                    downloadneeded = False
+                    break
+            if downloadneeded:
+                filename = os.path.join(self.dir_partial,image.uuid)
+                urltouple = urlparse(image.uri)
+                if urltouple.scheme == u'http':
+                    req = urllib2.urlopen(image.uri)
+                    CHUNK = 16 * 1024
+                    with open(filename, 'wb') as fp:
+                      while True:
+                        chunk = req.read(CHUNK)
+                        if not chunk: break
+                        fp.write(chunk)
+                file_metadata = file_extract_metadata(filename)
+                if (file_metadata[u'hv:size'] == image.size and
+                    file_metadata[u'hv:size'] == image.sha512):
+                    print "downloaded"
+                else:
+                    os.remove(filename)
+                    print "downlaod failed"
 def main():
     log = logging.getLogger("vmlisub_sub.main")
     """Runs program and handles command line options"""
@@ -114,9 +149,12 @@ def main():
     if dir_expired == None:
         dir_expired = os.path.join(dir_cache,"expired")
     
-    fred = cache_manager(dir_cache, dir_partial, dir_expired)
+    engine = create_engine(options.database, echo=False)
+    model.init(engine)
+    SessionFactory = sessionmaker(bind=engine)
+    fred = cache_manager(SessionFactory,dir_cache, dir_partial, dir_expired)
     fred.cache_index_save()
-    
+    fred.download_images()
     
             
 
