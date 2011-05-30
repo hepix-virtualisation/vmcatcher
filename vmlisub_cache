@@ -39,7 +39,7 @@ import datetime
 from hepixvmitrust.vmitrustlib import VMimageListDecoder as VMimageListDecoder
 from hepixvmitrust.vmitrustlib import time_format_definition as time_format_definition
 from hepixvmitrust.vmitrustlib import file_extract_metadata as file_extract_metadata
-
+import os, statvfs 
 try:
     import simplejson as json
 except:
@@ -100,18 +100,27 @@ class cache_manager(object):
                     downloadneeded = False
                     break
             if downloadneeded:
-                filename = os.path.join(self.dir_partial,image.uuid)
+                
+                filename = os.path.join(self.dir_partial,image.identifier)
+                stats = os.statvfs(self.dir_partial) 
+                if image.size > (stats[statvfs.F_BSIZE] * stats[statvfs.F_BAVAIL]):
+                    self.log.error("Image '%s' is too large" % (image.identifier))
+                    continue
                 urltouple = urlparse(image.uri)
                 if urltouple.scheme == u'http':
                     req = urllib2.urlopen(image.uri)
                     CHUNK = 16 * 1024
-                    with open(filename, 'wb') as fp:
-                      while True:
-                        chunk = req.read(CHUNK)
-                        if not chunk: break
-                        fp.write(chunk)
+                    try:
+                        fp = open(filename, 'wb')
+                        while True:
+                            chunk = req.read(CHUNK)
+                            if not chunk: break
+                            fp.write(chunk)
+                    finally:
+                        fp.flush()
+                        fp.close()
                 file_metadata = file_extract_metadata(filename)
-                if (file_metadata[u'hv:size'] == image.size and
+                if (int(file_metadata[u'hv:size']) == int(image.size) and
                     file_metadata[u'hv:size'] == image.sha512):
                     print "downloaded"
                 else:
