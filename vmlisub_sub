@@ -133,6 +133,8 @@ class db_actions:
                 for message in messagehash_q:
                     if now > message.expires:
                         self.log.warning("Image list '%s' has expired on: '%s'" % (message.identifier,message.expires))
+                        message.authorised = False
+                        self.session.commit()
                 continue
             #Now we check its authenticity
             validated_data = anchor.validate_text(update_unprocessed)
