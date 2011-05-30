@@ -1,14 +1,36 @@
 #!/usr/bin/env python
+import sys
+if sys.version_info < (2, 4):
+    print "Your python interpreter is too old. Please consider upgrading."
+    sys.exit(1)
+
+if sys.version_info < (2, 5):
+    import site
+    import os.path
+    from distutils.sysconfig import get_python_lib
+    found = False
+    module_dir = get_python_lib()
+    for name in os.listdir(module_dir):
+        lowername = name.lower()
+        if lowername[0:10] == 'sqlalchemy' and 'egg' in lowername:
+            sqlalchemy_dir = os.path.join(module_dir, name) 
+            if os.path.isdir(sqlalchemy_dir):
+                site.addsitedir(sqlalchemy_dir) 
+                found = True
+                break
+    if not found:
+        print "Could not find SQLAlchemy installed."
+        sys.exit(1)
+
 from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
 import hepixvmlis.databaseDefinition as model
 
 import logging
 import optparse
 import smimeX509validation.loadcanamespace as loadcanamespace
-import sys
 from hepixvmlis.__version__ import version
-
-from sqlalchemy.orm import sessionmaker
 import hepixvmlis
 import urllib2
 import urllib
@@ -17,9 +39,9 @@ import datetime
 from hepixvmitrust.vmitrustlib import VMimageListDecoder as VMimageListDecoder
 from hepixvmitrust.vmitrustlib import time_format_definition as time_format_definition
 try:
-    import json
+    import simplejson as json
 except:
-    import simplejson
+    import json
 
 class db_actions:
     
@@ -106,7 +128,13 @@ class db_actions:
                 filter(model.Imagelist.data_hash==messagehash)
             count = messagehash_q.count()
             if count != 0:
+                now = datetime.datetime.utcnow()
                 self.log.debug('Hash already found')
+                for message in messagehash_q:
+                    if now > message.expires:
+                        self.log.warning("Image list '%s' has expired on: '%s'" % (message.identifier,message.expires))
+                        message.authorised = False
+                        self.session.commit()
                 continue
             #Now we check its authenticity
             validated_data = anchor.validate_text(update_unprocessed)
@@ -167,7 +195,7 @@ class db_actions:
                 self.session.commit()
             if subscription.imagelist_latest != None:
                 oldimagelist_q = self.session.query(model.Imagelist).\
-                    filter(model.Imagelist.id==imagelist_latest)
+                    filter(model.Imagelist.id == subscription.imagelist_latest)
                 for imagelist in oldimagelist_q:
                     imagelist.authorised = False
 
@@ -292,7 +320,7 @@ class db_controler:
         self.factory_view = None
 
     def setup_trust_anchor(self,directory):
-        self.anchor = loadcanamespace.ViewTrustAnchor()
+        self.anchor = loadcanamespace.TrustAnchor()
         self.anchor.update_ca_list(directory)
     def setup_selector_factory(self,factory):
         self.factory_selector = factory
