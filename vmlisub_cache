@@ -1,0 +1,126 @@
+#!/usr/bin/env python
+import sys
+if sys.version_info < (2, 4):
+    print "Your python interpreter is too old. Please consider upgrading."
+    sys.exit(1)
+
+if sys.version_info < (2, 5):
+    import site
+    import os.path
+    from distutils.sysconfig import get_python_lib
+    found = False
+    module_dir = get_python_lib()
+    for name in os.listdir(module_dir):
+        lowername = name.lower()
+        if lowername[0:10] == 'sqlalchemy' and 'egg' in lowername:
+            sqlalchemy_dir = os.path.join(module_dir, name) 
+            if os.path.isdir(sqlalchemy_dir):
+                site.addsitedir(sqlalchemy_dir) 
+                found = True
+                break
+    if not found:
+        print "Could not find SQLAlchemy installed."
+        sys.exit(1)
+
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
+import hepixvmlis.databaseDefinition as model
+import os.path
+import logging
+import optparse
+import smimeX509validation.loadcanamespace as loadcanamespace
+from hepixvmlis.__version__ import version
+import hepixvmlis
+import urllib2
+import urllib
+import hashlib
+import datetime
+from hepixvmitrust.vmitrustlib import VMimageListDecoder as VMimageListDecoder
+from hepixvmitrust.vmitrustlib import time_format_definition as time_format_definition
+try:
+    import simplejson as json
+except:
+    import json
+
+
+class cache_manager(object):
+    def __init__(self,dir_cache, dir_partial, dir_expired):
+        self.dir_cache = dir_cache
+        self.dir_partial = dir_partial
+        self.dir_expired = dir_expired
+        self.file_cache_index = os.path.join(self.dir_cache,"cache.idx")
+        self.cache_index_load()
+        self.files = {}
+    def cache_index_load(self):
+        if os.path.isfile(self.file_cache_index):
+            fp = open(self.file_cache_index,'r')
+            lines = fp.read()
+            tmp = json.loads(lines)
+            if type(tmp) is dict:
+                self.files = tmp
+    def cache_index_save(self):
+        fp = open(self.file_cache_index,'w')
+        fp.write(json.dumps(self.files))
+        fp.flush()
+        fp.close()
+
+    
+    def check_checksum(self):
+        files_to_delete = []
+        for filename in self.files.keys():
+            filepath = os.path.join(self.dir_cache,filename)
+            if not os.path.isfile(filename):
+                files_to_delete.append(filepath)
+                continue
+            file_metadata = file_extract_metadata(filepath)
+            print file_metadata
+        for filename in files_to_delete:
+            filepath = os.path.join(self.dir_cache,filename)
+            os.remove(filepath)
+            
+        
+
+
+def main():
+    log = logging.getLogger("vmlisub_sub.main")
+    """Runs program and handles command line options"""
+    p = optparse.OptionParser(version = "%prog " + version)
+    p.add_option('-d', '--database', action ='store', help='Database Initiation string',
+        default='sqlite:///tutorial.db')
+    p.add_option('-c', '--cert-dir', action ='store',help='Certificate directory.', metavar='INPUTDIR',
+        default='/etc/grid-security/certificates/')
+    p.add_option('-C', '--cache-dir', action ='store',help='Set the cache directory.',metavar='INPUTDIR')
+    p.add_option('-p', '--partial-dir', action ='store',help='Set the cache download directory.')
+    p.add_option('-e', '--expired-dir', action ='store',help='Set the cache expired directory.')
+    options, arguments = p.parse_args()
+    
+    dir_cache = None
+    dir_partial = None
+    dir_expired = None
+    
+    
+    if options.cache_dir:
+        dir_cache = options.cache_dir
+    if options.partial_dir:
+        dir_partial = options.partial_dir
+    if options.expired_dir:
+        dir_expired = options.expired_dir
+    
+    if dir_cache == None:
+        dir_cache = "."
+    if dir_partial == None:
+        dir_partial = os.path.join(dir_cache,"partial")
+    if dir_expired == None:
+        dir_expired = os.path.join(dir_cache,"expired")
+    
+    fred = cache_manager(dir_cache, dir_partial, dir_expired)
+    fred.cache_index_save()
+    
+    
+            
+
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+    main()
