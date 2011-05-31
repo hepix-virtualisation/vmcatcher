@@ -111,19 +111,16 @@ class cache_manager(object):
         query_image = Session.query(model.Subscription,model.Imagelist,model.Image).\
                 filter(model.Subscription.authorised == True).\
                 filter(model.Subscription.imagelist_latest == model.Imagelist.id).\
-                filter(model.Image.imagelist == model.Imagelist.id)
-                #.\
-                #filter(model.Imagelist.authorised == True)
+                filter(model.Image.imagelist == model.Imagelist.id).\
+                filter(model.Imagelist.authorised == True)
         for touple in query_image:
             subscription, imagelist, image = touple
             downloadneeded = True
-            for path in self.files.keys():
-                msg = self.files[path]
+            if image.identifier in self.files.keys():
+                msg = self.files[image.identifier]
                 if str(msg) == str(imagelist.data):
                     downloadneeded = False
-                    break
             if downloadneeded:
-                
                 filename = os.path.join(self.dir_partial,image.identifier)
                 stats = os.statvfs(self.dir_partial) 
                 if image.size > (stats[statvfs.F_BSIZE] * stats[statvfs.F_BAVAIL]):
@@ -133,13 +130,14 @@ class cache_manager(object):
                 if urltouple.scheme == u'http':
                     cmd = "wget -q -O %s %s" % (filename,image.uri)
                     os.system(cmd)
+                    
                 file_metadata = file_extract_metadata(filename)
                 if (int(file_metadata[u'hv:size']) == int(image.size) and
                     file_metadata[u'sl:checksum:sha512'] == image.sha512):
                     storename = os.path.join(self.dir_cache,image.identifier)
                     os.rename(filename, storename)
                     self.files[image.identifier] = imagelist.data
-                    fred.cache_index_save()
+                    self.cache_index_save()
                 else:
                     os.remove(filename)
 
