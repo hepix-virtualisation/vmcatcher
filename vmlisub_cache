@@ -57,6 +57,7 @@ class cache_manager(object):
         self.file_cache_index = os.path.join(self.dir_cache,"cache.idx")
         self.cache_index_load()
         self.files = {}
+        self.cache_index_load()
     def cache_index_load(self):
         if os.path.isfile(self.file_cache_index):
             fp = open(self.file_cache_index,'r')
@@ -64,9 +65,12 @@ class cache_manager(object):
             tmp = json.loads(lines)
             if type(tmp) is dict:
                 self.files = tmp
+        else:
+            self.files = {}
+
     def cache_index_save(self):
         fp = open(self.file_cache_index,'w')
-        fp.write(json.dumps(self.files))
+        fp.write(json.dumps(self.files,sort_keys=True, indent=4))
         fp.flush()
         fp.close()
 
@@ -95,8 +99,8 @@ class cache_manager(object):
             subscription, imagelist, image = touple
             downloadneeded = True
             for path in self.files.keys():
-                downloaded_hash = self.files[path]
-                if downloaded_hash == image.sha512:
+                msg = self.files[path]
+                if str(msg) == str(imagelist.data):
                     downloadneeded = False
                     break
             if downloadneeded:
@@ -108,22 +112,18 @@ class cache_manager(object):
                     continue
                 urltouple = urlparse(image.uri)
                 if urltouple.scheme == u'http':
-                    req = urllib2.urlopen(image.uri)
-                    CHUNK = 16 * 1024
-                    try:
-                        fp = open(filename, 'wb')
-                        while True:
-                            chunk = req.read(CHUNK)
-                            if not chunk: break
-                            fp.write(chunk)
-                    finally:
-                        fp.flush()
-                        fp.close()
+                    cmd = "wget -q -O %s %s" % (filename,image.uri)
+                    os.system(cmd)
                 file_metadata = file_extract_metadata(filename)
                 if (int(file_metadata[u'hv:size']) == int(image.size) and
-                    file_metadata[u'hv:size'] == image.sha512):
-                    print "downloaded"
+                    file_metadata[u'sl:checksum:sha512'] == image.sha512):
+                    storename = os.path.join(self.dir_cache,image.identifier)
+                    os.rename(filename, storename)
+                    self.files[image.identifier] = imagelist.data
+                    fred.cache_index_save()
                 else:
+                    print "size %s=%s" % (int(file_metadata[u'hv:size']) ,int(image.size))
+                    print "hash %s\n%s" % (file_metadata[u'sl:checksum:sha512'],image.sha512)
                     os.remove(filename)
                     print "downlaod failed"
 def main():
@@ -162,8 +162,8 @@ def main():
     model.init(engine)
     SessionFactory = sessionmaker(bind=engine)
     fred = cache_manager(SessionFactory,dir_cache, dir_partial, dir_expired)
-    fred.cache_index_save()
     fred.download_images()
+    fred.cache_index_save()
     
             
 
