@@ -126,6 +126,37 @@ class cache_manager(object):
                     print "hash %s\n%s" % (file_metadata[u'sl:checksum:sha512'],image.sha512)
                     os.remove(filename)
                     print "downlaod failed"
+    def expire_images(self):
+        Session = self.SessionFactory()
+        query_image = Session.query(model.Subscription,model.Imagelist,model.Image).\
+                filter(model.Subscription.authorised == True).\
+                filter(model.Subscription.imagelist_latest == model.Imagelist.id).\
+                filter(model.Image.imagelist == model.Imagelist.id).\
+                filter(model.Imagelist.authorised == True)
+        keys_to_delete = []
+        dbview = {}
+        for touple in query_image:
+            subscription, imagelist, image = touple
+            dbview[image.identifier] = imagelist.data
+        for identifier in self.files.keys():
+            if not identifier in dbview.keys():
+                keys_to_delete.append(identifier)
+                continue
+            if str(self.files[identifier]) != str(dbview[identifier]):
+                keys_to_delete.append(identifier)
+                continue
+        for item in keys_to_delete:
+            filepath = os.path.join(self.dir_cache,item)
+            counter = 0
+            archive = os.path.join(self.dir_expired,"%s_%03d.img" % (item,counter))
+            while os.path.isfile(archive):
+                counter += 1
+                archive = os.path.join(self.dir_expired,"%s_%03d.img" % (item,counter))
+            print archive
+            #del self.files[item]
+        #self.cache_index_save()
+        
+            
 def main():
     log = logging.getLogger("vmlisub_sub.main")
     """Runs program and handles command line options"""
@@ -157,14 +188,25 @@ def main():
         dir_partial = os.path.join(dir_cache,"partial")
     if dir_expired == None:
         dir_expired = os.path.join(dir_cache,"expired")
-    
+    directories_good = True
+    if not os.path.isdir(dir_cache):
+        log.error("Cache directory '%s' does not exist." % (dir_cache))
+        directories_good = False
+    if not os.path.isdir(dir_partial):
+        log.error("Download directory '%s' does not exist." % (dir_partial))
+        directories_good = False
+    if not os.path.isdir(dir_expired):
+        log.error("Expired directory '%s' does not exist." % (dir_expired))
+        directories_good = False
+    if not directories_good:
+        sys.exit(1)
     engine = create_engine(options.database, echo=False)
     model.init(engine)
     SessionFactory = sessionmaker(bind=engine)
     fred = cache_manager(SessionFactory,dir_cache, dir_partial, dir_expired)
     fred.download_images()
     fred.cache_index_save()
-    
+    fred.expire_images()
             
 
 
