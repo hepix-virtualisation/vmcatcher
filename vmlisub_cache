@@ -55,9 +55,12 @@ class cache_manager(object):
         self.dir_partial = dir_partial
         self.dir_expired = dir_expired
         self.file_cache_index = os.path.join(self.dir_cache,"cache.idx")
-        self.cache_index_load()
+        self.expired_cache_index = os.path.join(self.dir_expired,"cache.idx")
         self.files = {}
+        self.expired_files = {}
         self.cache_index_load()
+        self.expired_index_load()
+        
     def cache_index_load(self):
         if os.path.isfile(self.file_cache_index):
             fp = open(self.file_cache_index,'r')
@@ -71,6 +74,22 @@ class cache_manager(object):
     def cache_index_save(self):
         fp = open(self.file_cache_index,'w')
         fp.write(json.dumps(self.files,sort_keys=True, indent=4))
+        fp.flush()
+        fp.close()
+
+    def expired_index_load(self):
+        if os.path.isfile(self.expired_cache_index):
+            fp = open(self.expired_cache_index,'r')
+            lines = fp.read()
+            tmp = json.loads(lines)
+            if type(tmp) is dict:
+                self.expired_files = tmp
+        else:
+            self.expired_files = {}
+
+    def expired_index_save(self):
+        fp = open(self.expired_cache_index,'w')
+        fp.write(json.dumps(self.expired_files,sort_keys=True, indent=4))
         fp.flush()
         fp.close()
 
@@ -122,10 +141,8 @@ class cache_manager(object):
                     self.files[image.identifier] = imagelist.data
                     fred.cache_index_save()
                 else:
-                    print "size %s=%s" % (int(file_metadata[u'hv:size']) ,int(image.size))
-                    print "hash %s\n%s" % (file_metadata[u'sl:checksum:sha512'],image.sha512)
                     os.remove(filename)
-                    print "downlaod failed"
+
     def expire_images(self):
         Session = self.SessionFactory()
         query_image = Session.query(model.Subscription,model.Imagelist,model.Image).\
@@ -148,13 +165,19 @@ class cache_manager(object):
         for item in keys_to_delete:
             filepath = os.path.join(self.dir_cache,item)
             counter = 0
-            archive = os.path.join(self.dir_expired,"%s_%03d.img" % (item,counter))
+            filename = "%s_%03d.img" % (item,counter)
+            archive = os.path.join(self.dir_expired,filename)
             while os.path.isfile(archive):
                 counter += 1
-                archive = os.path.join(self.dir_expired,"%s_%03d.img" % (item,counter))
-            print archive
-            #del self.files[item]
-        #self.cache_index_save()
+                filename = "%s_%03d.img" % (item,counter)
+                archive = os.path.join(self.dir_expired,filename)
+            print archive,filename
+            os.rename(filepath,archive)
+            self.expired_files[filename] = self.files[item]
+            del self.files[item]
+            
+        self.cache_index_save()
+        self.expired_index_save()
         
             
 def main():
