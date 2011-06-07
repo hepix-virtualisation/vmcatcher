@@ -31,6 +31,6 @@ setup(name='hepixvmilsubscriber',
         'Programming Language :: Python',
         ],
     
-    scripts=['vmlisub_image','vmlisub_sub'],
+    scripts=['vmlisub_image','vmlisub_sub','vmlisub_cache'],
     data_files=[('/usr/share/doc/hepixvmilsubscriber',['README'])]
     )

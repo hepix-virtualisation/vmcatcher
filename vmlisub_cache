@@ -1,0 +1,236 @@
+#!/usr/bin/env python
+import sys
+if sys.version_info < (2, 4):
+    print "Your python interpreter is too old. Please consider upgrading."
+    sys.exit(1)
+
+if sys.version_info < (2, 5):
+    import site
+    import os.path
+    from distutils.sysconfig import get_python_lib
+    found = False
+    module_dir = get_python_lib()
+    for name in os.listdir(module_dir):
+        lowername = name.lower()
+        if lowername[0:10] == 'sqlalchemy' and 'egg' in lowername:
+            sqlalchemy_dir = os.path.join(module_dir, name) 
+            if os.path.isdir(sqlalchemy_dir):
+                site.addsitedir(sqlalchemy_dir) 
+                found = True
+                break
+    if not found:
+        print "Could not find SQLAlchemy installed."
+        sys.exit(1)
+
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
+import hepixvmlis.databaseDefinition as model
+import os.path
+import logging
+import optparse
+import smimeX509validation.loadcanamespace as loadcanamespace
+from hepixvmlis.__version__ import version
+import hepixvmlis
+import urllib2
+import urllib
+import hashlib
+import datetime
+from hepixvmitrust.vmitrustlib import VMimageListDecoder as VMimageListDecoder
+from hepixvmitrust.vmitrustlib import time_format_definition as time_format_definition
+from hepixvmitrust.vmitrustlib import file_extract_metadata as file_extract_metadata
+import os, statvfs 
+try:
+    import simplejson as json
+except:
+    import json
+from urlparse import urlparse
+
+class cache_manager(object):
+    def __init__(self,SessionFactory, dir_cache, dir_partial, dir_expired):
+        self.log = logging.getLogger("db_controler")
+        self.SessionFactory = SessionFactory
+        
+        self.dir_cache = dir_cache
+        self.dir_partial = dir_partial
+        self.dir_expired = dir_expired
+        self.file_cache_index = os.path.join(self.dir_cache,"cache.idx")
+        self.expired_cache_index = os.path.join(self.dir_expired,"cache.idx")
+        self.files = {}
+        self.expired_files = {}
+        self.cache_index_load()
+        self.expired_index_load()
+        
+    def cache_index_load(self):
+        if os.path.isfile(self.file_cache_index):
+            fp = open(self.file_cache_index,'r')
+            lines = fp.read()
+            tmp = json.loads(lines)
+            if type(tmp) is dict:
+                self.files = tmp
+        else:
+            self.files = {}
+
+    def cache_index_save(self):
+        fp = open(self.file_cache_index,'w')
+        fp.write(json.dumps(self.files,sort_keys=True, indent=4))
+        fp.flush()
+        fp.close()
+
+    def expired_index_load(self):
+        if os.path.isfile(self.expired_cache_index):
+            fp = open(self.expired_cache_index,'r')
+            lines = fp.read()
+            tmp = json.loads(lines)
+            if type(tmp) is dict:
+                self.expired_files = tmp
+        else:
+            self.expired_files = {}
+
+    def expired_index_save(self):
+        fp = open(self.expired_cache_index,'w')
+        fp.write(json.dumps(self.expired_files,sort_keys=True, indent=4))
+        fp.flush()
+        fp.close()
+
+    
+    def check_checksum(self):
+        files_to_delete = []
+        for filename in self.files.keys():
+            filepath = os.path.join(self.dir_cache,filename)
+            if not os.path.isfile(filename):
+                files_to_delete.append(filepath)
+                continue
+            file_metadata = file_extract_metadata(filepath)
+            print file_metadata
+        for filename in files_to_delete:
+            filepath = os.path.join(self.dir_cache,filename)
+            os.remove(filepath)
+    def download_images(self):
+        Session = self.SessionFactory()
+        query_image = Session.query(model.Subscription,model.Imagelist,model.Image).\
+                filter(model.Subscription.authorised == True).\
+                filter(model.Subscription.imagelist_latest == model.Imagelist.id).\
+                filter(model.Image.imagelist == model.Imagelist.id).\
+                filter(model.Imagelist.authorised == True)
+        for touple in query_image:
+            subscription, imagelist, image = touple
+            downloadneeded = True
+            if image.identifier in self.files.keys():
+                msg = self.files[image.identifier]
+                if str(msg) == str(imagelist.data):
+                    downloadneeded = False
+            if downloadneeded:
+                filename = os.path.join(self.dir_partial,image.identifier)
+                stats = os.statvfs(self.dir_partial) 
+                if image.size > (stats[statvfs.F_BSIZE] * stats[statvfs.F_BAVAIL]):
+                    self.log.error("Image '%s' is too large" % (image.identifier))
+                    continue
+                urltouple = urlparse(image.uri)
+                if urltouple.scheme == u'http':
+                    cmd = "wget -q -O %s %s" % (filename,image.uri)
+                    os.system(cmd)
+                    
+                file_metadata = file_extract_metadata(filename)
+                if (int(file_metadata[u'hv:size']) == int(image.size) and
+                    file_metadata[u'sl:checksum:sha512'] == image.sha512):
+                    storename = os.path.join(self.dir_cache,image.identifier)
+                    os.rename(filename, storename)
+                    self.files[image.identifier] = imagelist.data
+                    self.cache_index_save()
+                else:
+                    os.remove(filename)
+
+    def expire_images(self):
+        Session = self.SessionFactory()
+        query_image = Session.query(model.Subscription,model.Imagelist,model.Image).\
+                filter(model.Subscription.authorised == True).\
+                filter(model.Subscription.imagelist_latest == model.Imagelist.id).\
+                filter(model.Image.imagelist == model.Imagelist.id).\
+                filter(model.Imagelist.authorised == True)
+        keys_to_delete = []
+        dbview = {}
+        for touple in query_image:
+            subscription, imagelist, image = touple
+            dbview[image.identifier] = imagelist.data
+        for identifier in self.files.keys():
+            if not identifier in dbview.keys():
+                keys_to_delete.append(identifier)
+                continue
+            if str(self.files[identifier]) != str(dbview[identifier]):
+                keys_to_delete.append(identifier)
+                continue
+        for item in keys_to_delete:
+            filepath = os.path.join(self.dir_cache,item)
+            counter = 0
+            filename = "%s_%03d.img" % (item,counter)
+            archive = os.path.join(self.dir_expired,filename)
+            while os.path.isfile(archive):
+                counter += 1
+                filename = "%s_%03d.img" % (item,counter)
+                archive = os.path.join(self.dir_expired,filename)
+            print archive,filename
+            os.rename(filepath,archive)
+            self.expired_files[filename] = self.files[item]
+            del self.files[item]
+            
+        self.cache_index_save()
+        self.expired_index_save()
+        
+            
+def main():
+    log = logging.getLogger("vmlisub_sub.main")
+    """Runs program and handles command line options"""
+    p = optparse.OptionParser(version = "%prog " + version)
+    p.add_option('-d', '--database', action ='store', help='Database Initiation string',
+        default='sqlite:///tutorial.db')
+    p.add_option('-c', '--cert-dir', action ='store',help='Certificate directory.', metavar='INPUTDIR',
+        default='/etc/grid-security/certificates/')
+    p.add_option('-C', '--cache-dir', action ='store',help='Set the cache directory.',metavar='INPUTDIR')
+    p.add_option('-p', '--partial-dir', action ='store',help='Set the cache download directory.')
+    p.add_option('-e', '--expired-dir', action ='store',help='Set the cache expired directory.')
+    options, arguments = p.parse_args()
+    
+    dir_cache = None
+    dir_partial = None
+    dir_expired = None
+    
+    
+    if options.cache_dir:
+        dir_cache = options.cache_dir
+    if options.partial_dir:
+        dir_partial = options.partial_dir
+    if options.expired_dir:
+        dir_expired = options.expired_dir
+    
+    if dir_cache == None:
+        dir_cache = "."
+    if dir_partial == None:
+        dir_partial = os.path.join(dir_cache,"partial")
+    if dir_expired == None:
+        dir_expired = os.path.join(dir_cache,"expired")
+    directories_good = True
+    if not os.path.isdir(dir_cache):
+        log.error("Cache directory '%s' does not exist." % (dir_cache))
+        directories_good = False
+    if not os.path.isdir(dir_partial):
+        log.error("Download directory '%s' does not exist." % (dir_partial))
+        directories_good = False
+    if not os.path.isdir(dir_expired):
+        log.error("Expired directory '%s' does not exist." % (dir_expired))
+        directories_good = False
+    if not directories_good:
+        sys.exit(1)
+    engine = create_engine(options.database, echo=False)
+    model.init(engine)
+    SessionFactory = sessionmaker(bind=engine)
+    fred = cache_manager(SessionFactory,dir_cache, dir_partial, dir_expired)
+    fred.download_images()
+    fred.cache_index_save()
+    fred.expire_images()
+            
+
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+    main()
