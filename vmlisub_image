@@ -43,7 +43,7 @@ try:
 except:
     import json
 
-class db_actions():
+class db_actions:
     
     def __init__(self,session):
         self.session = session
