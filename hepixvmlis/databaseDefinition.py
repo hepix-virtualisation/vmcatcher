@@ -94,7 +94,7 @@ class SubscriptionAuth(Base):
 class Imagelist(Base):
     __tablename__ = 'imagelist'
     id = Column(Integer, primary_key=True)
-    identifier = Column(String(50),unique=True)
+    identifier = Column(String(50))
     endorsed = Column(String(50))
     url = Column(String(100))
     data = Column(String(1000))
