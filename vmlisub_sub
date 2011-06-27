@@ -194,6 +194,7 @@ class db_actions:
             except IntegrityError,E:
                 self.log.error("Database integrity error '%s' processing '%s'." % (E.args,ProcessingSubscriptionUuid))
                 self.log.debug(E.params)
+                self.session.rollback()
                 continue
             for imageObj in vmilist.images:
                 imageDb = model.Image(imagelist.id,imageObj.metadata)
