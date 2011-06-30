@@ -77,7 +77,7 @@ class SubscriptionAuth(Base):
     __tablename__ = 'subscription_auth'
     id = Column(Integer, primary_key=True)
     subscription = Column(Integer, ForeignKey(Subscription.id, onupdate="CASCADE", ondelete="CASCADE"))
-    subscription2 = relationship(Subscription, backref=backref('auth', order_by=id, cascade="all,delete"))
+    orm_subscription = relationship(Subscription, backref=backref('auth', order_by=id, cascade="all,delete"))
     endorser = Column(Integer, ForeignKey(Endorser.id, onupdate="CASCADE", ondelete="CASCADE"))
     authorised = Column(Boolean,nullable = False)
     orm_imagelist = relationship("Imagelist", backref="SubscriptionAuth",cascade='all, delete')
@@ -94,11 +94,10 @@ class SubscriptionAuth(Base):
 class Imagelist(Base):
     __tablename__ = 'imagelist'
     id = Column(Integer, primary_key=True)
-    identifier = Column(String(50),unique=True)
-    endorsed = Column(String(50))
-    url = Column(String(100))
-    data = Column(String(1000))
-    data_hash = Column(String(128))
+    identifier = Column(String(50),nullable = False)
+    url = Column(String(100),nullable = False)
+    data = Column(String(1000),nullable = False)
+    data_hash = Column(String(128),nullable = False)
     expired = Column(DateTime)
     sub_auth = Column(Integer, ForeignKey(SubscriptionAuth.id, onupdate="CASCADE", ondelete="CASCADE"))
     orm_image = relationship("Image", backref="Imagelist", passive_updates=False)
@@ -110,7 +109,6 @@ class Imagelist(Base):
         
         #print metadata
         self.identifier = metadata[u'dc:identifier']
-        self.endorsed = metadata[u'hv:uri']
         self.url = metadata[u'hv:uri']
         self.sub_auth = sub_auth
         self.data = metadata[u'data']

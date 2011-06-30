@@ -24,7 +24,7 @@ if sys.version_info < (2, 5):
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-
+from sqlalchemy.exc import IntegrityError, DatabaseError, ProgrammingError
 import hepixvmlis.databaseDefinition as model
 
 import logging
@@ -113,8 +113,9 @@ class db_actions:
     def subscriptions_update(self,anchor):
         
         subscriptionlist = self.session.query(model.Subscription).all()
-        for subscription in subscriptionlist:            
-            self.log.info("Updating:%s" % (subscription.uuid))
+        for subscription in subscriptionlist:
+            ProcessingSubscriptionUuid = str(subscription.uuid)            
+            self.log.info("Updating:%s" % (ProcessingSubscriptionUuid))
             req = urllib2.Request(url=subscription.url)
             f = urllib2.urlopen(req)
             update_unprocessed = f.read()
@@ -143,23 +144,23 @@ class db_actions:
             removeauthorsiation = False
             
             if vmilist.endorser.metadata[u'hv:dn'] != dn:
-                self.log.error('Endorser DN does not match signature')
+                self.log.error("Endorser DN does not match signature for '%s'" (ProcessingSubscriptionUuid))
                 continue
             if vmilist.endorser.metadata[u'hv:ca'] != ca:
-                self.log.error( 'list hv:ca does not match signature')
+                self.log.error("list hv:ca does not match signature for '%s'" % (ProcessingSubscriptionUuid))
                 continue
             if vmilist.metadata[u'hv:uri'] != subscription.url:
-                self.log.error('list hv:uri does not match subscription uri')
+                self.log.error("list hv:uri does not match subscription uri for '%s'" % (ProcessingSubscriptionUuid))
                 continue
             if vmilist.metadata[u'dc:identifier'] != subscription.uuid:
-                self.log.error('list dc:identifier does not match subscription uuid')
+                self.log.error("list dc:identifier does not match subscription uuid for '%s'" % ProcessingSubscriptionUuid)
                 continue
             now = datetime.datetime.utcnow()
             if now < vmilist.metadata[u'dc:date:created']:
-                self.log.error('Invalide creation date:%s' % (subscription.uuid))
+                self.log.error('Invalide creation date:%s' % (ProcessingSubscriptionUuid))
                 continue
             if now > vmilist.metadata[u'dc:date:expires']:
-                self.log.warning('Image list has expired:%s' % (subscription.uuid))
+                self.log.warning('Image list has expired:%s' % (ProcessingSubscriptionUuid))
                 removeauthorsiation = True
             metadata = vmilist.metadata
             metadata[u'data'] = update_unprocessed
@@ -184,7 +185,13 @@ class db_actions:
             
             imagelist = model.Imagelist(authsub.id,metadata)
             self.session.add(imagelist)
-            self.session.commit()
+            try:
+                self.session.commit()
+            except IntegrityError,E:
+                self.log.error("Database integrity error '%s' processing '%s'." % (E.args,ProcessingSubscriptionUuid))
+                self.log.debug(E.params)
+                self.session.rollback()
+                continue
             for imageObj in vmilist.images:
                 imageDb = model.Image(imagelist.id,imageObj.metadata)
                 self.session.add(imageDb)
