@@ -1,0 +1,427 @@
+#!/usr/bin/env python
+from sqlalchemy import create_engine
+import hepixvmlis.databaseDefinition as model
+
+import logging
+import optparse
+import smimeX509validation.loadcanamespace as loadcanamespace
+import sys
+from hepixvmlis.__version__ import version
+
+from sqlalchemy.orm import sessionmaker
+import hepixvmlis
+import urllib2
+import urllib
+import hashlib
+import datetime
+from hepixvmitrust.vmitrustlib import VMimageListDecoder as VMimageListDecoder
+from hepixvmitrust.vmitrustlib import time_format_definition as time_format_definition
+try:
+    import json
+except:
+    import simplejson
+
+# User interface
+
+class queryby_base:
+    """"Base class for querying subscriptions"""
+    def __init__(self,session):
+        self.session = session
+    def subscription_by_id(self,private_id):
+        subscriptionlist = self.session.query(model.Subscription).\
+                filter(model.Subscription.id==private_id)
+        return subscriptionlist
+    def subscription_by_uri(self,url):
+        subscriptionlist = self.session.query(model.Subscription).\
+                filter(model.Subscription.url==url)
+        return subscriptionlist
+    def subscription_by_uuid(self,uuid):
+        subscriptionlist = self.session.query(model.Subscription).\
+                filter(model.Subscription.uuid==uuid)
+        return subscriptionlist
+    def imagelist_by_id(self,private_id):
+        subscriptionlist = self.session.query(model.Imagelist).\
+                filter(model.Imagelist.id==private_id)
+        return subscriptionlist
+    
+        # Now the virtual class
+    def subscription_get(self,by_id):
+        return self.subscription_by_id(private_id)
+    def endorser_all(self):
+        return self.session.query(model.Endorser).all()
+    def endorser_by_uuid(self,uuid):
+        endorser_list = self.session.query(model.Endorser).\
+                filter(model.Endorser.identifier==uuid)
+        return endorser_list
+    def princible_by_endorserId(self,identifier):
+        princible_list = self.session.query(model.EndorserPrincible).\
+                filter(model.EndorserPrincible.endorser == identifier)
+        return princible_list
+    def subscriptionAuth_by_endorserId(self,identifier):
+        subauth_list = self.session.query(model.SubscriptionAuth).\
+                filter(model.SubscriptionAuth.endorser == identifier)
+        return subauth_list
+class queryby_uri(queryby_base):
+    def subscription_get(self,url):
+        return self.subscription_by_uri(url)
+
+class queryby_uuid(queryby_base):
+    def subscription_get(self,uuid):
+        return self.subscription_by_uuid(uuid)
+
+
+class output_driver_base:
+    def __init__(self,file_pointer,session,anchor):
+        self.session = session
+        self.log = logging.getLogger("db_actions")
+        self.file_pointer = file_pointer
+        self.anchor = anchor
+    def display_subscription_imagelist(self,subscription,imagelist):
+        status = None
+        
+        self.display_subscription(subscription)
+        self.display_imagelist(imagelist)
+        
+        return True
+    def display_subscription(self,subscription):
+        pass
+    def display_imagelist(self,imagelist):
+        pass
+    def subscriptions_lister(self):
+        pass
+
+class output_driver_smime(output_driver_base):
+    def display_subscription(self,subscription):
+        pass
+    def display_imagelist(self,imagelist):
+        self.file_pointer.write (imagelist.data)
+
+class output_driver_message(output_driver_base):
+    def display_subscription(self,subscription):
+        pass
+    def display_imagelist(self,imagelist):
+        
+        validated_data = self.anchor.validate_text(str(imagelist.data))
+        self.file_pointer.write (validated_data['data'])
+
+class output_driver_lines(output_driver_base):
+    def display_subscription(self,subscription):
+        self.file_pointer.write ('subscription.dc:identifier=%s\n' % (subscription.uuid))
+        self.file_pointer.write ('subscription.dc:description=%s\n' % (subscription.description))
+        self.file_pointer.write ('subscription.sl:authorised=%s\n' % (subscription.authorised))
+        self.file_pointer.write ('subscription.hv:uri=%s\n' % (subscription.url))
+        if subscription.updated:
+            self.file_pointer.write ('subscription.dc:date:updated=%s\n' % (subscription.updated.strftime(time_format_definition)))
+        else:
+            self.file_pointer.write ('subscription.dc:date:updated=%s\n'% (False))
+        return True
+    def display_imagelist(self,imagelist):
+        
+        validated_data = self.anchor.validate_text(str(imagelist.data))
+        self.file_pointer.write (validated_data['data'])
+    def display_imagelist(self,imagelist):
+        self.file_pointer.write ('imagelist.dc:date:imported=%s\n' % (imagelist.imported.strftime(time_format_definition)))
+        self.file_pointer.write ('imagelist.dc:date:created=%s\n' % (imagelist.created.strftime(time_format_definition)))
+        self.file_pointer.write ('imagelist.dc:date:expires=%s\n' % (imagelist.expires.strftime(time_format_definition)))
+        self.file_pointer.write ('imagelist.authorised=%s\n' % (imagelist.authorised))
+    def endorser_lister(self,allendorsers):
+        for endorser in allendorsers:
+            print endorser.identifier
+        
+        subauthq = self.session.query(model.Endorser,model.EndorserPrincible,model.Subscription,model.SubscriptionAuth).\
+            filter(model.Endorser.id==model.EndorserPrincible.endorser).\
+            filter(model.Subscription.id==model.SubscriptionAuth.subscription).\
+            filter(model.Endorser.id==model.SubscriptionAuth.endorser)
+        for item in subauthq:
+            endorser = item[0]
+            princible = item[1]
+            subscription = item[2]
+            auth = item[3]
+            self.file_pointer.write ("%s\t%s\t%s\t%s\n" % (endorser.identifier,
+                princible.hv_dn,subscription.uuid,auth.authorised))
+
+    def display_endorser(self,endorser):
+        self.file_pointer.write ("endorser.dc:identifier=%s\n" % (endorser.identifier))
+        princible_query = self.query.princible_by_endorserId(endorser.id)
+        if princible_query.count() == 0:
+            self.log.warning("endorser '%s' has no princibles" % (selector_filter))
+            return False
+        for princible in princible_query:
+            self.file_pointer.write("endorser.hv:dn=%s\n" % (princible.hv_dn))
+            self.file_pointer.write("endorser.hv:ca=%s\n" % (princible.hv_ca))
+        subauth_query = self.query.subscriptionAuth_by_endorserId(endorser.id)
+        for subauth in subauth_query:
+            self.file_pointer.write("subauth.authorised=%s\n" % (subauth.authorised))
+            subscription_query = self.query.subscription_by_id(subauth.subscription)
+            for subscription in subscription_query:
+                self.display_subscription(subscription)
+        
+class db_controler:
+    def __init__(self,dboptions):
+        self.log = logging.getLogger("db_controler")
+        self.engine = create_engine(dboptions, echo=False)
+        model.init(self.engine)
+        self.SessionFactory = sessionmaker(bind=self.engine)
+        self.anchor = None
+        self.factory_selector = None
+        self.factory_view = None
+
+    def setup_trust_anchor(self,directory):
+        self.anchor = loadcanamespace.ViewTrustAnchor()
+        self.anchor.update_ca_list(directory)
+    def setup_selector_factory(self,factory):
+        self.factory_selector = factory
+    def setup_view_factory(self,factory):
+        self.factory_view = factory
+    # Utility functions
+    def check_factories(self):
+        if self.factory_view == None:
+            self.log.warning("factory_view not available.")
+            return False
+        if self.factory_selector == None:
+            self.log.warning("selector not available.")
+            return False
+        return True   
+    def endosers_list(self):
+        Session = self.SessionFactory()
+        selector = self.factory_selector(Session)
+        view = self.factory_view(sys.stdout,Session,self.anchor)
+        
+        view.endorser_lister(selector.endorser_all())
+        return True
+    def endorsers_info(self,selected,outputfiles):
+        if not self.check_factories():
+            return False
+        pairs, extra_selectors ,extra_paths = pairsNnot(selected,outputfiles)
+        
+        for item in extra_selectors:
+            pairs.append([item,None])
+            
+        errorhappened = False
+        Session = self.SessionFactory()
+        selector = self.factory_selector(Session)
+        for pair in pairs:
+            selector_filter = pair[0]
+            output_file_name = pair[1]        
+            output_fileptr = sys.stdout
+            if output_file_name != None:
+                output_fileptr = open(output_file_name,'w+')
+                output_fileptr.flush()
+            query_endorser = selector.endorser_by_uuid(selector_filter)
+            if query_endorser.count() == 0:
+                self.log.error("endorser '%s' not found" % (selector_filter)) 
+                continue
+            view = self.factory_view(output_fileptr,Session,self.anchor)
+            view.query = selector
+            for endorser in query_endorser:
+                view.display_endorser(endorser)
+                princible_query = selector.princible_by_endorserId(endorser.id)
+                if princible_query.count() == 0:
+                    self.log.warning("endorser '%s' has no princibles" % (selector_filter))
+                else:
+                    pass
+        return True
+    def endorsers_create(self,uuid,x509_dn,x509_ca_dn):
+        metadata = {
+            u'dc:identifier' : uuid,
+            u'hv:dn' :x509_dn,
+            u'hv:ca' : x509_ca_dn
+        }
+        Session = self.SessionFactory()
+        print metadata
+        
+def pairsNnot(list_a,list_b):
+    len_generate_list = len(list_a)
+    len_image_list = len(list_b)
+    ocupies_generate_list = set(range(len_generate_list))
+    ocupies_image_list = set(range(len_image_list))
+    ocupies_pairs = ocupies_image_list.intersection(ocupies_generate_list)
+    diff_a = ocupies_generate_list.difference(ocupies_image_list)
+    diff_b = ocupies_image_list.difference(ocupies_generate_list)
+    arepairs = []
+    for i in ocupies_pairs:
+        arepairs.append([list_a[i],list_b[i]])
+    notpairs_a = []
+    for i in diff_a:
+        notpairs_a.append(list_a[i])
+    notpairs_b = []
+    for i in diff_b:
+        notpairs_b.append(list_b[i])
+    
+    return arepairs,notpairs_a,notpairs_b
+
+
+           
+def main():
+    log = logging.getLogger("main")
+    """Runs program and handles command line options"""
+    p = optparse.OptionParser(version = "%prog " + version)
+    p.add_option('-l', '--list', action ='store_true',help='list subscriptions')
+    p.add_option('-d', '--database', action ='store', help='Database Initiation string',
+        default='sqlite:///tutorial.db')
+    p.add_option('-c', '--cert-dir', action ='store',help='Certificate directory.', metavar='INPUTDIR',
+        default='/etc/grid-security/certificates/')
+    p.add_option('-s', '--subscription_uuid', action ='append',help='Select subscription by uuid', metavar='UUID')
+    p.add_option('-e', '--endorser_uuid', action ='append',help='Select endorser by uuid', metavar='UUID')
+    p.add_option('-n', '--x509_dn', action ='append',help='DN of endorser', metavar='DN')
+    p.add_option('-a', '--x509_ca_dn', action ='append',help='DN of endorser CA', metavar='DN')
+    p.add_option('-f', '--format', action ='store',help='Sets the output format')
+    p.add_option('-C', '--create', action ='store_true',help='Create an endorser.')
+    p.add_option('-D', '--delete', action ='store_true',help='Delete subscription')
+    p.add_option('-L', '--link', action ='store_true',help='Add endorser to subscription.')
+    p.add_option('-u', '--unlink', action ='store_true',help='remove endorser from Subscription.')
+    p.add_option('-A', '--authorise', action ='store_true',help='authoriase endorser to update subscription.')    
+    p.add_option('-i', '--info', action ='store_true',help='Information on subscription')
+    p.add_option('-o', '--output', action ='append',help='Export File.', metavar='OUTPUTFILE')
+    
+    options, arguments = p.parse_args()
+    anchor_needed = False
+    format_needed = False
+    actions = set([])
+    endorsers_selected = []
+    subscriptions_selected = []
+    actionsrequiring_endorser = set(['create','delete','link','unlink','authorise','info'])
+    actionsrequiring_subscription = set(['link','unlink','authorise'])
+    outputformats = set(['SMIME','message','lines'])
+    output_format_selected = set([])
+    outputfiles = []
+    x509_dn = []
+    x509_ca_dn = []
+    
+    if options.list:
+        actions.add('list')
+        output_format_selected.add('lines')
+    
+    
+    if options.format:
+        if options.format in outputformats:
+            output_format_selected.add(options.format)
+            anchor_needed = True
+        else:
+            log.error("Invalid format '%s' allowed formats are '%s'" % (options.format,outputformats))
+            sys.exit(1)
+    if options.endorser_uuid:
+        endorsers_selected = options.endorser_uuid
+    if options.subscription_uuid:
+        subscriptions_selected = options.subscription_uuid
+    if options.x509_dn:
+        x509_dn = options.x509_dn
+    if options.x509_ca_dn:
+        x509_ca_dn = options.x509_ca_dn
+    if options.create:
+        actions.add('create')
+    if options.delete:
+        actions.add('delete')
+    if options.link:
+        actions.add('link')
+    if options.unlink:
+        actions.add('unlink')
+    
+    if options.authorise:
+        actions.add('authorise')
+    if options.info:
+        actions.add('info')
+    
+    if options.output:
+        format_needed = True
+        outputfiles = options.output
+        
+    # 1 So we have some command line validation
+    if len(actions) == 0:
+        log.error("No actions selected")
+        sys.exit(1)
+    if len(actions) > 1:
+        log.error("More than one action selected.")
+        sys.exit(1)
+    if format_needed and len(output_format_selected) == 0:
+        log.error("No output format selected")
+        sys.exit(1)
+    # 1.1 Initate DB
+    database = db_controler(options.database)
+    
+    # 2 Initate CA's to manage files
+    if anchor_needed:
+        database.setup_trust_anchor(options.cert_dir)
+    
+    # Handle actions selections beign required.
+    actions_req_endorser = actionsrequiring_endorser.intersection(actions)
+    
+    actions_req_endorser_len = len(actions_req_endorser)
+    if actions_req_endorser_len == 1:
+        if len(endorsers_selected) == 0:
+            log.error('No endorsers selected.')
+            sys.exit(1)
+    
+
+    actions_req_subscription = actionsrequiring_subscription.intersection(actions)
+    
+    actions_req_subscription_len = len(actions_req_subscription)
+    if actions_req_subscription_len == 1:
+        if len(subscriptions_selected) == 0:
+            log.error('No subscriptions selected.')
+            sys.exit(1)
+
+
+    # Handle conflicting identifiers
+    
+    
+    database.setup_selector_factory(queryby_uuid)
+    
+    # Handle the output_view
+    
+    outputformats_selections = outputformats.intersection(output_format_selected)
+    outputformats_selections_len = len(outputformats_selections)
+    if outputformats_selections_len > 1:
+        log.error('Conflicting output formats.')
+        sys.exit(1)
+    selector_str = 'lines'
+    if outputformats_selections_len == 1:
+        selector_str = outputformats_selections.pop()
+    mapper = {'lines' : output_driver_lines,
+        'SMIME' : output_driver_smime,
+        'message' : output_driver_message,    
+    }
+    database.setup_view_factory(mapper[selector_str])
+    
+    if 'subscribe' in actions:
+        database.subscriptions_subscribe(subscription_url_list)
+    if 'list' in actions:
+        database.endosers_list()
+    if 'update' in actions:
+        database.subscriptions_update()
+    if 'delete' in actions:
+        database.subscriptions_delete(subscriptions_selected)
+    if 'dump' in actions:
+        if not 'select' in actions:
+            log.error('No subscriptions selected.')
+        database.message_files(subscriptions_selected,outputfiles)
+    if 'json' in actions:   
+        database.dumpfiles(subscriptions_selected,outputfiles)
+    if 'info' in actions:
+        database.endorsers_info(endorsers_selected,outputfiles)
+    if 'create' in actions:
+        if len(endorsers_selected) == 0:
+            log.error("Endorser UUID must be specified.")
+            sys.exit(1)
+        pairs_dn, extra_x509_dn, extra_x509_ca_dn = pairsNnot(x509_dn,x509_ca_dn)
+        if len(extra_x509_ca_dn):
+            log.error("Not enough x509_dn on command line.")
+            sys.exit(1)
+        if len(extra_x509_dn):
+            log.error("Not enough x509_ca_dn on command line.")
+            sys.exit(1)
+        pairs, extra_uuid, extra_dn = pairsNnot(endorsers_selected,pairs_dn)
+        if len(extra_uuid):
+            log.error("Endorser dn's must be specified.")
+            sys.exit(1)
+        if len(extra_dn):
+            log.error("Endorser UID must be specified for each DN pair.")
+            sys.exit(1)
+        for item in pairs:
+            uuid = item[0]
+            x509_dn = item[1][0]
+            x509_ca_dn = item[1][1]
+            database.endorsers_create(uuid,x509_dn,x509_ca_dn)
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+    main()

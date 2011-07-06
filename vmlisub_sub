@@ -92,7 +92,6 @@ class db_actions:
         validated_data = anchor.validate_text(f.read())
         jsontext = json.loads(validated_data['data'])
         vmilist = VMimageListDecoder(jsontext)
-        
         metadata = {}
         metadata.update(vmilist.metadata)
         metadata.update(vmilist.endorser.metadata)
@@ -107,11 +106,8 @@ class db_actions:
             return False
         if metadata[u'hv:uri'] != filename:
             self.log.warning('list hv:uri does not match subscription uri')
-        
-            
         self.subscription_create(metadata,authorised=True)
-
-    
+        return True
 
 
     def subscriptions_update(self,anchor):
@@ -377,10 +373,13 @@ class db_controler:
         Session.commit()
         return True
     def subscriptions_subscribe(self,urls_selected):
+        rc = True
         Session = self.SessionFactory()
         db = db_actions(Session)
         for uri in urls_selected:
-            db.subscribe_file(self.anchor,uri)       
+            if not db.subscribe_file(self.anchor,uri):
+                rc = False
+        return rc
     
             
     def subscriptions_info(self,subscriptions_selected,outputfiles):
@@ -567,9 +566,10 @@ def main():
         'message' : output_driver_message,    
     }
     database.setup_view_factory(mapper[selector_str])
-    
     if 'subscribe' in actions:
-        database.subscriptions_subscribe(subscription_url_list)
+        if not database.subscriptions_subscribe(subscription_url_list):
+            log.error("Failed to subscribe to '%s'" % (subscription_url_list))
+            sys.exit(1)
     if 'list' in actions:
         database.sessions_list()
     if 'update' in actions:
@@ -584,6 +584,7 @@ def main():
         database.dumpfiles(subscriptions_selected,outputfiles)
     if 'info' in actions:
         database.subscriptions_info(subscriptions_selected,outputfiles)
+    
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     main()
