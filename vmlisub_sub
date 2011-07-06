@@ -132,6 +132,7 @@ class db_actions:
                 now = datetime.datetime.utcnow()
                 self.log.debug('Hash already found')
                 for message in messagehash_q:
+                    print message.data_hash
                     if now > message.expires:
                         self.log.warning("Image list '%s' has expired on: '%s'" % (message.identifier,message.expires))
                         message.authorised = False
@@ -144,7 +145,6 @@ class db_actions:
             ca = validated_data['issuer_dn']
             jsontext = json.loads(data)
             vmilist = VMimageListDecoder(jsontext)
-            
             removeauthorsiation = False
             
             if vmilist.endorser.metadata[u'hv:dn'] != dn:
@@ -186,7 +186,6 @@ class db_actions:
                 self.log.error('Endorser not authorised on subscription')
                 return False
             authsub = subauthq.one()
-            
             imagelist = model.Imagelist(authsub.id,metadata)
             self.session.add(imagelist)
             try:
@@ -196,8 +195,9 @@ class db_actions:
                 self.log.debug(E.params)
                 self.session.rollback()
                 continue
+            imagelistref = int(imagelist.id)
             for imageObj in vmilist.images:
-                imageDb = model.Image(imagelist.id,imageObj.metadata)
+                imageDb = model.Image(imagelistref,imageObj.metadata)
                 self.session.add(imageDb)
                 self.session.commit()
             if subscription.imagelist_latest != None:
@@ -207,7 +207,8 @@ class db_actions:
                     imagelist.authorised = False
 
             subscription.updated = datetime.datetime.utcnow()   
-            subscription.imagelist_latest = imagelist.id
+            subscription.imagelist_latest = imagelistref
+            self.session.add(subscription)
             self.session.commit()
     def subscriptions_delete(self,uuid):
         subscriptionlist = self.session.query(model.Subscription).\
