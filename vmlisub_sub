@@ -128,7 +128,6 @@ class db_actions:
                 now = datetime.datetime.utcnow()
                 self.log.debug('Hash already found')
                 for message in messagehash_q:
-                    print message.data_hash
                     if now > message.expires:
                         self.log.warning("Image list '%s' has expired on: '%s'" % (message.identifier,message.expires))
                         message.authorised = False
