@@ -40,6 +40,7 @@ from hepixvmitrust.vmitrustlib import VMimageListDecoder as VMimageListDecoder
 from hepixvmitrust.vmitrustlib import time_format_definition as time_format_definition
 from hepixvmitrust.vmitrustlib import file_extract_metadata as file_extract_metadata
 import os, statvfs 
+import shutil
 try:
     import simplejson as json
 except:
@@ -131,9 +132,14 @@ class cache_manager(object):
                     if urltouple.scheme == u'http':
                         cmd = "wget -q -O %s %s" % (filename,image.uri)
                         os.system(cmd)
+                    if urltouple.scheme == u'file':
+                        shutil.copyfile(urltouple.path,filename)
                 else:
                     cmd = "wget -q -O %s %s" % (filename,image.uri)
                     os.system(cmd)
+                if not os.path.isfile(filename):
+                    self.log.error("Image '%s' failed to download" % (image.identifier))
+                    continue
                 file_metadata = file_extract_metadata(filename)
                 if (int(file_metadata[u'hv:size']) == int(image.size) and
                     file_metadata[u'sl:checksum:sha512'] == image.sha512):
@@ -142,6 +148,7 @@ class cache_manager(object):
                     self.files[image.identifier] = imagelist.data
                     self.cache_index_save()
                 else:
+                    self.log.error("Image '%s' download but size is incorect." % (image.identifier))
                     os.remove(filename)
 
     def expire_images(self):
