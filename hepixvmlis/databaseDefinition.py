@@ -56,22 +56,26 @@ class EndorserPrincible(Base):
 class Subscription(Base):
     __tablename__ = 'subscription'
     id = Column(Integer, primary_key=True)
-    uuid = Column(String(50),nullable = False,unique=True)
+    identifier = Column(String(50),nullable = False,unique=True)
     description = Column(String(200))
-    url = Column(String(200),nullable = False,unique=True)
+    uri = Column(String(200),nullable = False,unique=True)
     authorised = Column( Boolean,nullable = False)
     # Line woudl be but for inconsitancy #imagelist_latest =Column(Integer, ForeignKey('imagelist.id'))
     imagelist_latest =Column(Integer)
     orm_auth = relationship("SubscriptionAuth", backref="Subscription",cascade='all, delete')
     updated = Column(DateTime)
     def __init__(self,details, authorised = False):
-        self.uuid = details[u'dc:identifier']
+        self.identifier = details[u'dc:identifier']
         self.description = details[u'dc:description']
-        self.url = details[u'hv:uri']
+        self.uri = details[u'hv:uri']
         self.imagelist_latest = None
         self.authorised = authorised
     def __repr__(self):
-        return "<Subscription('%s','%s', '%s')>" % (self.uuid, self.url, self.description)
+        return "<Subscription('%s','%s', '%s')>" % (self.uuid, self.uri, self.description)
+
+
+
+
 
 class SubscriptionAuth(Base):
     __tablename__ = 'subscription_auth'
@@ -80,7 +84,7 @@ class SubscriptionAuth(Base):
     orm_subscription = relationship(Subscription, backref=backref('auth', order_by=id, cascade="all,delete"))
     endorser = Column(Integer, ForeignKey(Endorser.id, onupdate="CASCADE", ondelete="CASCADE"))
     authorised = Column(Boolean,nullable = False)
-    orm_imagelist = relationship("Imagelist", backref="SubscriptionAuth",cascade='all, delete')
+    orm_imagelist = relationship("ImageListInstance", backref="SubscriptionAuth",cascade='all, delete')
     def __init__(self,subscription,endorser,authorised=False):
         self.subscription = subscription
         self.endorser = endorser
@@ -89,42 +93,73 @@ class SubscriptionAuth(Base):
     def __repr__(self):
         return "<SubscriptionAuth('%s','%s', '%s')>" % (self.subscription, self.authorised,self.endorser)
 
-        
 
-class Imagelist(Base):
-    __tablename__ = 'imagelist'
+
+class ImageDefinition(Base):
+    __tablename__ = 'ImageDefinition'
+    # The table stores the definitions of image UUID.
+    # This table stores information on the image 
+    id = Column(Integer, primary_key = True)
+    # All identifier for image instances must never clash.    
+    identifier = Column(String(50),nullable = False,unique=True)
+    # This stores the Latest Image Instance
+    latest = Column(Integer)
+    # Set of state options
+    # 1 Subscribed the Image In cache if posible.
+    state = Column(Integer,nullable = False)
+    subscription = Column(Integer, ForeignKey(Subscription.id, onupdate="CASCADE", ondelete="CASCADE"))
+    def __init__(self, SubscriptionKey,Metadata):
+        self.subscription = SubscriptionKey
+        self.identifier = str(Metadata[u'dc:identifier'])
+        self.state = int(Metadata[u'cache'])
+        self.latest = 0
+
+    def __repr__(self):
+        return "<ImageDefinition('%s','%s', '%s')>" % (self.identifier, self.subscription,self.latest)
+
+class ImageListInstance(Base):
+    __tablename__ = 'imagelistinstance'
     id = Column(Integer, primary_key=True)
-    identifier = Column(String(50),nullable = False)
-    url = Column(String(100),nullable = False)
+    # Raw signed messsage
     data = Column(String(1000),nullable = False)
+    # Hash of Raw signed message
     data_hash = Column(String(128),nullable = False)
+    # This state indicates if the data was readable
+    # Bitwise on checks 1 Authenticated, 2 Parsed, 
+    #   4 Accepted, 8 Images Accepted
+    accepted = Column(Integer,nullable = False)
+    # Null until expired then with date
     expired = Column(DateTime)
     sub_auth = Column(Integer, ForeignKey(SubscriptionAuth.id, onupdate="CASCADE", ondelete="CASCADE"))
-    orm_image = relationship("Image", backref="Imagelist", passive_updates=False)
+    orm_image = relationship("ImageInstance", backref="ImageListInstance", passive_updates=False)
     imported = Column(DateTime,nullable = False)
     created = Column(DateTime,nullable = False)
     expires = Column(DateTime,nullable = False)
-    authorised = Column( Boolean,nullable = False)
-    def __init__(self, sub_auth, metadata):
-        
+    def __init__(self, SubscriptionAuthKey, metadata):
         #print metadata
-        self.identifier = metadata[u'dc:identifier']
-        self.url = metadata[u'hv:uri']
-        self.sub_auth = sub_auth
+        self.sub_auth = SubscriptionAuthKey
         self.data = metadata[u'data']
         self.data_hash = metadata[u'data-hash']
-        # All times are in UTC at all times.
+        
+        # All times are in UTC at all times, except display.
         self.imported = datetime.datetime.utcnow()
         self.created = metadata[u'dc:date:created']       
         self.expires = metadata[u'dc:date:expires']
-        if u'authorised' in metadata.keys():
-            self.authorised = metadata[u'authorised']
+        if u'sccepted' in metadata.keys():
+            self.accepted = metadata[u'accepted']
         else:
-            self.authorised = True
-class Image(Base):
-    __tablename__ = 'image'
-    id = Column(Integer, primary_key=True)
-    identifier = Column(String(50),nullable = False)
+            self.accepted = 0
+        if u'expired' in metadata.keys():
+            self.expired = metadata[u'expired']
+    def __repr__(self):
+        return "<ImageListInstance ('%s','%s')>" % (self.id, self.imported)
+
+class ImageInstance(Base):
+    __tablename__ = 'ImageInstance'
+    # Stores the parsed Images status 
+    # Only accepted Image instances Get commited.
+    # refused are stored 
+    id = Column(Integer, primary_key = True)
     description = Column(String(50),nullable = False)
     hypervisor = Column(String(50),nullable = False)
     sha512 = Column(String(128),nullable = False)
@@ -136,11 +171,11 @@ class Image(Base):
     size = Column(Integer,nullable = False)
     title = Column(String(100),nullable = False)
     comments = Column(String(100))
-    
-    
-    imagelist = Column(Integer, ForeignKey(Imagelist.id, onupdate="CASCADE", ondelete="CASCADE"))
-    def __init__(self, Imagelist,metadata):
-        self.identifier = str(metadata[u'dc:identifier'])
+    fkIdentifier = Column(Integer, ForeignKey(ImageDefinition.id, onupdate="CASCADE", ondelete="CASCADE"))
+    fkimagelistinstance = Column(Integer, ForeignKey(ImageListInstance.id, onupdate="CASCADE", ondelete="CASCADE"))
+    def __init__(self, ImageListInstanceKey,ImageDefinitionKey,metadata):
+        self.fkimagelistinstance = ImageListInstanceKey
+        self.fkIdentifier = ImageDefinitionKey
         self.description = metadata[u'dc:description']
         self.hypervisor = metadata[u'hv:hypervisor']
         self.sha512 = metadata[u'sl:checksum:sha512']
@@ -152,9 +187,9 @@ class Image(Base):
         self.size = metadata[u'hv:size']
         self.title = metadata[u'dc:title']
         self.comments = metadata[u'sl:comments']
-        self.imagelist = Imagelist
+        
     def __repr__(self):
-        return "<Image('%s','%s', '%s')>" % (self.identifier, self.description,self.uri)
+        return "<ImageInstance('%s','%s', '%s')>" % (self.fkIdentifier, self.description,self.uri)
 
 
 def init(engine):

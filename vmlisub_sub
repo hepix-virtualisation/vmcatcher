@@ -67,15 +67,16 @@ class db_actions:
         return self.endorser_get(metadata)
     def subscription_get(self,metadata):
         subscriptionlist = self.session.query(model.Subscription).\
-                filter(model.Subscription.url==metadata[u'hv:uri'])
+                filter(model.Subscription.uri==metadata[u'hv:uri'])
         return subscriptionlist
         
     def subscription_create(self,metadata,authorised=True):
         subscription_query = self.subscription_get(metadata)
-        if subscription_query.count() != 0:
+        if subscription_query.count() > 0:
             return subscription_query
         endorser_list = self.endorser_create(metadata)
         endorser = endorser_list.one()
+        endorserId = int(endorser.id)
         new_subscription = model.Subscription(metadata)
         # We will make the new subscription enabled by default
         new_subscription.authorised = True
@@ -86,6 +87,22 @@ class db_actions:
         self.session.commit()
         return self.subscription_get(metadata)
         
+    def ImageDefinition_get(self,subscriptionKey,metadata):
+        subscriptionlist = self.session.query(model.ImageDefinition).\
+                filter(model.ImageDefinition.subscription==subscriptionKey).\
+                filter(model.ImageDefinition.identifier == metadata[u'dc:identifier'])
+        return subscriptionlist
+        
+    def ImageDefinition_create(self,subscriptionKey,metadata):
+        ImageDefinitionQuery = self.ImageDefinition_get(subscriptionKey,metadata)
+        if ImageDefinitionQuery.count() > 0:
+            return ImageDefinitionQuery
+        newlist = model.ImageDefinition(subscriptionKey,metadata)
+        self.session.add(newlist)
+        self.session.commit()
+        ImageDefinitionQuery = self.ImageDefinition_get(subscriptionKey,metadata)
+        return ImageDefinitionQuery
+    
     def subscribe_file(self,anchor,filename):
         req = urllib2.Request(url=filename) 
         f = urllib2.urlopen(req)
@@ -106,7 +123,25 @@ class db_actions:
             return False
         if metadata[u'hv:uri'] != filename:
             self.log.warning('list hv:uri does not match subscription uri')
-        self.subscription_create(metadata,authorised=True)
+        subscription_query = self.subscription_create(metadata,authorised=True)
+        if subscription_query.count() != 1:
+            self.log.error('Creation of Subscription referance failed.')
+            return False
+        subscription = subscription_query.one()
+        subscriptionKey = int(subscription.id)
+        failedToCreateImages = []
+        for imageReferance in vmilist.images:
+            # Now we creat image definitions
+            metadata = {}
+            metadata.update(imageReferance.metadata)
+            metadata['cache'] = 1
+            ImageDefinition_query = self.ImageDefinition_create(subscriptionKey,metadata)
+            if ImageDefinition_query.count() != 1:
+                self.log.error('Creation of ImageDefinition referance failed.')
+                failedToCreateImages.append(imageReferance)
+                continue
+        if len(failedToCreateImages) > 0:
+            return False
         return True
 
 
@@ -114,23 +149,24 @@ class db_actions:
         
         subscriptionlist = self.session.query(model.Subscription).all()
         for subscription in subscriptionlist:
-            ProcessingSubscriptionUuid = str(subscription.uuid)            
+            subscriptionKey = int(subscription.id)
+            ProcessingSubscriptionUuid = str(subscription.identifier)            
             self.log.info("Updating:%s" % (ProcessingSubscriptionUuid))
-            req = urllib2.Request(url=subscription.url)
+            req = urllib2.Request(url=subscription.uri)
             f = urllib2.urlopen(req)
             update_unprocessed = f.read()
             # Now we have the update lets first check its hash 
             messagehash = hashlib.sha512(update_unprocessed).hexdigest()
-            messagehash_q = self.session.query(model.Imagelist).\
-                filter(model.Imagelist.data_hash==messagehash)
+            messagehash_q = self.session.query(model.ImageListInstance).\
+                filter(model.ImageListInstance.data_hash==messagehash)
             count = messagehash_q.count()
+            now = datetime.datetime.utcnow()
             if count != 0:
-                now = datetime.datetime.utcnow()
                 self.log.debug('Hash already found')
                 for message in messagehash_q:
                     if now > message.expires:
                         self.log.warning("Image list '%s' has expired on: '%s'" % (message.identifier,message.expires))
-                        message.authorised = False
+                        message.expired = now
                         self.session.commit()
                 continue
             #Now we check its authenticity
@@ -148,10 +184,10 @@ class db_actions:
             if vmilist.endorser.metadata[u'hv:ca'] != ca:
                 self.log.error("list hv:ca does not match signature for '%s'" % (ProcessingSubscriptionUuid))
                 continue
-            if vmilist.metadata[u'hv:uri'] != subscription.url:
+            if vmilist.metadata[u'hv:uri'] != subscription.uri:
                 self.log.error("list hv:uri does not match subscription uri for '%s'" % (ProcessingSubscriptionUuid))
                 continue
-            if vmilist.metadata[u'dc:identifier'] != subscription.uuid:
+            if vmilist.metadata[u'dc:identifier'] != subscription.identifier:
                 self.log.error("list dc:identifier does not match subscription uuid for '%s'" % ProcessingSubscriptionUuid)
                 continue
             now = datetime.datetime.utcnow()
@@ -181,7 +217,7 @@ class db_actions:
                 self.log.error('Endorser not authorised on subscription')
                 return False
             authsub = subauthq.one()
-            imagelist = model.Imagelist(authsub.id,metadata)
+            imagelist = model.ImageListInstance(authsub.id,metadata)
             self.session.add(imagelist)
             try:
                 self.session.commit()
@@ -191,23 +227,71 @@ class db_actions:
                 self.session.rollback()
                 continue
             imagelistref = int(imagelist.id)
+            failedToAdd = []
             for imageObj in vmilist.images:
-                imageDb = model.Image(imagelistref,imageObj.metadata)
-                self.session.add(imageDb)
+                if not u'dc:identifier' in imageObj.metadata.keys():
+                    failedToAdd.append(imageObj)
+                    self.log.error('Image had no ID so ignored')
+                    continue
+                imageDefQuery = self.ImageDefinition_get(subscriptionKey,imageObj.metadata)
+                if imageDefQuery.count() != 1:
+                    self.log.error("ImageId '%s' not accepted for subscription '%s'" %
+                        (imageObj.metadata[u'dc:identifier'],ProcessingSubscriptionUuid))
+                    failedToAdd.append(imageObj)
+                    continue
+                ThisImageDef = imageDefQuery.one()
+                
+                ThisImageDefId = int(ThisImageDef.id)
+                #print ("ThisImageDefId=%s" % (ThisImageDefId))
+                try:
+                    imageinstance = model.ImageInstance(imagelistref,ThisImageDefId,imageObj.metadata)
+                except KeyError, E:
+                    failedToAdd.append(imageObj)
+                    self.log.error("missing parameters '%s'" % E.message)
+                    self.session.rollback()
+                    continue
+                self.session.add(imageinstance)
+                try:
+                    self.session.commit()
+                except IntegrityError,E:
+                    self.log.error("Database integrity error '%s' processing '%s'." % (E.args,ProcessingSubscriptionUuid))
+                    self.log.debug(E.params)
+                    self.session.rollback()
+                    continue
+                
+                latestimageInstanceQuery = self.session.query(model.ImageInstance).\
+                    filter(model.ImageInstance.fkimagelistinstance == imagelistref).\
+                    filter(model.ImageInstance.fkIdentifier == ThisImageDefId)
+                if latestimageInstanceQuery.count() != 1:
+                    continue
+                imageInstancelatest = latestimageInstanceQuery.one()
+                #print ("imageInstancelatest=%s" % (imageInstancelatest))
+                imageDefQuery = self.ImageDefinition_get(subscriptionKey,imageObj.metadata)
+                if imageDefQuery.count() != 1:
+                    self.log.error("ImageId '%s' not accepted for subscription '%s'" %
+                        (imageObj.metadata[u'dc:identifier'],ProcessingSubscriptionUuid))
+                    failedToAdd.append(imageObj)
+                    continue
+                ThisImageDef = imageDefQuery.one()
+                ThisImageDef.latest = imageInstancelatest.id
+                self.session.add(ThisImageDef)
                 self.session.commit()
+                
             if subscription.imagelist_latest != None:
-                oldimagelist_q = self.session.query(model.Imagelist).\
-                    filter(model.Imagelist.id == subscription.imagelist_latest)
+                oldimagelist_q = self.session.query(model.ImageListInstance).\
+                    filter(model.ImageListInstance.id == subscription.imagelist_latest)
                 for imagelist in oldimagelist_q:
                     imagelist.authorised = False
-
-            subscription.updated = datetime.datetime.utcnow()   
+                    self.session.add(imagelist)
+            subscription.updated = datetime.datetime.utcnow() 
+              
             subscription.imagelist_latest = imagelistref
             self.session.add(subscription)
             self.session.commit()
+            return
     def subscriptions_delete(self,uuid):
         subscriptionlist = self.session.query(model.Subscription).\
-            filter(model.Subscription.uuid==uuid)
+            filter(model.Subscription.identifier==uuid)
         for item in subscriptionlist:
             #print item.SubscriptionAuth
             self.session.delete(item)
@@ -225,17 +309,17 @@ class queryby_base:
         subscriptionlist = self.session.query(model.Subscription).\
                 filter(model.Subscription.id==private_id)
         return subscriptionlist
-    def subscription_by_uri(self,url):
+    def subscription_by_uri(self,uri):
         subscriptionlist = self.session.query(model.Subscription).\
-                filter(model.Subscription.url==url)
+                filter(model.Subscription.uri==uri)
         return subscriptionlist
     def subscription_by_uuid(self,uuid):
         subscriptionlist = self.session.query(model.Subscription).\
-                filter(model.Subscription.uuid==uuid)
+                filter(model.Subscription.identifier==uuid)
         return subscriptionlist
     def imagelist_by_id(self,private_id):
-        subscriptionlist = self.session.query(model.Imagelist).\
-                filter(model.Imagelist.id==private_id)
+        subscriptionlist = self.session.query(model.ImageListInstance).\
+                filter(model.ImageListInstance.id==private_id)
         return subscriptionlist
     
         # Now the virtual class
@@ -288,10 +372,10 @@ class output_driver_message(output_driver_base):
 
 class output_driver_lines(output_driver_base):
     def display_subscription(self,subscription):
-        self.file_pointer.write ('subscription.dc:identifier=%s\n' % (subscription.uuid))
+        self.file_pointer.write ('subscription.dc:identifier=%s\n' % (subscription.identifier))
         self.file_pointer.write ('subscription.dc:description=%s\n' % (subscription.description))
         self.file_pointer.write ('subscription.sl:authorised=%s\n' % (subscription.authorised))
-        self.file_pointer.write ('subscription.hv:uri=%s\n' % (subscription.url))
+        self.file_pointer.write ('subscription.hv:uri=%s\n' % (subscription.uri))
         if subscription.updated:
             self.file_pointer.write ('subscription.dc:date:updated=%s\n' % (subscription.updated.strftime(time_format_definition)))
         else:
@@ -310,7 +394,7 @@ class output_driver_lines(output_driver_base):
         
         subauthq = self.session.query(model.Subscription).all()
         for item in subauthq:
-            self.file_pointer.write ("%s\t%s\t%s\n" % (item.uuid,item.authorised,item.url))
+            self.file_pointer.write ("%s\t%s\t%s\n" % (item.identifier,item.authorised,item.uri))
             
 class db_controler:
     def __init__(self,dboptions):
