@@ -134,7 +134,11 @@ class db_actions:
                         self.session.commit()
                 continue
             #Now we check its authenticity
-            validated_data = anchor.validate_text(update_unprocessed)
+            try:
+                validated_data = anchor.validate_text(update_unprocessed)
+            except SmimeX509ValidationError,E:
+                self.log.error("Failed to process validate text for '%s' " % (ProcessingSubscriptionUuid))
+                continue
             data = validated_data['data']
             dn = validated_data['signer_dn']
             ca = validated_data['issuer_dn']
