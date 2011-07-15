@@ -104,14 +104,14 @@ class ImageDefinition(Base):
     identifier = Column(String(50),nullable = False,unique=True)
     # This stores the Latest Image Instance
     latest = Column(Integer)
-    # Set of state options
+    # Set of cache options
     # 1 Subscribed the Image In cache if posible.
-    state = Column(Integer,nullable = False)
+    cache = Column(Integer,nullable = False)
     subscription = Column(Integer, ForeignKey(Subscription.id, onupdate="CASCADE", ondelete="CASCADE"))
     def __init__(self, SubscriptionKey,Metadata):
         self.subscription = SubscriptionKey
         self.identifier = str(Metadata[u'dc:identifier'])
-        self.state = int(Metadata[u'cache'])
+        self.cache = int(Metadata[u'cache'])
         self.latest = 0
 
     def __repr__(self):
