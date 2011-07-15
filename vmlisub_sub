@@ -134,7 +134,7 @@ class db_actions:
             # Now we creat image definitions
             metadata = {}
             metadata.update(imageReferance.metadata)
-            metadata['cache'] = 1
+            metadata['cache'] = 0
             ImageDefinition_query = self.ImageDefinition_create(subscriptionKey,metadata)
             if ImageDefinition_query.count() != 1:
                 self.log.error('Creation of ImageDefinition referance failed.')
