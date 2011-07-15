@@ -109,11 +109,13 @@ class cache_manager(object):
             os.remove(filepath)
     def download_images(self):
         Session = self.SessionFactory()
-        query_image = Session.query(model.Subscription,model.Imagelist,model.Image).\
+        query_image = Session.query(model.Subscription,model.ImageDefinition,model.ImageListInstance,model.ImageInstance).\
                 filter(model.Subscription.authorised == True).\
-                filter(model.Subscription.imagelist_latest == model.Imagelist.id).\
-                filter(model.Image.imagelist == model.Imagelist.id).\
-                filter(model.Imagelist.authorised == True)
+                filter(model.Subscription.imagelist_latest == model.ImageListInstance.id).\
+                filter(model.ImageDefinition.subscription == model.Subscription.id).\
+                filter(model.ImageDefinition.cache == 1).\
+                filter(model.ImageDefinition.latest == model.ImageInstance.id).\
+                filter(model.ImageListInstance.id == model.ImageInstance.fkIdentifier)
         for touple in query_image:
             subscription, imagelist, image = touple
             downloadneeded = True
