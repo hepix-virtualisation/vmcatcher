@@ -53,24 +53,26 @@ class db_actions:
     def image_lister(self):
         outputlist = []
 
-        subauthq = self.session.query(model.Image,model.Subscription).\
-            filter(model.Subscription.imagelist_latest == model.Imagelist.id).\
+        subauthq = self.session.query(model.ImageDefinition, model.ImageInstance, model.Subscription).\
+            filter(model.Subscription.imagelist_latest == model.ImageListInstance.id).\
             filter(model.Subscription.authorised == True).\
-            filter(model.Image.imagelist == model.Imagelist.id)
+            filter(model.ImageInstance.fkimagelistinstance == model.ImageListInstance.id).\
+            filter(model.ImageDefinition.id == model.ImageInstance.id)
             
         for q_result in subauthq:
-            image = q_result[0]
-            subscription = q_result[1]
+            imagedef = q_result[0]
+            image = q_result[1]
+            subscription = q_result[2]
             
-            outputlist.append("%s\t%s\t%s" % (image.identifier,subscription.uuid,image.sha512))
+            outputlist.append("%s\t%s\t%s" % (imagedef.identifier,subscription.identifier,image.sha512))
         
         seperator = '\n'
         return seperator.join(outputlist)
     
     def image_by_sha512_writefile_imagelist(self,treess,sha512,path):
-        query_image = self.session.query(model.Image).\
-            filter(model.Image.imagelist == model.Imagelist.id).\
-            filter(model.Image.sha512 == str(sha512))
+        query_image = self.session.query(model.ImageInstance).\
+            filter(model.ImageInstance.fkimagelistinstance == model.ImageListInstance.id).\
+            filter(model.ImageInstance.sha512 == str(sha512))
         if query_image.count() == 0:
             self.log.warning('Message not found')
             return False
@@ -82,9 +84,9 @@ class db_actions:
         
         
     def image_by_sha512_writefile_json(self,treess,sha512,path):
-        query_image = self.session.query(model.Image,model.Imagelist).\
-            filter(model.Image.imagelist == model.Imagelist.id).\
-            filter(model.Image.sha512 == sha512)
+        query_image = self.session.query(model.ImageInstance,model.ImageListInstance).\
+            filter(model.ImageInstance.fkimagelistinstance == model.ImageListInstance.id).\
+            filter(model.ImageInstance.sha512 == sha512)
         if query_image.count() == 0:
             self.log.warning('Message not found')
             return False
@@ -100,9 +102,9 @@ class db_actions:
         fp.close()
     def image_by_sha512_display_info(self,ancore,sha512):
         output = []
-        query_image = self.session.query(model.Image,model.Imagelist).\
-            filter(model.Image.imagelist == model.Imagelist.id).\
-            filter(model.Image.sha512 == str(sha512))
+        query_image = self.session.query(model.ImageInstance,model.ImageListInstance).\
+            filter(model.ImageInstance.fkimagelistinstance == model.ImageListInstance.id).\
+            filter(model.ImageInstance.sha512 == str(sha512))
         if query_image.count() == 0:
             self.log.warning('Message not found')
             return False
@@ -144,11 +146,11 @@ class queryby_base:
         return subscriptionlist
     def subscription_by_uuid(self,uuid):
         subscriptionlist = self.session.query(model.Subscription).\
-                filter(model.Subscription.uuid==uuid)
+                filter(model.Subscription.identifier==uuid)
         return subscriptionlist
     def imagelist_by_id(self,private_id):
-        subscriptionlist = self.session.query(model.Imagelist).\
-                filter(model.Imagelist.id==private_id)
+        subscriptionlist = self.session.query(model.ImageListInstance).\
+                filter(model.ImageListInstance.id==private_id)
         return subscriptionlist
     
         # Now the virtual class
@@ -156,14 +158,14 @@ class queryby_base:
         return self.subscription_by_id(by_id)
     
     def imagelistImage_by_imageUuid(self,uuid):
-        imagelistImage = self.session.query(model.Imagelist,model.Image).\
-                filter(model.Imagelist.id==model.Image.imagelist).\
-                filter(model.Image.identifier == uuid)
+        imagelistImage = self.session.query(model.ImageListInstance,model.ImageInstance).\
+                filter(model.ImageListInstance.id==model.ImageInstance.fkimagelistinstance).\
+                filter(model.ImageInstance.identifier == uuid)
         return imagelistImage
     def imagelistImage_by_imageSha512(self,sha512):
-        imagelistImage = self.session.query(model.Imagelist,model.Image).\
-                filter(model.Imagelist.id==model.Image.imagelist).\
-                filter(model.Image.sha512 == sha512)
+        imagelistImage = self.session.query(model.ImageListInstance,model.ImageInstance).\
+                filter(model.ImageListInstance.id==model.ImageInstance.fkimagelistinstance).\
+                filter(model.ImageInstance.sha512 == sha512)
         return imagelistImage
     
     
