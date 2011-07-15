@@ -165,7 +165,7 @@ class db_actions:
                 self.log.debug('Hash already found')
                 for message in messagehash_q:
                     if now > message.expires:
-                        self.log.warning("Image list '%s' has expired on: '%s'" % (message.identifier,message.expires))
+                        self.log.warning("Image list '%s' has expired on: '%s'" % (ProcessingSubscriptionUuid,message.expires))
                         message.expired = now
                         self.session.commit()
                 continue
