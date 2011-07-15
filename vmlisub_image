@@ -158,14 +158,17 @@ class queryby_base:
         return self.subscription_by_id(by_id)
     
     def imagelistImage_by_imageUuid(self,uuid):
-        imagelistImage = self.session.query(model.ImageListInstance,model.ImageInstance).\
+        imagelistImage = self.session.query(model.ImageDefinition,model.ImageListInstance,model.ImageInstance).\
                 filter(model.ImageListInstance.id==model.ImageInstance.fkimagelistinstance).\
-                filter(model.ImageInstance.identifier == uuid)
+                filter(model.ImageDefinition.identifier == uuid).\
+                filter(model.ImageInstance.fkIdentifier == model.ImageDefinition.id)
+                
         return imagelistImage
     def imagelistImage_by_imageSha512(self,sha512):
-        imagelistImage = self.session.query(model.ImageListInstance,model.ImageInstance).\
+        imagelistImage = self.session.query(model.ImageDefinition,model.ImageListInstance,model.ImageInstance).\
                 filter(model.ImageListInstance.id==model.ImageInstance.fkimagelistinstance).\
-                filter(model.ImageInstance.sha512 == sha512)
+                filter(model.ImageInstance.sha512 == sha512).\
+                filter(model.ImageInstance.fkIdentifier == model.ImageDefinition.id)
         return imagelistImage
     
     
@@ -202,7 +205,7 @@ class output_driver_smime(output_driver_base):
         pass
     def display_imagelist(self,imagelist):
         self.file_pointer.write (imagelist.data)
-    def display_imagelistImage(self,imagelist,image):
+    def display_imagelistImage(self,imagedef,imagelist,image):
         self.display_imagelist(imagelist)
     
 class output_driver_message(output_driver_base):
@@ -212,7 +215,7 @@ class output_driver_message(output_driver_base):
         
         validated_data = self.anchor.validate_text(str(imagelist.data))
         self.file_pointer.write (validated_data['data'])
-    def display_imagelistImage(self,imagelist,image):
+    def display_imagelistImage(self,imagedef,imagelist,image):
         self.display_imagelist(imagelist)
 
 class output_driver_lines(output_driver_base):
@@ -225,13 +228,13 @@ class output_driver_lines(output_driver_base):
         
         validated_data = self.anchor.validate_text(str(imagelist.data))
         self.file_pointer.write (validated_data['data'])
-    def display_imagelistImage(self,imagelist,image):
-        self.file_pointer.write ('imagelist.dc:identifier=%s\n' % (imagelist.identifier))
+    def display_imagelistImage(self,imagedef,imagelist,image):
+        self.file_pointer.write ('imagelist.dc:identifier=%s\n' % (imagedef.identifier))
         self.file_pointer.write ('imagelist.dc:date:imported=%s\n' % (imagelist.imported.strftime(time_format_definition)))
         self.file_pointer.write ('imagelist.dc:date:created=%s\n' % (imagelist.created.strftime(time_format_definition)))
         self.file_pointer.write ('imagelist.dc:date:expires=%s\n' % (imagelist.expires.strftime(time_format_definition)))
-        self.file_pointer.write ('imagelist.authorised=%s\n' % (imagelist.authorised))
-        self.file_pointer.write ('image.dc:identifier=%s\n' % (image.identifier))
+        self.file_pointer.write ('imagelist.state=%s\n' % (imagedef.state))
+        self.file_pointer.write ('image.dc:identifier=%s\n' % (imagedef.identifier))
         self.file_pointer.write ('image.sl:checksum:sha512=%s\n' % (image.sha512))
         
     def subscriptions_lister(self):
@@ -275,9 +278,10 @@ class db_controler:
             view = self.factory_view(output_fileptr,Session,self.anchor)
             
             for item in query_subscription:
-                imagelist = item[0]
-                image = item[1]
-                view.display_imagelistImage(imagelist,image)
+                imagedef = item[0]
+                imagelist = item[1]
+                image = item[2]
+                view.display_imagelistImage(imagedef,imagelist,image)
                 
                     
             if output_file_name != None:
