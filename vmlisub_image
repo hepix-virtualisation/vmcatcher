@@ -233,9 +233,23 @@ class output_driver_lines(output_driver_base):
         self.file_pointer.write ('imagelist.dc:date:imported=%s\n' % (imagelist.imported.strftime(time_format_definition)))
         self.file_pointer.write ('imagelist.dc:date:created=%s\n' % (imagelist.created.strftime(time_format_definition)))
         self.file_pointer.write ('imagelist.dc:date:expires=%s\n' % (imagelist.expires.strftime(time_format_definition)))
-        self.file_pointer.write ('imagelist.state=%s\n' % (imagedef.state))
-        self.file_pointer.write ('image.dc:identifier=%s\n' % (imagedef.identifier))
+        self.file_pointer.write ('imagedef.dc:identifier=%s\n' % (imagedef.identifier))
+        self.file_pointer.write ('imagedef.cache=%s\n' % (imagedef.cache))
+        self.file_pointer.write ('image.dc:description=%s\n' % (image.description))       
+        self.file_pointer.write ('image.dc:title=%s\n' % (image.title))
+        self.file_pointer.write ('image.hv:hypervisor=%s\n' % (image.hypervisor))
+        self.file_pointer.write ('image.hv:size=%s\n' % (image.size))
+        self.file_pointer.write ('image.hv:uri=%s\n' % (image.uri))
+        self.file_pointer.write ('image.hv:version=%s\n' % (image.version))
+        self.file_pointer.write ('image.sl:arch=%s\n' % (image.hypervisor))
         self.file_pointer.write ('image.sl:checksum:sha512=%s\n' % (image.sha512))
+        self.file_pointer.write ('image.sl:comments=%s\n' % (image.comments))
+        self.file_pointer.write ('image.sl:os=%s\n' % (image.os))
+        self.file_pointer.write ('image.sl:osversion=%s\n' % (image.osversion))
+
+
+
+        
         
     def subscriptions_lister(self):
         
