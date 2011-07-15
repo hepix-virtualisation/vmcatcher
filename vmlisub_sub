@@ -198,7 +198,13 @@ class db_actions:
             for imageObj in vmilist.images:
                 imageDb = model.Image(imagelistref,imageObj.metadata)
                 self.session.add(imageDb)
-                self.session.commit()
+                try:
+                    self.session.commit()
+                except IntegrityError,E:
+                    self.log.error("Database integrity error '%s' processing '%s'." % (E.args,ProcessingSubscriptionUuid))
+                    self.log.debug(E.params)
+                    self.session.rollback()
+                    continue
             if subscription.imagelist_latest != None:
                 oldimagelist_q = self.session.query(model.Imagelist).\
                     filter(model.Imagelist.id == subscription.imagelist_latest)
