@@ -64,7 +64,7 @@ class db_actions:
             image = q_result[1]
             subscription = q_result[2]
             
-            outputlist.append("%s\t%s\t%s" % (imagedef.identifier,subscription.identifier,image.sha512))
+            outputlist.append("%s\t%s\t%s\t%s" % (imagedef.identifier,imagedef.cache,subscription.identifier,image.sha512))
         
         seperator = '\n'
         return seperator.join(outputlist)
@@ -312,6 +312,17 @@ class db_controler:
         Session = self.SessionFactory()
         db = db_actions(Session)
         print db.image_lister()
+    def images_subscribe(self,images_selected,subscribe):
+        Session = self.SessionFactory()
+        selector = self.factory_selector(Session)
+        for image in images_selected:
+            query_subscription = selector.imagelistImage_get(image)
+            for reternedline in query_subscription:
+                ImageDef = reternedline[0]
+                ImageDef.cache = subscribe
+                Session.add(ImageDef)
+                Session.commit()
+
 # User interface
 
 def pairsNnot(list_a,list_b):
@@ -344,6 +355,8 @@ def main():
         default='sqlite:///tutorial.db')
     p.add_option('-c', '--cert-dir', action ='store',help='Certificate directory.', metavar='INPUTDIR',
         default='/etc/grid-security/certificates/')
+    p.add_option('-a', '--add', action ='store_true',help='Add image to Cache.')
+    p.add_option('-r', '--remove', action ='store_true',help='Remove image from Cache.')    
     p.add_option('-s', '--sha512', action ='append',help='Select images by sha512.', metavar='SHA512')
     p.add_option('-u', '--uuid', action ='append',help='Select images by uuid.', metavar='UUID')    
     p.add_option('-D', '--delete', action ='store_true',help='Delete subscription', metavar='OUTPUTFILE')
@@ -362,7 +375,7 @@ def main():
     subscription_url_list = []
     outputfiles = []
     input_format_selected = set([])
-    actionsrequiring_selections = set(['output','delete','info'])
+    actionsrequiring_selections = set(['output','delete','info','add','remove'])
     inputformats = set(['uuid','sha512'])
     input_format_selected = set([])
     if options.list:
@@ -381,14 +394,21 @@ def main():
     if options.output:
         format_needed = True
         outputfiles = options.output
-    
+    if options.add:
+        actions.add('add')
+    if options.remove:
+        actions.add('remove')
     # 1 So we have some command line validation
-    
+
     if len(actions) == 0:
         log.error("No actions selected")
         sys.exit(1)
     if len(actions) > 1:
         log.error("More than one action selected.")
+        sys.exit(1)
+    if actions.issubset(actionsrequiring_selections) and len(images_selected) == 0:
+        action_askedfor = actions.pop()
+        log.error("Action '%s' requires an image to be selected." % action_askedfor)
         sys.exit(1)
     if format_needed and len(output_format_selected) == 0:
         log.error("No output format selected")
@@ -491,7 +511,10 @@ def main():
     if 'info' in actions:
         database.images_info(images_selected,outputfiles)
         
-        
+    if 'add' in actions:
+        database.images_subscribe(images_selected,1)
+    if 'remove' in actions:
+        database.images_subscribe(images_selected,0)
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     main()
