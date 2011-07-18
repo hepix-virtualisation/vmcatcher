@@ -71,7 +71,7 @@ class Subscription(Base):
         self.imagelist_latest = None
         self.authorised = authorised
     def __repr__(self):
-        return "<Subscription('%s','%s', '%s')>" % (self.uuid, self.uri, self.description)
+        return "<Subscription('%s','%s', '%s')>" % (self.identifier, self.uri, self.description)
 
 
 
