@@ -47,6 +47,8 @@ except:
     import json
 from urlparse import urlparse
 
+
+
 class cache_manager(object):
     def __init__(self,SessionFactory, dir_cache, dir_partial, dir_expired):
         self.log = logging.getLogger("db_controler")
@@ -103,19 +105,35 @@ class cache_manager(object):
                 files_to_delete.append(filepath)
                 continue
             file_metadata = file_extract_metadata(filepath)
-            print file_metadata
         for filename in files_to_delete:
             filepath = os.path.join(self.dir_cache,filename)
             os.remove(filepath)
-    def download_images(self):
+    def validImagesQuery(self):
         Session = self.SessionFactory()
-        query_image = Session.query(model.Subscription,model.ImageDefinition,model.ImageListInstance,model.ImageInstance).\
-                filter(model.Subscription.authorised == True).\
-                filter(model.Subscription.imagelist_latest == model.ImageListInstance.id).\
-                filter(model.ImageDefinition.subscription == model.Subscription.id).\
+        return Session.query(model.Subscription,model.ImageDefinition,model.ImageListInstance,model.ImageInstance).\
                 filter(model.ImageDefinition.cache == 1).\
                 filter(model.ImageDefinition.latest == model.ImageInstance.id).\
-                filter(model.ImageListInstance.id == model.ImageInstance.fkIdentifier)
+                filter(model.ImageDefinition.id == model.ImageInstance.fkIdentifier).\
+                filter(model.Subscription.authorised == True).\
+                filter(model.Subscription.imagelist_latest == model.ImageListInstance.id).\
+                filter(model.ImageDefinition.subscription == model.Subscription.id)
+    def cachedImages(self):
+        output = set()
+        directoryList = os.listdir(self.dir_cache)
+        for item in directoryList:
+            if item == "cache.idx":
+                print 'fffoo'
+                
+            filepath = os.path.join(self.dir_cache,item)
+            if os.path.isfile(filepath):
+                output.add(filepath)
+        print output
+        
+    def download_images(self):
+        self.cachedImages()
+        sys.exit(1)
+        query_image = self.validImages()
+        
         for touple in query_image:
             subscription, imagelist, image = touple
             downloadneeded = True
@@ -155,11 +173,13 @@ class cache_manager(object):
 
     def expire_images(self):
         Session = self.SessionFactory()
-        query_image = Session.query(model.Subscription,model.Imagelist,model.Image).\
+        query_image = Session.query(model.Subscription,model.ImageDefinition,model.ImageListInstance,model.ImageInstance).\
                 filter(model.Subscription.authorised == True).\
-                filter(model.Subscription.imagelist_latest == model.Imagelist.id).\
-                filter(model.Image.imagelist == model.Imagelist.id).\
-                filter(model.Imagelist.authorised == True)
+                filter(model.Subscription.imagelist_latest == model.ImageListInstance.id).\
+                filter(model.ImageDefinition.subscription == model.Subscription.id).\
+                filter(model.ImageDefinition.cache == 1).\
+                filter(model.ImageDefinition.latest == model.ImageInstance.id).\
+                filter(model.ImageListInstance.id == model.ImageInstance.fkIdentifier)
         keys_to_delete = []
         dbview = {}
         for touple in query_image:
@@ -181,14 +201,254 @@ class cache_manager(object):
                 counter += 1
                 filename = "%s_%03d.img" % (item,counter)
                 archive = os.path.join(self.dir_expired,filename)
-            print archive,filename
             os.rename(filepath,archive)
             self.expired_files[filename] = self.files[item]
             del self.files[item]
             
         self.cache_index_save()
         self.expired_index_save()
+
+class BaseDir(object):
+    def __init__(self, directory):
+        self.directory = directory
+        self.indexFile = "cache.index"
+        self.indexLoad()
+        # self.files = { 'uuid' : { 'sha512' : 'hash', 'message' : 'signed message' , 'date' : }
+        self.indexUnknownClear()
+    def getFiles(self):
+        output = set()
+        directoryList = os.listdir(self.directory)
+        for item in directoryList:
+            if item == self.indexFile:
+                continue            
+            filepath = os.path.join(self.directory,item)
+            if os.path.isfile(filepath):
+                output.add(item)
+        return output
         
+    def indexLoad(self):
+        indexFilePath = os.path.join(self.directory,self.indexFile)
+        if os.path.isfile(indexFilePath):
+            fp = open(indexFilePath,'r')
+            lines = fp.read()
+            tmp = json.loads(lines)
+            if type(tmp) is dict:
+                self.index = tmp
+        else:
+            self.index = {}
+        return True
+        
+    def indexSave(self):
+        self.indexUnknownClear()
+        indexFilePath = os.path.join(self.directory,self.indexFile)
+        fp = open(indexFilePath,'w')
+        fp.write(json.dumps(self.index,sort_keys=True, indent=4))
+        fp.flush()
+        fp.close()
+        return True
+    
+    def indexUnknownClear(self):
+        allfiles = self.getFiles()
+        for filename in allfiles:
+            unknown = True
+            for uuid in self.index.keys():
+                if self.index[uuid]['filename'] == filename:
+                    unknown = False
+                    break
+            if unknown:
+                filepath = os.path.join(self.directory,filename)
+                os.remove(filepath)
+    def indexAdd(self,metadata):
+        requiredkeys = set(['uuid','sha512','uri','size'])
+        metadataKeys = set(metadata.keys())
+        if not requiredkeys.issubset(metadataKeys):
+            return False
+        uuid = metadata['uuid']
+        if not uuid in self.index.keys():
+            self.index[uuid] = dict(metadata)
+            return True
+        self.log("not yet implenented updating metadata")
+    def moveFrom(self,aDir,uuid):
+        if not isinstance(aDir,BaseDir):
+            self.log("not a BaseDir object code error")
+            return False
+        if not uuid in aDir.index.keys():
+            self.log("uuid '%s' is not in directory %s" % aDir)
+            return False
+        origin = os.path.join(aDir.directory,aDir.index[uuid]['filename'])
+        destination = os.path.join(self.directory,uuid)
+        shutil.move(origin, destination)
+        self.index[uuid] = aDir.index[uuid]
+        self.index[uuid]['filename'] = uuid
+        del aDir.index[uuid]
+        return True
+        
+class DownloadDir(BaseDir):
+    def __init__(self, dir_download):
+        self.log = logging.getLogger("DownloadDir")
+        BaseDir.__init__(self,dir_download)
+    def download(self,metadata):
+        if not self.indexAdd(metadata):
+            self.log.error("Failed to add metadata to download '%s' " % (metadata['uuid']))
+            return False
+        if metadata['size'] != None:
+            stats = os.statvfs(self.directory) 
+            if metadata['size'] > (stats[statvfs.F_BSIZE] * stats[statvfs.F_BAVAIL]):
+                self.log.error("Image '%s' is too large" % (image.identifier))
+                return False
+        filename = metadata['uuid']
+        self.index[metadata['uuid']]['filename'] = filename
+        filepath = os.path.join(self.directory,filename)
+        urltouple = urlparse(metadata['uri'])
+        if hasattr (urltouple, "scheme" ):
+            if urltouple.scheme == u'http':
+                cmd = "wget -q -O %s %s" % (filepath,metadata['uri'])
+                os.system(cmd)
+            if urltouple.scheme == u'https':
+                cmd = "wget -q -O %s %s --no-check-certificate" % (filepath,metadata['uri'])
+                os.system(cmd)
+            if urltouple.scheme == u'file':
+                shutil.copyfile(urltouple.path,filepath)
+        else:
+            cmd = "wget -q -O %s %s" % (filepath,metadata['uri'])
+            os.system(cmd)
+        file_metadata = file_extract_metadata(filepath)
+        if file_metadata[u'sl:checksum:sha512'] != metadata['sha512']:
+            os.remove(filepath)
+            return False
+        if metadata['size'] != None:
+            if int(file_metadata[u'hv:size']) != int(metadata['size']):
+                os.remove(filepath)
+                return False
+        return True 
+        
+class CacheDir(BaseDir):
+    def __init__(self, dir_cache):
+        self.log = logging.getLogger("CacheDir")
+        BaseDir.__init__(self,dir_cache)
+    
+    def getExpired(self,validDict):
+        # Takes a dictionary of uuid : sha512 mappings.
+        # Returns the file path of all files not matching
+        pass
+
+class ExpireDir(BaseDir):
+    def __init__(self, dir_cache):
+        self.log = logging.getLogger("ExpireDir")
+        BaseDir.__init__(self,dir_cache)
+    
+    def moveFrom(self,aDir,uuid):
+        if not isinstance(aDir,BaseDir):
+            self.log("not a BaseDir object code error")
+            return False
+        if not uuid in aDir.index.keys():
+            self.log("uuid '%s' is not in directory %s" % aDir)
+            return False
+        idStr = "%s.%s" % (uuid, datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
+        origin = os.path.join(aDir.directory,aDir.index[uuid]['filename'])
+        destination = os.path.join(self.directory,idStr)
+        shutil.move(origin, destination)
+        self.index[idStr] = aDir.index[uuid]
+        self.index[idStr]['filename'] = idStr
+        del aDir.index[uuid]
+        return True   
+        
+class CacheMan(object):
+    def __init__(self,database, dir_cache, dir_partial, dir_expired):
+        self.log = logging.getLogger("CacheMan")
+        self.engine = create_engine(database, echo=False)
+        model.init(self.engine)
+        self.SessionFactory = sessionmaker(bind=self.engine)
+        self.Session = self.SessionFactory()
+        self.cacheDir = CacheDir(dir_cache)
+        self.DownloadDir = DownloadDir(dir_partial)
+        self.ExpireDir = ExpireDir(dir_expired)
+    
+        
+    def checkSumCache(self):
+        self.cacheDir.indexUnknownClear()
+        uuid2keep = set()
+        for uuid in self.cacheDir.index.keys():
+            filename = self.cacheDir.index[uuid]['filename']
+            filepath = os.path.join(self.cacheDir.directory,filename)
+            file_metadata = file_extract_metadata(filepath)
+            MatchingUuid = None
+            if (int(file_metadata[u'hv:size']) == int(self.cacheDir.index[uuid]['size']) and 
+                file_metadata[u'sl:checksum:sha512'] == self.cacheDir.index[uuid]['sha512']):   
+                uuid2keep.add(uuid)
+        return True
+    def expire(self):
+        rc = True
+        self.cacheDir.indexUnknownClear()
+        uuids2expire = []
+        for uuid in self.cacheDir.index.keys():
+            CachedSha512 = self.cacheDir.index[uuid]['sha512']
+            QueryResults = self.Session.query(model.Subscription,model.ImageDefinition,model.ImageListInstance,model.ImageInstance).\
+                filter(model.ImageInstance.sha512 == CachedSha512).\
+                filter(model.ImageDefinition.cache == 1).\
+                filter(model.ImageDefinition.latest == model.ImageInstance.id).\
+                filter(model.ImageDefinition.id == model.ImageInstance.fkIdentifier).\
+                filter(model.Subscription.authorised == True).\
+                filter(model.Subscription.imagelist_latest == model.ImageListInstance.id).\
+                filter(model.ImageDefinition.subscription == model.Subscription.id)
+            if QueryResults.count() != 1:
+                uuids2expire.append(uuid)
+                continue
+            dbSub, sbImageDef, DbImageListInst, DbImageInst = QueryResults.one()
+            if self.cacheDir.index[uuid][u'sha512'] != DbImageInst.sha512:
+                uuids2expire.append(uuid)
+                continue
+            if DbImageListInst.data_hash != self.cacheDir.index[uuid]['msgHash']:
+                self.cacheDir.index[uuid]['message'] = DbImageListInst.data
+                self.cacheDir.index[uuid]['msgHash'] = DbImageListInst.data_hash
+        for uuid in uuids2expire:
+            if self.ExpireDir.moveFrom(self.cacheDir,uuid):
+                self.log.info("Expired images '%s'" % (uuid))
+            else:
+                self.log.error("Failed to move file %s to expired directory" % (uuid))
+                rc = False
+        return rc
+    def download(self):
+        downloadsneeded = {}
+        QueryResults = self.Session.query(model.Subscription,model.ImageDefinition,model.ImageListInstance,model.ImageInstance).\
+                filter(model.ImageDefinition.cache == 1).\
+                filter(model.ImageDefinition.latest == model.ImageInstance.id).\
+                filter(model.ImageDefinition.id == model.ImageInstance.fkIdentifier).\
+                filter(model.Subscription.authorised == True).\
+                filter(model.Subscription.imagelist_latest == model.ImageListInstance.id).\
+                filter(model.ImageDefinition.subscription == model.Subscription.id)
+        for line in QueryResults:
+            imageDef = line[1]
+            imageListInst = line[2]
+            ImageInst = line[3]
+            uuid = imageDef.identifier
+            details = { 'uri' : str(ImageInst.uri),
+                    'sha512' : str(ImageInst.sha512),
+                    'size': int(ImageInst.size),
+                    'uuid' : uuid,
+                    'message' : str(imageListInst.data),
+                    'msgHash' : str(imageListInst.data_hash)}
+            if not uuid in self.cacheDir.index.keys():
+                downloadsneeded[uuid] = details
+                continue
+            if self.cacheDir.index[uuid]['sha512'] != str(ImageInst.sha512):
+                downloadsneeded[uuid] = details
+                continue
+        for key in downloadsneeded:
+            if self.DownloadDir.download(downloadsneeded[key]):
+                if self.cacheDir.moveFrom(self.DownloadDir,key):
+                    self.log.info("moved file %s" % (key))
+        return True  
+                
+                
+    def load(self):
+        self.cacheDir.indexLoad()
+        self.DownloadDir.indexLoad()
+        self.ExpireDir.indexLoad()
+    def save(self):
+        self.cacheDir.indexSave()
+        self.DownloadDir.indexSave()
+        self.ExpireDir.indexSave()
             
 def main():
     log = logging.getLogger("vmlisub_sub.main")
@@ -201,12 +461,16 @@ def main():
     p.add_option('-C', '--cache-dir', action ='store',help='Set the cache directory.',metavar='INPUTDIR')
     p.add_option('-p', '--partial-dir', action ='store',help='Set the cache download directory.')
     p.add_option('-e', '--expired-dir', action ='store',help='Set the cache expired directory.')
+    p.add_option('-D', '--download', action ='store_true',help='Download subscribed images to cache.')
+    p.add_option('-s', '--sha512', action ='store_true',help='check Sha512 for images in cache.')
+    p.add_option('-E', '--expire', action ='store_true',help='expire images from cache.')
+    
     options, arguments = p.parse_args()
     
     dir_cache = None
     dir_partial = None
     dir_expired = None
-    
+    actions = set()
     
     if options.cache_dir:
         dir_cache = options.cache_dir
@@ -214,9 +478,19 @@ def main():
         dir_partial = options.partial_dir
     if options.expired_dir:
         dir_expired = options.expired_dir
-    
+    if options.expire:
+        actions.add("expire")
+    if options.sha512:
+        actions.add("sha512")
+    if options.download:
+        actions.add("download")
+    if len(actions) == 0:
+        actions.add("sha512")
+        actions.add("download")
+        actions.add("expire")
+
     if dir_cache == None:
-        dir_cache = "."
+        dir_cache = "cache"
     if dir_partial == None:
         dir_partial = os.path.join(dir_cache,"partial")
     if dir_expired == None:
@@ -233,14 +507,38 @@ def main():
         directories_good = False
     if not directories_good:
         sys.exit(1)
+        
+    
+    ThisCacheManager = CacheMan(options.database,dir_cache, dir_partial, dir_expired)
+    ThisCacheManager.load()
+    if "expire" in actions:
+        if not ThisCacheManager.expire():
+            log.error("Failed to expire old images")
+            sys.exit(1)
+    if "sha512" in actions:
+        if not ThisCacheManager.checkSumCache():
+            log.error("Failed to checksum old images")
+            sys.exit(1)
+    if "download" in actions:
+        if not ThisCacheManager.download():
+            log.error("Failed to dwonload new images")
+            sys.exit(1)
+    ThisCacheManager.save()
+    
     engine = create_engine(options.database, echo=False)
     model.init(engine)
     SessionFactory = sessionmaker(bind=engine)
-    fred = cache_manager(SessionFactory,dir_cache, dir_partial, dir_expired)
-    fred.download_images()
-    fred.cache_index_save()
-    fred.expire_images()
-            
+    Session = SessionFactory()
+    
+    QueryResults = Session.query(model.Subscription,model.ImageDefinition,model.ImageListInstance,model.ImageInstance).\
+                filter(model.ImageDefinition.cache == 1).\
+                filter(model.ImageDefinition.latest == model.ImageInstance.id).\
+                filter(model.ImageDefinition.id == model.ImageInstance.fkIdentifier).\
+                filter(model.Subscription.authorised == True).\
+                filter(model.Subscription.imagelist_latest == model.ImageListInstance.id).\
+                filter(model.ImageDefinition.subscription == model.Subscription.id)
+    
+    
 
 
 if __name__ == "__main__":
