@@ -132,10 +132,23 @@ class DownloadDir(BaseDir):
         BaseDir.__init__(self,dir_download)
         self.log = logging.getLogger("DownloadDir")
     def download(self,uuid):
+        if not uuid in self.index.keys():
+            self.log.error("Image '%s' is not known" % (uuid))
+            return False
+        DownLoadTrys = 0
+        if u'DownLoadTrys' in self.index[uuid].keys():
+            if 'msgHash' in self.index[uuid]['DownLoadTrys'].keys():
+                if self.index[uuid]['DownLoadTrys']['msgHash'] == self.index[uuid]['msgHash']:
+                    DownLoadTrys = int(self.index[uuid]['DownLoadTrys']['count'])
+        if DownLoadTrys >= 5:
+            self.log.warning("Image '%s' has failed to download '%s' times, giving up until new image list." % (uuid,DownLoadTrys))
+            return False
+        self.index[uuid]['DownLoadTrys'] = { 'count' : DownLoadTrys + 1 , 'msgHash' : self.index[uuid]['msgHash'] }
+        self.indexSave()
         if self.index[uuid]['size'] != None:
             stats = os.statvfs(self.directory) 
             if self.index[uuid]['size'] > (stats[statvfs.F_BSIZE] * stats[statvfs.F_BAVAIL]):
-                self.log.error("Image '%s' is too large" % (image.identifier))
+                self.log.error("Image '%s' is too large %s bytes." % (uuid,self.index[uuid]['size']))
                 return False
         filename = uuid
         self.index[uuid]['filename'] = filename
@@ -300,10 +313,13 @@ class CacheMan(object):
                 continue
             if not self.DownloadDir.download(key):
                 self.log.error("Failed to download file '%s'." % (key))
+                self.DownloadDir.indexSave()
                 continue
             if not self.cacheDir.moveFrom(self.DownloadDir,key):
                 self.log.error("Failed to Move file '%s' into the enbdorsed directory." % (key))
                 continue
+            self.DownloadDir.indexSave()
+            self.cacheDir.indexSave()
             self.log.info("moved file %s" % (key))
         return True  
                 
