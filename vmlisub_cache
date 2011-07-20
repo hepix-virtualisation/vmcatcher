@@ -56,6 +56,7 @@ class BaseDir(object):
         self.indexLoad()
         # self.files = { 'uuid' : { 'sha512' : 'hash', 'message' : 'signed message' , 'date' : }
         self.indexUnknownClear()
+        self.log = logging.getLogger("BaseDir")
     def getFiles(self):
         output = set()
         directoryList = os.listdir(self.directory)
@@ -126,48 +127,48 @@ class BaseDir(object):
         
 class DownloadDir(BaseDir):
     def __init__(self, dir_download):
-        self.log = logging.getLogger("DownloadDir")
         BaseDir.__init__(self,dir_download)
+        self.log = logging.getLogger("DownloadDir")
     def download(self,metadata):
+        uuid = metadata['uuid']
         if not self.indexAdd(metadata):
             self.log.error("Failed to add metadata to download '%s' " % (metadata['uuid']))
             return False
-        if metadata['size'] != None:
+        if self.index[uuid]['size'] != None:
             stats = os.statvfs(self.directory) 
-            if metadata['size'] > (stats[statvfs.F_BSIZE] * stats[statvfs.F_BAVAIL]):
+            if self.index[uuid]['size'] > (stats[statvfs.F_BSIZE] * stats[statvfs.F_BAVAIL]):
                 self.log.error("Image '%s' is too large" % (image.identifier))
                 return False
         filename = metadata['uuid']
         self.index[metadata['uuid']]['filename'] = filename
         filepath = os.path.join(self.directory,filename)
-        urltouple = urlparse(metadata['uri'])
+        urltouple = urlparse(self.index[uuid]['uri'])
         if hasattr (urltouple, "scheme" ):
             if urltouple.scheme == u'http':
-                cmd = "wget -q -O %s %s" % (filepath,metadata['uri'])
+                cmd = "wget -q -O %s %s" % (filepath,self.index[uuid]['uri'])
                 os.system(cmd)
             if urltouple.scheme == u'https':
-                cmd = "wget -q -O %s %s --no-check-certificate" % (filepath,metadata['uri'])
+                cmd = "wget -q -O %s %s --no-check-certificate" % (filepath,self.index[uuid]['uri'])
                 os.system(cmd)
             if urltouple.scheme == u'file':
                 shutil.copyfile(urltouple.path,filepath)
         else:
-            cmd = "wget -q -O %s %s" % (filepath,metadata['uri'])
+            cmd = "wget -q -O %s %s" % (filepath,self.index[uuid]['uri'])
             os.system(cmd)
         file_metadata = file_extract_metadata(filepath)
-        if file_metadata[u'sl:checksum:sha512'] != metadata['sha512']:
+        if file_metadata[u'sl:checksum:sha512'] != self.index[uuid]['sha512']:
             os.remove(filepath)
             return False
-        if metadata['size'] != None:
-            if int(file_metadata[u'hv:size']) != int(metadata['size']):
+        if self.index[uuid]['size'] != None:
+            if int(file_metadata[u'hv:size']) != int(self.index[uuid]['size']):
                 os.remove(filepath)
                 return False
         return True 
         
 class CacheDir(BaseDir):
     def __init__(self, dir_cache):
-        self.log = logging.getLogger("CacheDir")
         BaseDir.__init__(self,dir_cache)
-    
+        self.log = logging.getLogger("CacheDir")
     def getExpired(self,validDict):
         # Takes a dictionary of uuid : sha512 mappings.
         # Returns the file path of all files not matching
@@ -175,8 +176,8 @@ class CacheDir(BaseDir):
 
 class ExpireDir(BaseDir):
     def __init__(self, dir_cache):
-        self.log = logging.getLogger("ExpireDir")
         BaseDir.__init__(self,dir_cache)
+        self.log = logging.getLogger("ExpireDir")
     
     def moveFrom(self,aDir,uuid):
         if not isinstance(aDir,BaseDir):
