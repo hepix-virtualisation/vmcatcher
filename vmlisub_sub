@@ -106,7 +106,11 @@ class db_actions:
     def subscribe_file(self,anchor,filename):
         req = urllib2.Request(url=filename) 
         f = urllib2.urlopen(req)
-        validated_data = anchor.validate_text(f.read())
+        try:
+            validated_data = anchor.validate_text(f.read())
+        except loadcanamespace.SmimeX509ValidationError,E:
+            self.log.error("Failed to validate text for '%s' " % (filename))
+            return False
         jsontext = json.loads(validated_data['data'])
         vmilist = VMimageListDecoder(jsontext)
         metadata = {}
@@ -170,7 +174,11 @@ class db_actions:
                         self.session.commit()
                 continue
             #Now we check its authenticity
-            validated_data = anchor.validate_text(update_unprocessed)
+            try:
+                validated_data = anchor.validate_text(update_unprocessed)
+            except loadcanamespace.SmimeX509ValidationError,E:
+                self.log.error("Failed to process validate text for '%s' " % (subscriptionKey))
+                continue
             data = validated_data['data']
             dn = validated_data['signer_dn']
             ca = validated_data['issuer_dn']
@@ -363,12 +371,19 @@ class output_driver_smime(output_driver_base):
         self.file_pointer.write (imagelist.data)
 
 class output_driver_message(output_driver_base):
+    def __init__(self,file_pointer,session,anchor):
+        output_driver_base.__init__(self,file_pointer,session,anchor)
+        self.log = logging.getLogger("output_driver_message")
     def display_subscription(self,subscription):
         pass
     def display_imagelist(self,imagelist):
-        
-        validated_data = self.anchor.validate_text(str(imagelist.data))
+        try:
+            validated_data = self.anchor.validate_text(str(imagelist.data))
+        except loadcanamespace.SmimeX509ValidationError,E:
+            self.log.error("Failed to validate text for '%s' " % (imagelist))
+            return False
         self.file_pointer.write (validated_data['data'])
+        return True
 
 class output_driver_lines(output_driver_base):
     def display_subscription(self,subscription):
@@ -382,16 +397,19 @@ class output_driver_lines(output_driver_base):
             self.file_pointer.write ('subscription.dc:date:updated=%s\n'% (False))
         return True
     def display_imagelist(self,imagelist):
-        
-        validated_data = self.anchor.validate_text(str(imagelist.data))
+        try:
+            validated_data = self.anchor.validate_text(str(imagelist.data))
+        except loadcanamespace.SmimeX509ValidationError,E:
+            self.log.error("Failed to validate text for '%s' " % (imagelist))
+            return False
         self.file_pointer.write (validated_data['data'])
+        return True
     def display_imagelist(self,imagelist):
         self.file_pointer.write ('imagelist.dc:date:imported=%s\n' % (imagelist.imported.strftime(time_format_definition)))
         self.file_pointer.write ('imagelist.dc:date:created=%s\n' % (imagelist.created.strftime(time_format_definition)))
         self.file_pointer.write ('imagelist.dc:date:expires=%s\n' % (imagelist.expires.strftime(time_format_definition)))
         self.file_pointer.write ('imagelist.authorised=%s\n' % (imagelist.authorised))
     def subscriptions_lister(self):
-        
         subauthq = self.session.query(model.Subscription).all()
         for item in subauthq:
             self.file_pointer.write ("%s\t%s\t%s\n" % (item.identifier,item.authorised,item.uri))
