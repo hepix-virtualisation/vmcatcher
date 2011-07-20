@@ -136,7 +136,7 @@ class db_actions:
             #Now we check its authenticity
             try:
                 validated_data = anchor.validate_text(update_unprocessed)
-            except SmimeX509ValidationError,E:
+            except loadcanamespace.SmimeX509ValidationError,E:
                 self.log.error("Failed to process validate text for '%s' " % (ProcessingSubscriptionUuid))
                 continue
             data = validated_data['data']
