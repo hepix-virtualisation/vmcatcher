@@ -133,9 +133,9 @@ class cache_manager(object):
                     if urltouple.scheme == u'http':
                         cmd = "wget -q -O %s %s" % (filename,image.uri)
                         os.system(cmd)
-                         unknownTransport = False
+                        unknownTransport = False
                     if urltouple.scheme == u'https':
-                        cmd = "wget -q -O %s %s --no-check-certificate" % (filepath,metadata['uri'])
+                        cmd = "wget -q -O %s %s --no-check-certificate" % (filename,image.uri)
                         os.system(cmd)
                         unknownTransport = False
                     if urltouple.scheme == u'file':
