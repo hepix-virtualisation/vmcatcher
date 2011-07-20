@@ -129,12 +129,22 @@ class cache_manager(object):
                     continue
                 urltouple = urlparse(image.uri)
                 if hasattr (urltouple, "scheme" ):
+                    unknownTransport = True
                     if urltouple.scheme == u'http':
                         cmd = "wget -q -O %s %s" % (filename,image.uri)
                         os.system(cmd)
+                         unknownTransport = False
+                    if urltouple.scheme == u'https':
+                        cmd = "wget -q -O %s %s --no-check-certificate" % (filepath,metadata['uri'])
+                        os.system(cmd)
+                        unknownTransport = False
                     if urltouple.scheme == u'file':
                         shutil.copyfile(urltouple.path,filename)
+                        unknownTransport = False
+                    if unknownTransport:
+                        self.log.warning("Unknown transport '%s' for URI for '%s'" % (urltouple.scheme,image.identifier))
                 else:
+                    self.log.warning("Could not fully parse URI for '%s'" % (image.identifier))
                     cmd = "wget -q -O %s %s" % (filename,image.uri)
                     os.system(cmd)
                 if not os.path.isfile(filename):
