@@ -125,7 +125,7 @@ class cache_manager(object):
                 filename = os.path.join(self.dir_partial,image.identifier)
                 stats = os.statvfs(self.dir_partial) 
                 if image.size > (stats[statvfs.F_BSIZE] * stats[statvfs.F_BAVAIL]):
-                    self.log.error("Image '%s' is too large" % (image.identifier))
+                    self.log.error("Image '%s' is too large for available disk space." % (image.identifier))
                     continue
                 urltouple = urlparse(image.uri)
                 if hasattr (urltouple, "scheme" ):
