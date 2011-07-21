@@ -78,7 +78,7 @@ class Subscription(Base):
 
 
 class SubscriptionAuth(Base):
-    __tablename__ = 'subscription_auth'
+    __tablename__ = 'subscriptionAuth'
     id = Column(Integer, primary_key=True)
     subscription = Column(Integer, ForeignKey(Subscription.id, onupdate="CASCADE", ondelete="CASCADE"))
     orm_subscription = relationship(Subscription, backref=backref('auth', order_by=id, cascade="all,delete"))
@@ -118,7 +118,7 @@ class ImageDefinition(Base):
         return "<ImageDefinition('%s','%s', '%s')>" % (self.identifier, self.subscription,self.latest)
 
 class ImageListInstance(Base):
-    __tablename__ = 'imagelistinstance'
+    __tablename__ = 'imageListInstance'
     id = Column(Integer, primary_key=True)
     # Raw signed messsage
     data = Column(String(1000),nullable = False)
