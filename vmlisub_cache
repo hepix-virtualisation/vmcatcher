@@ -115,10 +115,10 @@ class BaseDir(object):
         return True
     def moveFrom(self,aDir,uuid):
         if not isinstance(aDir,BaseDir):
-            self.log("not a BaseDir object code error")
+            self.log.error("not a BaseDir object code error")
             return False
         if not uuid in aDir.index.keys():
-            self.log("uuid '%s' is not in directory %s" % aDir)
+            self.log.error("uuid '%s' is not in directory %s" % aDir)
             return False
         origin = os.path.join(aDir.directory,aDir.index[uuid]['filename'])
         destination = os.path.join(self.directory,uuid)
@@ -152,6 +152,7 @@ class DownloadDir(BaseDir):
             if self.index[uuid]['size'] > (stats[statvfs.F_BSIZE] * stats[statvfs.F_BAVAIL]):
                 self.log.error("Image '%s' is too large %s bytes." % (uuid,self.index[uuid]['size']))
                 return False
+        self.log.info("Downloading '%s'." % (uuid))
         filepath = os.path.join(self.directory,self.index[uuid]['filename'])
         urltouple = urlparse(self.index[uuid]['uri'])
         if hasattr (urltouple, "scheme"):
@@ -185,6 +186,9 @@ class DownloadDir(BaseDir):
             cmd = "wget -q -O %s %s" % (filepath,self.index[uuid]['uri'])
             os.system(cmd)
         file_metadata = file_extract_metadata(filepath)
+        if file_metadata == None:
+            self.log.error("Failed to get metadata for image '%s' at path '%s'." % (uuid,filepath))
+            return False
         if file_metadata[u'sl:checksum:sha512'] != self.index[uuid]['sha512']:
             os.remove(filepath)
             self.log.error("Image '%s' has incorect sha512, downloaded metadate '%s'." % (uuid,file_metadata))
@@ -244,15 +248,31 @@ class CacheMan(object):
         
     def checkSumCache(self):
         self.cacheDir.indexUnknownClear()
-        uuid2keep = set()
+        uuid2del = set()
         for uuid in self.cacheDir.index.keys():
             filename = self.cacheDir.index[uuid]['filename']
             filepath = os.path.join(self.cacheDir.directory,filename)
             file_metadata = file_extract_metadata(filepath)
+            if file_metadata == None:
+                uuid2del.add(uuid)
+                continue
             MatchingUuid = None
-            if (int(file_metadata[u'hv:size']) == int(self.cacheDir.index[uuid]['size']) and 
-                file_metadata[u'sl:checksum:sha512'] == self.cacheDir.index[uuid]['sha512']):   
-                uuid2keep.add(uuid)
+            if int(file_metadata[u'hv:size']) != int(self.cacheDir.index[uuid]['size']):
+                self.log.error("Image '%s' size incorect." % (uuid))
+                uuid2del.add(uuid)
+                continue
+            if file_metadata[u'sl:checksum:sha512'] != self.cacheDir.index[uuid]['sha512']:   
+                self.log.error("Image '%s' sha512 incorect." % (uuid))
+                uuid2del.add(uuid)
+                continue
+        # Now we remove files that have been corrupted
+        for uuid in uuid2del:
+            if 'filename' in self.cacheDir.index[uuid]:
+                filepath = os.path.join(self.cacheDir.directory,self.cacheDir.index[uuid]['filename'])
+                if os.path.isfile(filepath):
+                    os.remove(filepath)
+                self.log.error("Image '%s' was corrupted deleting." % (uuid))
+            del self.cacheDir.index[uuid]
         return True
     def expire(self):
         rc = True
