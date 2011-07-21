@@ -98,7 +98,6 @@ class BaseDir(object):
                 if 'filename' in self.index[uuid].keys():
                     if self.index[uuid]['filename'] == filename:
                         unknown = False
-                        break
             if unknown:
                 filepath = os.path.join(self.directory,filename)
                 os.remove(filepath)
