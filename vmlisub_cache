@@ -283,12 +283,13 @@ class CacheMan(object):
             QueryResults = self.Session.query(model.Subscription,model.ImageDefinition,model.ImageListInstance,model.ImageInstance).\
                 filter(model.ImageInstance.sha512 == CachedSha512).\
                 filter(model.ImageDefinition.cache == 1).\
+                filter(model.ImageDefinition.identifier == uuid).\
                 filter(model.ImageDefinition.latest == model.ImageInstance.id).\
                 filter(model.ImageDefinition.id == model.ImageInstance.fkIdentifier).\
                 filter(model.Subscription.authorised == True).\
                 filter(model.Subscription.imagelist_latest == model.ImageListInstance.id).\
                 filter(model.ImageDefinition.subscription == model.Subscription.id).\
-                filter(model.ImageListInstance.expired != None)
+                filter(model.ImageListInstance.expired == None)
             if QueryResults.count() != 1:
                 uuids2expire.append(uuid)
                 continue
