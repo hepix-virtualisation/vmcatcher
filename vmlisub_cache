@@ -95,9 +95,10 @@ class BaseDir(object):
         for filename in allfiles:
             unknown = True
             for uuid in self.index.keys():
-                if self.index[uuid]['filename'] == filename:
-                    unknown = False
-                    break
+                if 'filename' in self.index[uuid].keys():
+                    if self.index[uuid]['filename'] == filename:
+                        unknown = False
+                        break
             if unknown:
                 filepath = os.path.join(self.directory,filename)
                 os.remove(filepath)
@@ -144,15 +145,14 @@ class DownloadDir(BaseDir):
             self.log.warning("Image '%s' has failed to download '%s' times, giving up until new image list." % (uuid,DownLoadTrys))
             return False
         self.index[uuid]['DownLoadTrys'] = { 'count' : DownLoadTrys + 1 , 'msgHash' : self.index[uuid]['msgHash'] }
+        self.index[uuid]['filename'] = uuid
         self.indexSave()
         if self.index[uuid]['size'] != None:
             stats = os.statvfs(self.directory) 
             if self.index[uuid]['size'] > (stats[statvfs.F_BSIZE] * stats[statvfs.F_BAVAIL]):
                 self.log.error("Image '%s' is too large %s bytes." % (uuid,self.index[uuid]['size']))
                 return False
-        filename = uuid
-        self.index[uuid]['filename'] = filename
-        filepath = os.path.join(self.directory,filename)
+        filepath = os.path.join(self.directory,self.index[uuid]['filename'])
         urltouple = urlparse(self.index[uuid]['uri'])
         if hasattr (urltouple, "scheme"):
             unknownTransport = True
@@ -212,13 +212,17 @@ class ExpireDir(BaseDir):
     
     def moveFrom(self,aDir,uuid):
         if not isinstance(aDir,BaseDir):
-            self.log("not a BaseDir object code error")
+            self.log.error("not a BaseDir object code error")
             return False
         if not uuid in aDir.index.keys():
-            self.log("uuid '%s' is not in directory %s" % aDir)
+            self.log.error("uuid '%s' is not in directory %s" % aDir)
             return False
         idStr = "%s.%s" % (uuid, datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
         origin = os.path.join(aDir.directory,aDir.index[uuid]['filename'])
+        if not os.path.isfile(origin):
+            self.log.error("uuid '%s' referances file '%s' but file does not exist." % (uuid,origin))
+            del aDir.index[uuid]
+            return False
         destination = os.path.join(self.directory,idStr)
         shutil.move(origin, destination)
         self.index[idStr] = aDir.index[uuid]
@@ -263,7 +267,8 @@ class CacheMan(object):
                 filter(model.ImageDefinition.id == model.ImageInstance.fkIdentifier).\
                 filter(model.Subscription.authorised == True).\
                 filter(model.Subscription.imagelist_latest == model.ImageListInstance.id).\
-                filter(model.ImageDefinition.subscription == model.Subscription.id)
+                filter(model.ImageDefinition.subscription == model.Subscription.id).\
+                filter(model.ImageListInstance.expired != None)
             if QueryResults.count() != 1:
                 uuids2expire.append(uuid)
                 continue
@@ -280,6 +285,8 @@ class CacheMan(object):
             else:
                 self.log.error("Failed to move file %s to expired directory" % (uuid))
                 rc = False
+            self.cacheDir.indexSave()
+            self.ExpireDir.indexSave()
         return rc
     def download(self):
         downloadsneeded = {}
@@ -287,6 +294,7 @@ class CacheMan(object):
                 filter(model.ImageDefinition.cache == 1).\
                 filter(model.ImageDefinition.latest == model.ImageInstance.id).\
                 filter(model.ImageDefinition.id == model.ImageInstance.fkIdentifier).\
+                filter(model.ImageListInstance.expired != None).\
                 filter(model.Subscription.authorised == True).\
                 filter(model.Subscription.imagelist_latest == model.ImageListInstance.id).\
                 filter(model.ImageDefinition.subscription == model.Subscription.id)
