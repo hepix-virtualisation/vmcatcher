@@ -278,8 +278,9 @@ class CacheMan(object):
         rc = True
         self.cacheDir.indexUnknownClear()
         uuids2expire = []
-        for uuid in self.cacheDir.index.keys():
-            CachedSha512 = self.cacheDir.index[uuid]['sha512']
+        for key in self.cacheDir.index.keys():
+            uuid = self.cacheDir.index[key]['uuid']
+            CachedSha512 = self.cacheDir.index[key]['sha512']
             QueryResults = self.Session.query(model.Subscription,model.ImageDefinition,model.ImageListInstance,model.ImageInstance).\
                 filter(model.ImageInstance.sha512 == CachedSha512).\
                 filter(model.ImageDefinition.cache == 1).\
@@ -289,20 +290,25 @@ class CacheMan(object):
                 filter(model.Subscription.authorised == True).\
                 filter(model.Subscription.imagelist_latest == model.ImageListInstance.id).\
                 filter(model.ImageDefinition.subscription == model.Subscription.id).\
-                filter(model.ImageListInstance.expired == None)
+                filter(model.ImageListInstance.expired == None).\
+                filter(model.ImageListInstance.id == model.ImageInstance.fkimagelistinstance)
             if QueryResults.count() != 1:
+                print QueryResults.count()
                 uuids2expire.append(uuid)
                 continue
             dbSub, sbImageDef, DbImageListInst, DbImageInst = QueryResults.one()
-            if self.cacheDir.index[uuid][u'sha512'] != DbImageInst.sha512:
+            if self.cacheDir.index[key][u'sha512'] != DbImageInst.sha512:
+                uuids2expire.append(uuid)
+                continue
+            if self.cacheDir.index[key][u'size'] != DbImageInst.size:
                 uuids2expire.append(uuid)
                 continue
             if DbImageListInst.data_hash != self.cacheDir.index[uuid]['msgHash']:
-                self.cacheDir.index[uuid]['message'] = DbImageListInst.data
-                self.cacheDir.index[uuid]['msgHash'] = DbImageListInst.data_hash
+                self.cacheDir.index[key]['message'] = DbImageListInst.data
+                self.cacheDir.index[key]['msgHash'] = DbImageListInst.data_hash
         for uuid in uuids2expire:
             if self.ExpireDir.moveFrom(self.cacheDir,uuid):
-                self.log.info("Expired images '%s'" % (uuid))
+                self.log.info("Expired image '%s'" % (uuid))
             else:
                 self.log.error("Failed to move file %s to expired directory" % (uuid))
                 rc = False
@@ -315,11 +321,13 @@ class CacheMan(object):
                 filter(model.ImageDefinition.cache == 1).\
                 filter(model.ImageDefinition.latest == model.ImageInstance.id).\
                 filter(model.ImageDefinition.id == model.ImageInstance.fkIdentifier).\
-                filter(model.ImageListInstance.expired != None).\
+                filter(model.ImageListInstance.expired == None).\
                 filter(model.Subscription.authorised == True).\
                 filter(model.Subscription.imagelist_latest == model.ImageListInstance.id).\
-                filter(model.ImageDefinition.subscription == model.Subscription.id)
+                filter(model.ImageDefinition.subscription == model.Subscription.id).\
+                filter(model.ImageListInstance.id == model.ImageInstance.fkimagelistinstance)
         for line in QueryResults:
+            sub = line[0]
             imageDef = line[1]
             imageListInst = line[2]
             ImageInst = line[3]
