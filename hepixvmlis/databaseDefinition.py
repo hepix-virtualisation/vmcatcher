@@ -31,7 +31,7 @@ class Endorser(Base):
         self.identifier = identifier
 
 class EndorserPrincible(Base):
-    __tablename__ = 'endorser_princible'
+    __tablename__ = 'endorserPrincible'
     id = Column(Integer, primary_key=True)    
     hv_dn = Column(String(50),unique=True,nullable = False)
     hv_ca = Column(String(50),nullable = False)
