@@ -296,7 +296,6 @@ class db_actions:
             subscription.imagelist_latest = imagelistref
             self.session.add(subscription)
             self.session.commit()
-            return
     def subscriptions_delete(self,uuid):
         subscriptionlist = self.session.query(model.Subscription).\
             filter(model.Subscription.identifier==uuid)
