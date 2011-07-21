@@ -124,10 +124,6 @@ class ImageListInstance(Base):
     data = Column(String(1000),nullable = False)
     # Hash of Raw signed message
     data_hash = Column(String(128),nullable = False)
-    # This state indicates if the data was readable
-    # Bitwise on checks 1 Authenticated, 2 Parsed, 
-    #   4 Accepted, 8 Images Accepted
-    accepted = Column(Integer,nullable = False)
     # Null until expired then with date
     expired = Column(DateTime)
     sub_auth = Column(Integer, ForeignKey(SubscriptionAuth.id, onupdate="CASCADE", ondelete="CASCADE"))
