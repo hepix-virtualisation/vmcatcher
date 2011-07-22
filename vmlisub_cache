@@ -175,15 +175,20 @@ class cache_manager(object):
                     self.log.error("Image '%s' failed to download" % (image.identifier))
                     continue
                 file_metadata = file_extract_metadata(filename)
-                if (int(file_metadata[u'hv:size']) == int(image.size) and
-                    file_metadata[u'sl:checksum:sha512'] == image.sha512):
-                    storename = os.path.join(self.dir_cache,image.identifier)
-                    os.rename(filename, storename)
-                    self.files[image.identifier] = imagelist.data
-                    self.cache_index_save()
-                else:
-                    self.log.error("Image '%s' download but size is incorrect." % (image.identifier))
+                if int(file_metadata[u'hv:size']) != int(image.size):
+                    self.log.error("Image '%s' downloaded but size is incorrect." % (image.identifier))
+                    self.log.info("Expected size '%s' downloaded size '%s'." % (image.size,file_metadata[u'hv:size']))
                     os.remove(filename)
+                    continue
+                if file_metadata[u'sl:checksum:sha512'] != image.sha512:
+                    self.log.error("Image '%s' downloaded but hash is incorrect." % (image.identifier))
+                    self.log.info("Expected hash '%s' downloaded hash '%s'." % (image.sha512,file_metadata[u'sl:checksum:sha512']))
+                    os.remove(filename)
+                    continue
+                storename = os.path.join(self.dir_cache,image.identifier)
+                os.rename(filename, storename)
+                self.files[image.identifier] = imagelist.data
+                self.cache_index_save()
 
     def expire_images(self):
         Session = self.SessionFactory()
