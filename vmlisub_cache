@@ -46,8 +46,31 @@ try:
     import simplejson as json
 except:
     import json
-from urlparse import urlparse
 
+import urlparse
+
+
+def uglyUriParser(uri):
+    parsedUri = urlparse.urlsplit(uri)
+    if isinstance(parsedUri, tuple):
+        # We are probably python 2.4
+        networklocation = parsedUri[1].split(':')
+        hostname = networklocation[0]
+        port = ""
+        if len (networklocation) > 1:
+            port = networklocation[1]
+        return { "scheme" : parsedUri[0],
+            "path" : parsedUri[2],
+            "hostname" : hostname,
+            "port" : port,
+        }
+    if isinstance(parsedUri,urlparse.SplitResult):
+        # We are probably python 2.6
+        return { "scheme" : parsedUri.scheme,
+            "path" : parsedUri.path,
+            "hostname" : parsedUri.hostname,
+            "port" : parsedUri.port,
+        }
 
 
 class BaseDir(object):
@@ -153,37 +176,34 @@ class DownloadDir(BaseDir):
                 return False
         self.log.info("Downloading '%s'." % (uuid))
         filepath = os.path.join(self.directory,self.index[uuid]['filename'])
-        urltouple = urlparse(self.index[uuid]['uri'])
-        if hasattr (urltouple, "scheme"):
-            unknownTransport = True
-            if urltouple.scheme == u'http':
-                cmd = "wget -q -O %s %s" % (filepath,self.index[uuid]['uri'])
-                rc,output = commands.getstatusoutput(cmd)
-                if rc != 0:
-                    self.log.error("Command '%s' failed with return code '%s' for image '%s'" % (cmd,rc,uuid))
-                    if len(output) > 0:
-                        self.log.info("Output '%s'" % (output))
-                    os.remove(filepath)
-                    return False
-                unknownTransport = False
-            if urltouple.scheme == u'https':
-                cmd = "wget -q -O %s %s --no-check-certificate" % (filepath,self.index[uuid]['uri'])
-                rc,output = commands.getstatusoutput(cmd)
-                if rc != 0:
-                    self.log.error("Command '%s' failed with return code '%s' for image '%s'" % (cmd,rc,uuid))
-                    if len(output) > 0:
-                        self.log.info("Output '%s'" % (output))
-                    os.remove(filepath)
-                    return False
-                unknownTransport = False
-            if urltouple.scheme == u'file':
-                shutil.copyfile(urltouple.path,filepath)
-                unknownTransport = False
-            if unknownTransport:
-                self.log.error("Unknown transport '%s' for URI for '%s'" % (urltouple.scheme,uuid))
-        else:
+        uriParsed = uglyUriParser(self.index[uuid]['uri'])        
+        unknownTransport = True
+        if uriParsed['scheme'] == u'http':
             cmd = "wget -q -O %s %s" % (filepath,self.index[uuid]['uri'])
-            os.system(cmd)
+            rc,output = commands.getstatusoutput(cmd)
+            if rc != 0:
+                self.log.error("Command '%s' failed with return code '%s' for image '%s'" % (cmd,rc,uuid))
+                if len(output) > 0:
+                    self.log.info("Output '%s'" % (output))
+                os.remove(filepath)
+                return False
+            unknownTransport = False
+        if uriParsed['scheme'] == u'https':
+            cmd = "wget -q -O %s %s --no-check-certificate" % (filepath,self.index[uuid]['uri'])
+            rc,output = commands.getstatusoutput(cmd)
+            if rc != 0:
+                self.log.error("Command '%s' failed with return code '%s' for image '%s'" % (cmd,rc,uuid))
+                if len(output) > 0:
+                    self.log.info("Output '%s'" % (output))
+                os.remove(filepath)
+                return False
+            unknownTransport = False
+        if uriParsed['scheme'] == u'file':
+            shutil.copyfile(uriParsed['path'],filepath)
+            unknownTransport = False
+        if unknownTransport:
+            self.log.error("Unknown transport '%s' for URI for '%s'" % (uriParsed['scheme'],uuid))
+            continue
         file_metadata = file_extract_metadata(filepath)
         if file_metadata == None:
             self.log.error("Failed to get metadata for image '%s' at path '%s'." % (uuid,filepath))
