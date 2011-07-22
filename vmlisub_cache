@@ -182,7 +182,7 @@ class cache_manager(object):
                     self.files[image.identifier] = imagelist.data
                     self.cache_index_save()
                 else:
-                    self.log.error("Image '%s' download but size is incorect." % (image.identifier))
+                    self.log.error("Image '%s' download but size is incorrect." % (image.identifier))
                     os.remove(filename)
 
     def expire_images(self):
