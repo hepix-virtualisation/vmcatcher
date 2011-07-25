@@ -312,7 +312,6 @@ class CacheMan(object):
                 filter(model.ImageListInstance.expired == None).\
                 filter(model.ImageListInstance.id == model.ImageInstance.fkimagelistinstance)
             if QueryResults.count() != 1:
-                print QueryResults.count()
                 uuids2expire.append(uuid)
                 continue
             dbSub, sbImageDef, DbImageListInst, DbImageInst = QueryResults.one()
