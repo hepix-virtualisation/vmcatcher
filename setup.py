@@ -11,7 +11,7 @@ else:
         	from setuptools import setup, find_packages
 
 
-setup(name='hepixvmilsubscriber-dev',
+setup(name='hepixvmilsubscriber',
     version=version,
     description="VM Image list subscribing tool.",
     author="O M Synge",
