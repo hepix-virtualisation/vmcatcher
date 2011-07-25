@@ -184,7 +184,10 @@ class db_actions:
             ca = validated_data['issuer_dn']
             jsontext = json.loads(data)
             vmilist = VMimageListDecoder(jsontext)
-            removeauthorsiation = False
+            
+            metadata = vmilist.metadata
+            metadata[u'data'] = update_unprocessed
+            metadata[u'data-hash'] = messagehash
             
             if vmilist.endorser.metadata[u'hv:dn'] != dn:
                 self.log.error("Endorser DN does not match signature for '%s'" (ProcessingSubscriptionUuid))
@@ -205,11 +208,7 @@ class db_actions:
             if now > vmilist.metadata[u'dc:date:expires']:
                 self.log.warning('Image list has expired:%s' % (ProcessingSubscriptionUuid))
                 removeauthorsiation = True
-            metadata = vmilist.metadata
-            metadata[u'data'] = update_unprocessed
-            metadata[u'data-hash'] = messagehash
-            if removeauthorsiation:
-                metadata[u'authorised'] = False
+                metadata[u'expired'] = now
             
             # Now we know the data better check the SubscriptionAuth
             subauthq = self.session.query(model.SubscriptionAuth).\
