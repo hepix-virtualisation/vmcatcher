@@ -53,23 +53,31 @@ class db_actions:
     def image_lister(self):
         outputlist = []
 
-        subauthq = self.session.query(model.ImageDefinition, model.ImageInstance,model.ImageListInstance ,model.Subscription).\
-            filter(model.ImageDefinition.subscription == model.Subscription.id).\
-            filter(model.ImageInstance.fkIdentifier == model.ImageDefinition.id).\
-            filter(model.ImageInstance.fkimagelistinstance == model.ImageListInstance.id)
+        imageDefs = self.session.query(model.ImageDefinition,model.Subscription).\
+            filter(model.Subscription.id == model.ImageDefinition.subscription)
 
-        for q_result in subauthq:
+        for q_result in imageDefs:
             imagedef = q_result[0]
-            imageInstance = q_result[1]
-            listInstance = q_result[2]
-            subscription = q_result[3]
-            available = 0
-            if ((imagedef.latest == imageInstance.id) and (subscription.authorised == 1) and
-                (subscription.imagelist_latest == listInstance.id) and (listInstance.expired == None) and
-                (imageInstance.fkimagelistinstance != None) ):
-                available = 1
-            bimappedOutput = imagedef.cache + (available << 1)
-            outputlist.append("%s\t%s\t%s\t%s" % (imagedef.identifier,bimappedOutput,subscription.identifier,imageInstance.sha512))
+            subscription = q_result[1]
+            subauthq = self.session.query(model.ImageInstance,model.ImageListInstance).\
+                filter(model.ImageDefinition.id == imagedef.id).\
+                filter(model.Subscription.id == subscription.id).\
+                filter(model.ImageDefinition.subscription == model.Subscription.id).\
+                filter(model.ImageInstance.fkIdentifier == model.ImageDefinition.id).\
+                filter(model.ImageInstance.fkimagelistinstance == model.ImageListInstance.id).\
+                filter(model.Subscription.imagelist_latest == model.ImageListInstance.id)
+            bimappedOutput = imagedef.cache
+            if subauthq.count() == 1:
+                q_result = subauthq.one()
+                imageInstance = q_result[0]
+                listInstance = q_result[1]
+                available = 0
+                if ((imagedef.latest == imageInstance.id) and (subscription.authorised == 1) and
+                    (subscription.imagelist_latest == listInstance.id) and (listInstance.expired == None) and
+                    (imageInstance.fkimagelistinstance != None) and (imagedef.latest !=None)):
+                    available = 1
+                bimappedOutput = imagedef.cache + (available << 1)
+            outputlist.append("%s\t%s\t%s" % (imagedef.identifier,bimappedOutput,subscription.identifier))
         
         seperator = '\n'
         return seperator.join(outputlist)
