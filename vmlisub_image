@@ -171,14 +171,13 @@ class queryby_base:
         return self.subscription_by_id(by_id)
     
     def imagelistImage_by_imageUuid(self,uuid):
-        imagelistImage = self.session.query(model.ImageDefinition,model.ImageListInstance,model.ImageInstance).\
-                filter(model.ImageListInstance.id==model.ImageInstance.fkimagelistinstance).\
-                filter(model.ImageDefinition.identifier == uuid).\
-                filter(model.ImageInstance.fkIdentifier == model.ImageDefinition.id)
+        imagelistImage = self.session.query(model.ImageDefinition).\
+                filter(model.ImageDefinition.identifier == uuid)
+                
                 
         return imagelistImage
     def imagelistImage_by_imageSha512(self,sha512):
-        imagelistImage = self.session.query(model.ImageDefinition,model.ImageListInstance,model.ImageInstance).\
+        imagelistImage = self.session.query(model.ImageDefinition).\
                 filter(model.ImageListInstance.id==model.ImageInstance.fkimagelistinstance).\
                 filter(model.ImageInstance.sha512 == sha512).\
                 filter(model.ImageInstance.fkIdentifier == model.ImageDefinition.id)
@@ -304,11 +303,16 @@ class db_controler:
             query_subscription = selector.imagelistImage_get(selector_filter)
             view = self.factory_view(output_fileptr,Session,self.anchor)
             
-            for item in query_subscription:
-                imagedef = item[0]
-                imagelist = item[1]
-                image = item[2]
-                view.display_imagelistImage(imagedef,imagelist,image)
+            for imagedef in query_subscription:
+                
+                details = Session.query(model.ImageListInstance,model.ImageInstance).\
+                    filter(model.ImageListInstance.id==model.ImageInstance.fkimagelistinstance).\
+                    filter(model.ImageDefinition.id == imagedef.id).\
+                    filter(model.ImageInstance.fkIdentifier == model.ImageDefinition.id)
+                for item in details:
+                    imagelist = item[0]
+                    image = item[1]
+                    view.display_imagelistImage(imagedef,imagelist,image)
                 
                     
             if output_file_name != None:
@@ -330,8 +334,7 @@ class db_controler:
         selector = self.factory_selector(Session)
         for image in images_selected:
             query_subscription = selector.imagelistImage_get(image)
-            for reternedline in query_subscription:
-                ImageDef = reternedline[0]
+            for ImageDef in query_subscription:
                 ImageDef.cache = subscribe
                 Session.add(ImageDef)
                 Session.commit()
