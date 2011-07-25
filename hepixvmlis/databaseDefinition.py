@@ -63,6 +63,9 @@ class Subscription(Base):
     # Line woudl be but for inconsitancy #imagelist_latest =Column(Integer, ForeignKey('imagelist.id'))
     imagelist_latest =Column(Integer)
     orm_auth = relationship("SubscriptionAuth", backref="Subscription",cascade='all, delete')
+    # The data of the last update to the subscription.
+    #     This is different from the creation time of the image list.
+    #     It is provided only for instrumentation purposes.
     updated = Column(DateTime)
     def __init__(self,details, authorised = False):
         self.identifier = details[u'dc:identifier']
