@@ -141,10 +141,6 @@ class ImageListInstance(Base):
         self.imported = datetime.datetime.utcnow()
         self.created = metadata[u'dc:date:created']       
         self.expires = metadata[u'dc:date:expires']
-        if u'sccepted' in metadata.keys():
-            self.accepted = metadata[u'accepted']
-        else:
-            self.accepted = 0
         if u'expired' in metadata.keys():
             self.expired = metadata[u'expired']
     def __repr__(self):
