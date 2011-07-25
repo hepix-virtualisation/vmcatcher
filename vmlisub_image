@@ -170,13 +170,13 @@ class queryby_base:
     def subscription_get(self,by_id):
         return self.subscription_by_id(by_id)
     
-    def imagelistImage_by_imageUuid(self,uuid):
+    def imageDefinition_by_imageUuid(self,uuid):
         imagelistImage = self.session.query(model.ImageDefinition).\
                 filter(model.ImageDefinition.identifier == uuid)
                 
                 
         return imagelistImage
-    def imagelistImage_by_imageSha512(self,sha512):
+    def imageDefinition_by_imageSha512(self,sha512):
         imagelistImage = self.session.query(model.ImageDefinition).\
                 filter(model.ImageListInstance.id==model.ImageInstance.fkimagelistinstance).\
                 filter(model.ImageInstance.sha512 == sha512).\
@@ -185,12 +185,12 @@ class queryby_base:
     
     
 class queryby_sha512(queryby_base):
-    def imagelistImage_get(self,sha512):
-        return self.imagelistImage_by_imageSha512(sha512)
+    def imageDefinition_get(self,sha512):
+        return self.imageDefinition_by_imageSha512(sha512)
 
 class queryby_uuid(queryby_base):
-    def imagelistImage_get(self,uuid):
-        return self.imagelistImage_by_imageUuid(uuid)
+    def imageDefinition_get(self,uuid):
+        return self.imageDefinition_by_imageUuid(uuid)
 
 class output_driver_base:
     def __init__(self,file_pointer,session,anchor):
@@ -300,10 +300,10 @@ class db_controler:
                 output_fileptr = open(output_file_name,'w+')
                 output_fileptr.flush()
             
-            query_subscription = selector.imagelistImage_get(selector_filter)
+            queryImageDef = selector.imageDefinition_get(selector_filter)
             view = self.factory_view(output_fileptr,Session,self.anchor)
             
-            for imagedef in query_subscription:
+            for imagedef in queryImageDef:
                 
                 details = Session.query(model.ImageListInstance,model.ImageInstance).\
                     filter(model.ImageListInstance.id==model.ImageInstance.fkimagelistinstance).\
@@ -333,8 +333,8 @@ class db_controler:
         Session = self.SessionFactory()
         selector = self.factory_selector(Session)
         for image in images_selected:
-            query_subscription = selector.imagelistImage_get(image)
-            for ImageDef in query_subscription:
+            queryImageDef = selector.imageDefinition_get(image)
+            for ImageDef in queryImageDef:
                 ImageDef.cache = subscribe
                 Session.add(ImageDef)
                 Session.commit()
