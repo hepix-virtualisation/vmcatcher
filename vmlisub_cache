@@ -203,7 +203,7 @@ class DownloadDir(BaseDir):
             unknownTransport = False
         if unknownTransport:
             self.log.error("Unknown transport '%s' for URI for '%s'" % (uriParsed['scheme'],uuid))
-            continue
+            return False
         file_metadata = file_extract_metadata(filepath)
         if file_metadata == None:
             self.log.error("Failed to get metadata for image '%s' at path '%s'." % (uuid,filepath))
