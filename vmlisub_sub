@@ -203,10 +203,10 @@ class db_actions:
                 continue
             now = datetime.datetime.utcnow()
             if now < vmilist.metadata[u'dc:date:created']:
-                self.log.error('Image list '%s' has an invalid creation date.' % (ProcessingSubscriptionUuid))
+                self.log.error("Image list '%s' has an invalid creation date." % (ProcessingSubscriptionUuid))
                 continue
             if now > vmilist.metadata[u'dc:date:expires']:
-                self.log.warning('Image list '%s' has expired.' % (ProcessingSubscriptionUuid))
+                self.log.warning("Image list '%s' has expired." % (ProcessingSubscriptionUuid))
                 removeauthorsiation = True
                 metadata[u'expired'] = now
             
