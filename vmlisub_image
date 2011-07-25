@@ -53,18 +53,23 @@ class db_actions:
     def image_lister(self):
         outputlist = []
 
-        subauthq = self.session.query(model.ImageDefinition, model.ImageInstance, model.Subscription).\
-            filter(model.Subscription.imagelist_latest == model.ImageListInstance.id).\
-            filter(model.Subscription.authorised == True).\
-            filter(model.ImageInstance.fkimagelistinstance == model.ImageListInstance.id).\
-            filter(model.ImageDefinition.id == model.ImageInstance.id)
-            
+        subauthq = self.session.query(model.ImageDefinition, model.ImageInstance,model.ImageListInstance ,model.Subscription).\
+            filter(model.ImageDefinition.subscription == model.Subscription.id).\
+            filter(model.ImageInstance.fkIdentifier == model.ImageDefinition.id).\
+            filter(model.ImageInstance.fkimagelistinstance == model.ImageListInstance.id)
+
         for q_result in subauthq:
             imagedef = q_result[0]
-            image = q_result[1]
-            subscription = q_result[2]
-            
-            outputlist.append("%s\t%s\t%s\t%s" % (imagedef.identifier,imagedef.cache,subscription.identifier,image.sha512))
+            imageInstance = q_result[1]
+            listInstance = q_result[2]
+            subscription = q_result[3]
+            available = 0
+            if ((imagedef.latest == imageInstance.id) and (subscription.authorised == 1) and
+                (subscription.imagelist_latest == listInstance.id) and (listInstance.expired == None) and
+                (imageInstance.fkimagelistinstance != None) ):
+                available = 1
+            bimappedOutput = imagedef.cache + (available << 1)
+            outputlist.append("%s\t%s\t%s\t%s" % (imagedef.identifier,bimappedOutput,subscription.identifier,imageInstance.sha512))
         
         seperator = '\n'
         return seperator.join(outputlist)
