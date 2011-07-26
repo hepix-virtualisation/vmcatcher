@@ -406,7 +406,10 @@ class output_driver_lines(output_driver_base):
         self.file_pointer.write ('imagelist.dc:date:imported=%s\n' % (imagelist.imported.strftime(time_format_definition)))
         self.file_pointer.write ('imagelist.dc:date:created=%s\n' % (imagelist.created.strftime(time_format_definition)))
         self.file_pointer.write ('imagelist.dc:date:expires=%s\n' % (imagelist.expires.strftime(time_format_definition)))
-        self.file_pointer.write ('imagelist.authorised=%s\n' % (imagelist.authorised))
+        if imagelist.expired == None:
+            self.file_pointer.write ('imagelist.expired=0\n')
+        else:
+            self.file_pointer.write ('imagelist.expired=%s\n' % (imagelist.expired.strftime(time_format_definition)))
     def subscriptions_lister(self):
         subauthq = self.session.query(model.Subscription).all()
         for item in subauthq:
