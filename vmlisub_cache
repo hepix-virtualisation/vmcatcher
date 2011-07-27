@@ -426,7 +426,7 @@ def main():
     # 1 So we have some command line validation
     
     if databaseConnectionString == None:
-        databaseConnectionString = 'sqlite:///tutorial.db'
+        databaseConnectionString = 'sqlite:///vmilsubscriber.db'
         log.info("Defaulting DB connection to '%s'" % (databaseConnectionString))
     if len(actions) == 0:
         actions.add("sha512")
