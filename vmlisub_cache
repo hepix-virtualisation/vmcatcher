@@ -394,8 +394,7 @@ def main():
     p = optparse.OptionParser(version = "%prog " + version)
     p.add_option('-d', '--database', action ='store', help='Database Initiation string',
         default='sqlite:///tutorial.db')
-    p.add_option('-c', '--cert-dir', action ='store',help='Certificate directory.', metavar='INPUTDIR',
-        default='/etc/grid-security/certificates/')
+    p.add_option('-c', '--cert-dir', action ='store',help='Certificate directory.', metavar='INPUTDIR')
     p.add_option('-C', '--cache-dir', action ='store',help='Set the cache directory.',metavar='INPUTDIR')
     p.add_option('-p', '--partial-dir', action ='store',help='Set the cache download directory.')
     p.add_option('-e', '--expired-dir', action ='store',help='Set the cache expired directory.')
@@ -409,7 +408,7 @@ def main():
     dir_partial = None
     dir_expired = None
     actions = set()
-    
+    databaseConnectionString = None
     if options.cache_dir:
         dir_cache = options.cache_dir
     if options.partial_dir:
@@ -422,17 +421,30 @@ def main():
         actions.add("sha512")
     if options.download:
         actions.add("download")
+    if options.database:
+        databaseConnectionString = options.database
+    
+    # 1 So we have some command line validation
+    
+    if databaseConnectionString == None:
+        databaseConnectionString = 'sqlite:///tutorial.db'
+        log.info("Defaulting DB connection to '%s'" % (databaseConnectionString))
     if len(actions) == 0:
         actions.add("sha512")
         actions.add("download")
         actions.add("expire")
+        log.info("Defaulting actions as 'expire', 'sha512' and 'download'.")
 
     if dir_cache == None:
         dir_cache = "cache"
+        log.info("Defaulting cache-dir to '%s'." % (dir_cache))
+        
     if dir_partial == None:
         dir_partial = os.path.join(dir_cache,"partial")
+        log.info("Defaulting partial-dir to '%s'." % (dir_partial))
     if dir_expired == None:
         dir_expired = os.path.join(dir_cache,"expired")
+        log.info("Defaulting expired-dir to '%s'." % (dir_expired))
     directories_good = True
     if not os.path.isdir(dir_cache):
         log.error("Cache directory '%s' does not exist." % (dir_cache))

@@ -367,8 +367,7 @@ def main():
     """Runs program and handles command line options"""
     p = optparse.OptionParser(version = "%prog " + version)
     p.add_option('-l', '--list', action ='store_true',help='list subscriptions')
-    p.add_option('-d', '--database', action ='store', help='Database Initiation string',
-        default='sqlite:///tutorial.db')
+    p.add_option('-d', '--database', action ='store', help='Database Initiation string')
     p.add_option('-c', '--cert-dir', action ='store',help='Certificate directory.', metavar='INPUTDIR',
         default='/etc/grid-security/certificates/')
     p.add_option('-a', '--add', action ='store_true',help='Add image to Cache.')
@@ -394,6 +393,7 @@ def main():
     actionsrequiring_selections = set(['output','delete','info','add','remove'])
     inputformats = set(['uuid','sha512'])
     input_format_selected = set([])
+    databaseConnectionString = None
     if options.list:
         actions.add('list')
     if options.sha512:
@@ -414,8 +414,13 @@ def main():
         actions.add('add')
     if options.remove:
         actions.add('remove')
+    if options.database:
+        databaseConnectionString = options.database
     # 1 So we have some command line validation
-
+    
+    if databaseConnectionString == None:
+        databaseConnectionString = 'sqlite:///tutorial.db'
+        log.info("Defaulting DB connection to '%s'" % (databaseConnectionString))
     if len(actions) == 0:
         log.error("No actions selected")
         sys.exit(1)
@@ -440,7 +445,7 @@ def main():
     # 1 So we have some actions to process
     
     # 1.1 Initate DB
-    database = db_controler(options.database)
+    database = db_controler(databaseConnectionString)
     # 2 Initate CA's to manage files
     if anchor_needed:
         if anchor_needed:

@@ -545,8 +545,7 @@ def main():
     """Runs program and handles command line options"""
     p = optparse.OptionParser(version = "%prog " + version)
     p.add_option('-l', '--list', action ='store_true',help='list subscriptions')
-    p.add_option('-d', '--database', action ='store', help='Database Initiation string',
-        default='sqlite:///tutorial.db')
+    p.add_option('-d', '--database', action ='store', help='Database Initiation string')
     p.add_option('-s', '--subscribe', action ='append',help='Subscribe to URL', metavar='INPUTURL')
     p.add_option('-c', '--cert-dir', action ='store',help='Certificate directory.', metavar='INPUTDIR',
         default='/etc/grid-security/certificates/')
@@ -569,6 +568,7 @@ def main():
     inputformats = set(['uuid','url'])
     input_format_selected = set([])
     outputfiles = []
+    databaseConnectionString = None
     if options.list:
         actions.add('list')
         output_format_selected.add('lines')
@@ -586,7 +586,6 @@ def main():
     if options.uri:
         subscriptions_selected = options.uri
         input_format_selected.add('url')
-    
     if options.format:
         if options.format in outputformats:
             output_format_selected.add(options.format)
@@ -602,9 +601,14 @@ def main():
     if options.output:
         format_needed = True
         outputfiles = options.output
+    if options.database:
+        databaseConnectionString = options.database
     
     # 1 So we have some command line validation
     
+    if databaseConnectionString == None:
+        databaseConnectionString = 'sqlite:///tutorial.db'
+        log.info("Defaulting DB connection to '%s'" % (databaseConnectionString))
     if len(actions) == 0:
         log.error("No actions selected")
         sys.exit(1)
@@ -616,7 +620,7 @@ def main():
         sys.exit(1)
     
     # 1.1 Initate DB
-    database = db_controler(options.database)
+    database = db_controler(databaseConnectionString)
     
     # 2 Initate CA's to manage files
     if anchor_needed:
