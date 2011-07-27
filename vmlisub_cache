@@ -392,8 +392,7 @@ def main():
     log = logging.getLogger("vmlisub_sub.main")
     """Runs program and handles command line options"""
     p = optparse.OptionParser(version = "%prog " + version)
-    p.add_option('-d', '--database', action ='store', help='Database Initiation string',
-        default='sqlite:///tutorial.db')
+    p.add_option('-d', '--database', action ='store', help='Database Initiation string')
     p.add_option('-c', '--cert-dir', action ='store',help='Certificate directory.', metavar='INPUTDIR')
     p.add_option('-C', '--cache-dir', action ='store',help='Set the cache directory.',metavar='INPUTDIR')
     p.add_option('-p', '--partial-dir', action ='store',help='Set the cache download directory.')
@@ -459,7 +458,7 @@ def main():
         sys.exit(1)
         
     
-    ThisCacheManager = CacheMan(options.database,dir_cache, dir_partial, dir_expired)
+    ThisCacheManager = CacheMan(databaseConnectionString,dir_cache, dir_partial, dir_expired)
     ThisCacheManager.load()
     if "expire" in actions:
         if not ThisCacheManager.expire():
