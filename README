@@ -4,87 +4,203 @@
 Introduction
 ---------------------------------------
 
-This application attempts to be the equivalent of a modern Linux package update manager but for lists of 
-virtual machines signed with x509. It uses a database back end, and caches available image lists. This 
-application provides no control over what virtual machines are 
+This application attempts to be the equivalent of a modern Linux package update 
+manager but for lists of virtual machines signed with x509. It uses a database 
+back end, and caches available image lists. This application provides no control 
+over what virtual machines are 
 
-This set of applications are designed to provide a similar command line from each perspective to the imagelist
-archive.
+This set of applications are designed to provide a similar command line from each 
+perspective to the imagelist archive.
 
-vmlisub_image.py - Image details.
-vmlisub_sub.py - Subscription list details.
-vmlisub_auth.py -Subscription list authorization details.
+vmlisub_image    - Image details.
+vmlisub_sub      - Subscription list details.
+vmlisub_cache    - Cache selected images.
 
-They work in conjunction with a database to ease navigation, a local cache of image list subscriptions. The database 
-is message format agnostic, but it authenticates and validates all messages in import. Because these are just caches 
-of imagelists they are meant to be used the majority of the time without intervention.
+They work in conjunction with a database to ease navigation, a local cache of 
+image list subscriptions. The database is message format agnostic, but it 
+authenticates and validates all messages in import. Because these are just 
+caches of imagelists they are meant to be used the majority of the time without 
+intervention.
 
-If you are signing a list using the hepix image list signer, you should also install this application and
-subscribe to your current image. 
+If you are signing a list using the hepix image list signer, you should also 
+install this application and subscribe to your current image. 
 
-It is intended to with a couple of cron scripts to be informed at any time if your local images are 
-matching signatures in the image list.
+It is intended to with a couple of cron scripts to be informed at any time if 
+your local images are matching signatures in the image list.
 
-Anyone curious about this application should consider this application a software application similar to Debian's 
-'aptitude' or redhats 'yum', but rather for virtual machines, authenticated by the x509 signatures.
+Anyone curious about this application should consider this application a 
+software application similar to Debian's 'aptitude' or redhats 'yum', but rather 
+for virtual machines, authenticated by the x509 signatures.
 
 Instalation
 ---------------------------------------
 
-Instalation on SL6
+Instalation on Redhat Enterprise Linux 6
 ---------------------------------------
 
 Install EPEL for dependacies.
 
-rpm -i http://download.fedora.redhat.com/pub/epel/6/x86_64/epel-release-6-5.noarch.rpm
+    # rpm -i http://download.fedora.redhat.com/pub/epel/6/x86_64/epel-release-6-5.noarch.rpm
 
 Install DESY yum repository.
 
-cat /etc/yum.repos.d/desyvirt.repo 
+    $ cat /etc/yum.repos.d/desyvirt.repo 
 [desyvirt]
-name=owen
+name=desyvirt
 baseurl=http://grid.desy.de/vm/repo/yum/sl6/noarch/RPMS.stable/
 enabled=1
 gpgcheck=0
 
+Install the Grid CA repository for details please see https://wiki.egi.eu/wiki/EGI_IGTF_Release
 
-Install the Grid CA repository
-
-wget http://grid-deployment.web.cern.ch/grid-deployment/glite/repos/3.1/lcg-CA.repo
-mv lcg-CA.repo /etc/yum.repos.d/
-
+    $ cat /etc/yum.repos.d/egi-trust-anchor.repo
+[EGI-trustanchors]
+name=EGI-trustanchors
+baseurl=http://repository.egi.eu/sw/production/cas/1/current/
+gpgkey=http://repository.egi.eu/sw/production/cas/1/GPG-KEY-EUGridPMA-RPM-3
+gpgcheck=1
+enabled=1
 
 install the lcg-CA
 
-yum install lcg-CA
+    # yum install lcg-CA
 
 Install the hepix image list subscriber.
 
-yum install hepixvmilsubscriber
+    # yum install hepixvmilsubscriber
+
+
+Instalation on Redhat Enterprise Linux 5
+---------------------------------------
+
+Install EPEL for dependacies.
+
+    # rpm -i http://download.fedora.redhat.com/pub/epel/5/x86_64/epel-release-5-4.noarch.rpm
+
+Install DESY yum repository.
+
+    $ cat /etc/yum.repos.d/desyvirt.repo 
+[desyvirt]
+name=desyvirt
+baseurl=http://grid.desy.de/vm/repo/yum/sl5/noarch/RPMS.stable/
+enabled=1
+gpgcheck=0
+
+Install the Grid CA repository for details please see 
+https://wiki.egi.eu/wiki/EGI_IGTF_Release
+
+    $ cat /etc/yum.repos.d/egi-trust-anchor.repo
+[EGI-trustanchors]
+name=EGI-trustanchors
+baseurl=http://repository.egi.eu/sw/production/cas/1/current/
+gpgkey=http://repository.egi.eu/sw/production/cas/1/GPG-KEY-EUGridPMA-RPM-3
+gpgcheck=1
+enabled=1
+
+Install the lcg-CA
+
+    # yum install lcg-CA
+
+Install the hepix image list subscriber.
+
+    # yum install hepixvmilsubscriber
+
+This may fail due to a dependacy of m2crypto that cannot be satisfied. This is 
+due to known bugs in m2crypto in the version shipped in RHEL5. If this is a 
+problem please download the following
+
+http://ftp.informatik.uni-frankfurt.de/fedora-archive/fedora/linux/releases/8/Everything/source/SRPMS/m2crypto-0.18-2.src.rpm
+
+And build a native RPM.
+
+Quickstart use of hepixvmilsubscriber
+---------------------------------------
+
 
 Add a subscription, Insecure method.
 
-/usr/bin/vmlisub_sub \
-     -s https://particle.phys.uvic.ca/~igable/hepix/hepix_signed_image_list
+    $ vmlisub_sub \
+       -s https://particle.phys.uvic.ca/~igable/hepix/hepix_signed_image_list
+INFO:main:Defaulting DB connection to 'sqlite:///vmilsubscriber.db'
+
+Note: The INFO message is stating that the database parameter is defaulted to a
+      file in the local directory 'vmilsubscriber.db'.
 
 Add a subscription, Secure method.
+    $ wget https://particle.phys.uvic.ca/~igable/hepix/hepix_signed_image_list
 
-/usr/bin/vmlisub_sub -s file:////`pwd`/hepix_signed_image_list 
+Now you can check the image list by visiual inspection.  
+
+    $ vmlisub_sub -s file:////`pwd`/hepix_signed_image_list 
+INFO:main:Defaulting DB connection to 'sqlite:///vmilsubscriber.db'
 WARNING:db_actions:list hv:uri does not match subscription uri
+
+Next update the subscription.
+
+    $ vmlisub_sub -U 
+INFO:main:Defaulting DB connection to 'sqlite:///vmilsubscriber.db'
+INFO:db_actions:Updating:63175437-7d59-4851-b333-c96cb6545a86
+
+Now the data base contains the latest version of the image list. To query the
+available images they can be listed:
+
+    $ vmlisub_image -l
+INFO:vmlisub_sub.main:Defaulting DB connection to 'sqlite:///vmilsubscriber.db'
+327016b0-6508-41d2-bce0-c1724cb3d3e2    2       63175437-7d59-4851-b333-c96cb6545a86
+ecfbc671-eaee-439c-b1a3-db85dbef5e7b    2       63175437-7d59-4851-b333-c96cb6545a86
+da42ca85-179b-4873-b12e-32d549bf02b6    2       63175437-7d59-4851-b333-c96cb6545a86
+
+The results show the UUID of the image, the availablity state and the 
+subscription UUID. The state value is a bitmap, 1 is subscribed, 2 means its 
+available in the current image lists. Now we will seelct an image for local caching.
+
+    $ vmlisub_image -a -u ecfbc671-eaee-439c-b1a3-db85dbef5e7b
+INFO:vmlisub_sub.main:Defaulting DB connection to 'sqlite:///vmilsubscriber.db'
+
+Make the directories for caching the images.
+
+   $ mkdir cache cache/partial cache/expired
+
+Now cache the images.
+
+    $ vmlisub_cache 
+INFO:vmlisub_sub.main:Defaulting DB connection to 'sqlite:///vmilsubscriber.db'
+INFO:DownloadDir:Downloading 'ecfbc671-eaee-439c-b1a3-db85dbef5e7b'.
+INFO:CacheMan:moved file ecfbc671-eaee-439c-b1a3-db85dbef5e7b
+
+Once this is complete the image from the image list will be cached.
+
+    $ find cache/
+cache/
+cache/partial
+cache/partial/cache.index
+cache/expired
+cache/expired/cache.index
+cache/ecfbc671-eaee-439c-b1a3-db85dbef5e7b
+cache/cache.index
+
+
+Set up for Production using Cron
+--------------------------------
 
 Then the by hand configuration for your master DB
 
-useradd vmlisub
-mkdir /var/lib/vmlisub/
-chown vmlisub:vmlisub /var/lib/vmlisub/
-sudo -u vmlisub /usr/bin/vmlisub_sub \
-    -s https://particle.phys.uvic.ca/~igable/hepix/hepix_signed_image_list \
-    -d sqlite:////var/lib/vmlisub/vmlisub.db
+    $ useradd vmlisub
+    $ mkdir -p /var/lib/vmlisub /var/cache/vmimages/endorsed \
+      /var/cache/vmimages/partial /var/cache/vmimages/expired
+    $ touch /var/log/vmlisub.log
+    $ chown vmlisub:vmlisub /var/lib/vmlisub  /var/cache/vmimages/endorsed \
+      /var/cache/vmimages/partial /var/cache/vmimages/expired \
+      /var/log/vmlisub.log
+    $ sudo -u vmlisub /usr/bin/vmlisub_sub \
+      -s https://particle.phys.uvic.ca/~igable/hepix/hepix_signed_image_list \
+      -d sqlite:////var/lib/vmlisub/vmlisub.db
+    $ sudo /var/log/vmlisub.log
 
 make a cron job
 
-[root@vmic-virt-grid ~]# cat   /etc/cron.d/vmlisub
-50 */6 * * *    vmlisub /usr/bin/vmlisub_sub -d sqlite:////var/lib/vmlisub/vmlisub.db -U 2>> /var/log/vmlisub.log
+    $ cat   /etc/cron.d/vmlisub
+50 */6 * * *    vmlisub (/usr/bin/vmlisub_sub -d sqlite:////var/lib/vmlisub/vmlisub.db -U; /usr/bin/vmlisub_cache -d sqlite:////var/lib/vmlisub/vmlisub.db -C /var/cache/vmimages/endorsed/ -p /var/cache/vmimages/partial/ -e /var/cache/vmimages/expired/ ) >> /var/log/vmlisub.log 2>&1
 
 So the script is exexuted every 6 hours shortly after fetch CRL.
 
@@ -105,37 +221,36 @@ To get a complete list of available commands do:
 Formats
 ---------------------------------------
 
-Three formats exist SMIME, message, lines. SMIME for applications that wish to process the signature as if from the 
-endorser directly. "message" for applications that have no interest in processing the SMIME signature. "lines" for 
-human users of this application.
+Three formats exist SMIME, message, lines. SMIME for applications that wish to 
+process the signature as if from the endorser directly. "message" for 
+applications that have no interest in processing the SMIME signature. "lines" 
+for human users of this application.
 
 Examples
 ---------------------------------------
 
-To get a complete list of available commands do:
+*vmlisub_sub*
 
-    $ vmilisttool --help
-
-*vmlisub_sub.py*
+Thsi application manages your subscriptions:
 
 To add a subscription
 
-    $ python vmlisub_sub.py  -s https://particle.phys.uvic.ca/~igable/hepix/hepix_signed_image_list
+    $ vmlisub_sub  -s https://particle.phys.uvic.ca/~igable/hepix/hepix_signed_image_list
 
-    $ python vmlisub_sub.py  -s file:////`pwd`/hepix_signed_image_list
+    $ vmlisub_sub  -s file:////`pwd`/hepix_signed_image_list
 
 To update your subscriptions
 
-    $ python vmlisub_sub.py  -U
+    $ vmlisub_sub  -U
 
 To list subscriptions
 
-    $ python vmlisub_sub.py  -l
+    $ vmlisub_sub  -l
 63175437-7d59-4851-b333-c96cb6545a86    True    https://particle.phys.uvic.ca/~igable/hepix/hepix_signed_image_list
 
 Getting Information on a subscription:
 
-    $ python vmlisub_sub.py  -i --uuid=63175437-7d59-4851-b333-c96cb6545a86
+    $ vmlisub_sub  -i --uuid=63175437-7d59-4851-b333-c96cb6545a86
 dc:identifier=63175437-7d59-4851-b333-c96cb6545a86
 subscription.dc:description=HEPiX Image Exchange Testing
 subscription.sl:authorised=True
@@ -147,7 +262,7 @@ imagelist.dc:date:expires=2011-04-13T00:15:07Z
 
 you can also select on the basis of url:
 
-    $ python vmlisub_sub.py  -i -r https://particle.phys.uvic.ca/~igable/hepix/hepix_signed_image_list
+    $ vmlisub_sub  -i -r https://particle.phys.uvic.ca/~igable/hepix/hepix_signed_image_list
 dc:identifier=63175437-7d59-4851-b333-c96cb6545a86
 subscription.dc:description=HEPiX Image Exchange Testing
 subscription.sl:authorised=True
@@ -159,16 +274,34 @@ imagelist.dc:date:expires=2011-04-13T00:15:07Z
 
 Change the output format:
 
-    $ python vmlisub_sub.py  -i --uuid=63175437-7d59-4851-b333-c96cb6545a86 -f message
+    $ vmlisub_sub  -i --uuid=63175437-7d59-4851-b333-c96cb6545a86 -f message
 
 
 To delete a subscription
 
-    $ python vmlisub_sub.py  -D  --uuid=63175437-7d59-4851-b333-c96cb6545a86
+    $ vmlisub_sub  -D  --uuid=63175437-7d59-4851-b333-c96cb6545a86
 
-*vmlisub_image.py*
+*vmlisub_image*
 
-    $python vmlisub_image.py -l
-42d7acdf-2e31-4ec0-9d96-1fc8c997f995    63175437-7d59-4851-b333-c96cb6545a86    de637ecd52464fdee45848cf317330edf2df8b02594ab53cbd98acac53154f3e4355bdbee2c7484249e5f398fa68f9dd2af740e98b96e6f8f106f2e46ba2dc0a
-9f2334cb-688f-4189-9c54-c1e5511f7455    63175437-7d59-4851-b333-c96cb6545a86    c018fe33c4bd05b0c882fc0956cdf306ba10890e9b2a4e41fc9a681a9219e17e3c8f2285a233f15c294df7b47b9288fabe9a185bd10454e5bdb5ee93062d19f1
-da42ca85-179b-4873-b12e-32d549bf02b6    63175437-7d59-4851-b333-c96cb6545a86    63db1023085334560d974572f34e8b97ab15dd66fc661c8a7aa34ec8e7d24a93ba2fee7e6372b1e90b971070b6e56ef82be176beb0ad20a42b6bf92377f22a3c
+
+
+
+
+Example image lists
+---------------------------------------
+
+The following are image list providers known to the authors of the software.
+
+Ian Gables images from University of Victoria Canada.
+
+https://particle.phys.uvic.ca/~igable/hepix/hepix_signed_image_list
+
+Andrea Chierici images from CNAF the Italian National Center for Research and 
+Development about Information and Data transmission Technologies.
+
+http://www.cnaf.infn.it/~chierici/repo/andrea-list
+
+Predrag Buncic images from the CernVM project and is based at CERN, the European 
+Organization for Nuclear Research
+
+https://cernvm.cern.ch/releases/image.list
