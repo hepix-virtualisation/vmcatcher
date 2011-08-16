@@ -202,13 +202,13 @@ class output_driver_base:
         status = None
         
         self.display_subscription(subscription)
-        self.display_imagelist(imagelist)
-        
+        if not self.display_imagelist(imagelist):
+            return False
         return True
     def display_subscription(self,subscription):
         pass
     def display_imagelist(self,imagelist):
-        pass
+        return True
     def subscriptions_lister(self):
         pass
 
@@ -217,18 +217,27 @@ class output_driver_smime(output_driver_base):
         pass
     def display_imagelist(self,imagelist):
         self.file_pointer.write (imagelist.data)
+        return True
     def display_imagelistImage(self,imagedef,imagelist,image):
-        self.display_imagelist(imagelist)
+        if not self.display_imagelist(imagelist):
+            return False
+        return True
     
 class output_driver_message(output_driver_base):
     def display_subscription(self,subscription):
         pass
     def display_imagelist(self,imagelist):
-        
-        validated_data = self.anchor.validate_text(str(imagelist.data))
+        try:        
+            validated_data = self.anchor.validate_text(str(imagelist.data))
+        except SmimeX509ValidationError,E:
+            self.log.error("Failed to validate text for '%s' " % (imagelist))
+            return False
         self.file_pointer.write (validated_data['data'])
+        return True
     def display_imagelistImage(self,imagedef,imagelist,image):
-        self.display_imagelist(imagelist)
+        if not self.display_imagelist(imagelist):
+            return False
+        return True
 
 class output_driver_lines(output_driver_base):
     def display_subscription(self,image):
@@ -237,9 +246,13 @@ class output_driver_lines(output_driver_base):
         self.file_pointer.write ('image.hv:uri=%s\n' % (image.uri))
         return True
     def display_imagelist(self,imagelist):
-        
-        validated_data = self.anchor.validate_text(str(imagelist.data))
+        try:
+            validated_data = self.anchor.validate_text(str(imagelist.data))
+        except SmimeX509ValidationError,E:
+            self.log.error("Failed to validate text for '%s' " % (imagelist))
+            return False
         self.file_pointer.write (validated_data['data'])
+        return True
     def display_imagelistImage(self,imagedef,imagelist,image):
         self.file_pointer.write ('imagelist.dc:identifier=%s\n' % (imagedef.identifier))
         self.file_pointer.write ('imagelist.dc:date:imported=%s\n' % (imagelist.imported.strftime(time_format_definition)))
@@ -258,7 +271,7 @@ class output_driver_lines(output_driver_base):
         self.file_pointer.write ('image.sl:comments=%s\n' % (image.comments))
         self.file_pointer.write ('image.sl:os=%s\n' % (image.os))
         self.file_pointer.write ('image.sl:osversion=%s\n' % (image.osversion))
-
+        return True
 
 
         
@@ -283,13 +296,12 @@ class db_controler:
     def setup_view_factory(self,factory):
         self.factory_view = factory
     def images_info(self,images_selected,outputfiles):
-        
         pairs, extra_selectors ,extra_paths = pairsNnot(images_selected,outputfiles)
         
         for item in extra_selectors:
             pairs.append([item,None])
             
-        errorhappened = False
+        NoErrorHappened = True
         Session = self.SessionFactory()
         selector = self.factory_selector(Session)
         for pair in pairs:
@@ -312,11 +324,11 @@ class db_controler:
                 for item in details:
                     imagelist = item[0]
                     image = item[1]
-                    view.display_imagelistImage(imagedef,imagelist,image)
-                
-                    
+                    if not view.display_imagelistImage(imagedef,imagelist,image):
+                        NoErrorHappened = False
             if output_file_name != None:
                 output_fileptr.close()
+        return NoErrorHappened
     def image_subscription_delete(self,images_selected):
         Session = self.SessionFactory()
         db = db_actions(Session)
@@ -530,7 +542,8 @@ def main():
             for item in pairs:
                 db.image_by_sha512_writefile_imagelist(anchor,item[0],item[1])
     if 'info' in actions:
-        database.images_info(images_selected,outputfiles)
+        if not database.images_info(images_selected,outputfiles):
+            sys.exit(1)
         
     if 'add' in actions:
         database.images_subscribe(images_selected,1)
