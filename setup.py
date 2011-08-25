@@ -14,23 +14,28 @@ else:
 setup(name='hepixvmilsubscriber',
     version=version,
     description="VM Image list subscribing tool.",
+    long_description="""This application attempts to be the equivalent of a modern Linux package update 
+manager but for lists of virtual machines signed with x509. It uses a database 
+back end, and caches available image lists.""",
     author="O M Synge",
     author_email="owen.synge@desy.de",
+    license='Apache License (2.0)',
     install_requires=[
        "M2Crypto>=0.16",
         ],
     url = 'https://github.com/hepix-virtualisation/hepixvmilsubscriber',
     packages = ['hepixvmlis'],
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 5 - Production/Stable',
         'Environment :: Console',
-        'Intended Audience :: System Administrators',
-        'Intended Audience :: Science/Research'
         'Intended Audience :: Developers',
+        'Intended Audience :: Science/Research'
+        'Intended Audience :: System Administrators',
+        'License :: OSI Approved :: Apache Software License',
         'Operating System :: POSIX',
         'Programming Language :: Python',
         ],
     
     scripts=['vmlisub_image','vmlisub_sub','vmlisub_cache'],
-    data_files=[('/usr/share/doc/hepixvmilsubscriber',['README'])]
+    data_files=[('/usr/share/doc/hepixvmilsubscriber-%s' % (version),['README','LICENSE'])]
     )
