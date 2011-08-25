@@ -65,6 +65,10 @@ install the lcg-CA
 
     # yum install lcg-CA
 
+install fetch-crl
+
+    # yum install fetch-crl
+
 Install the hepix image list subscriber.
 
     # yum install hepixvmilsubscriber
@@ -101,6 +105,10 @@ Install the lcg-CA
 
     # yum install lcg-CA
 
+install fetch-crl
+
+    # yum install fetch-crl
+
 Install the hepix image list subscriber.
 
     # yum install hepixvmilsubscriber
@@ -116,6 +124,9 @@ And build a native RPM.
 Quickstart use of hepixvmilsubscriber
 ---------------------------------------
 
+First make sure that all the Certificate Revocation Lists (CRL) are upto date.
+
+    # fetch-crl
 
 Add a subscription, Insecure method.
 
