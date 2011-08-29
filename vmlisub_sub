@@ -582,6 +582,8 @@ def main():
             sys.exit(1)
     else:
         logging.basicConfig(level=logging.INFO)
+    log = logging.getLogger("main")
+    # Now logging is set up process other options
     if options.list:
         actions.add('list')
         output_format_selected.add('lines')
