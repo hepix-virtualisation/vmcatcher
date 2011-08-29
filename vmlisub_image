@@ -25,7 +25,7 @@ if sys.version_info < (2, 5):
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import hepixvmlis.databaseDefinition as model
-
+import os
 import logging
 import optparse
 import smimeX509validation.loadcanamespace as loadcanamespace
@@ -375,7 +375,6 @@ def pairsNnot(list_a,list_b):
 
 
 def main():
-    log = logging.getLogger("vmlisub_sub.main")
     """Runs program and handles command line options"""
     p = optparse.OptionParser(version = "%prog " + version)
     p.add_option('-l', '--list', action ='store_true',help='list subscriptions')
@@ -390,6 +389,8 @@ def main():
     p.add_option('-i', '--info', action ='store_true',help='Info on selected images')
     p.add_option('-f', '--format', action ='store',help='Sets the output format')
     p.add_option('-o', '--output', action ='append',help='Export File.', metavar='OUTPUTFILE')
+    p.add_option('-L', '--logfile', action ='store',help='Logfile configuration file.', metavar='LOGFILE')
+
     outputformats = set(['SMIME','message','lines'])
     output_format_selected = set([])
     options, arguments = p.parse_args()
@@ -406,6 +407,19 @@ def main():
     inputformats = set(['uuid','sha512'])
     input_format_selected = set([])
     databaseConnectionString = None
+    # Set up log file
+    if options.logfile:
+        if os.path.isfile(str(options.logfile)):
+            logging.config.fileConfig(options.logfile)
+        else:
+            logging.basicConfig(level=logging.INFO)
+            log = logging.getLogger("main")
+            log.error("Logfile configuration file '%s' was not found." % (options.logfile))
+            sys.exit(1)
+    else:
+        logging.basicConfig(level=logging.INFO)
+    log = logging.getLogger("main")
+    # Now logging is set up process other options
     if options.list:
         actions.add('list')
     if options.sha512:
@@ -550,5 +564,4 @@ def main():
     if 'remove' in actions:
         database.images_subscribe(images_selected,0)
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
     main()

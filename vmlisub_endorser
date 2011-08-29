@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from sqlalchemy import create_engine
 import hepixvmlis.databaseDefinition as model
-
+import os
 import logging
 import optparse
 import smimeX509validation.loadcanamespace as loadcanamespace
@@ -253,7 +253,6 @@ def pairsNnot(list_a,list_b):
 
            
 def main():
-    log = logging.getLogger("main")
     """Runs program and handles command line options"""
     p = optparse.OptionParser(version = "%prog " + version)
     p.add_option('-l', '--list', action ='store_true',help='list subscriptions')
@@ -267,12 +266,13 @@ def main():
     p.add_option('-f', '--format', action ='store',help='Sets the output format')
     p.add_option('-C', '--create', action ='store_true',help='Create an endorser.')
     p.add_option('-D', '--delete', action ='store_true',help='Delete subscription')
-    p.add_option('-L', '--link', action ='store_true',help='Add endorser to subscription.')
+    p.add_option('-k', '--link', action ='store_true',help='Add endorser to subscription.')
     p.add_option('-u', '--unlink', action ='store_true',help='remove endorser from Subscription.')
     p.add_option('-A', '--authorise', action ='store_true',help='authoriase endorser to update subscription.')    
     p.add_option('-i', '--info', action ='store_true',help='Information on subscription')
     p.add_option('-o', '--output', action ='append',help='Export File.', metavar='OUTPUTFILE')
-    
+    p.add_option('-L', '--logfile', action ='store',help='Logfile configuration file.', metavar='LOGFILE')
+
     options, arguments = p.parse_args()
     anchor_needed = False
     format_needed = False
@@ -287,6 +287,19 @@ def main():
     x509_dn = []
     x509_ca_dn = []
     databaseConnectionString = None
+    # Set up log file
+    if options.logfile:
+        if os.path.isfile(str(options.logfile)):
+            logging.config.fileConfig(options.logfile)
+        else:
+            logging.basicConfig(level=logging.INFO)
+            log = logging.getLogger("main")
+            log.error("Logfile configuration file '%s' was not found." % (options.logfile))
+            sys.exit(1)
+    else:
+        logging.basicConfig(level=logging.INFO)
+    log = logging.getLogger("main")
+    # Now logging is set up process other options
     if options.list:
         actions.add('list')
         output_format_selected.add('lines')
@@ -427,5 +440,4 @@ def main():
             x509_ca_dn = item[1][1]
             database.endorsers_create(uuid,x509_dn,x509_ca_dn)
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
     main()

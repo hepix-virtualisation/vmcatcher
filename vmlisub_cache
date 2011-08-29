@@ -389,7 +389,6 @@ class CacheMan(object):
         self.ExpireDir.indexSave()
             
 def main():
-    log = logging.getLogger("vmlisub_sub.main")
     """Runs program and handles command line options"""
     p = optparse.OptionParser(version = "%prog " + version)
     p.add_option('-d', '--database', action ='store', help='Database Initiation string')
@@ -400,7 +399,8 @@ def main():
     p.add_option('-D', '--download', action ='store_true',help='Download subscribed images to cache.')
     p.add_option('-s', '--sha512', action ='store_true',help='check Sha512 for images in cache.')
     p.add_option('-E', '--expire', action ='store_true',help='expire images from cache.')
-    
+    p.add_option('-L', '--logfile', action ='store',help='Logfile configuration file.', metavar='LOGFILE')
+
     options, arguments = p.parse_args()
     
     dir_cache = None
@@ -408,6 +408,17 @@ def main():
     dir_expired = None
     actions = set()
     databaseConnectionString = None
+    # Set up log file
+    if options.logfile:
+        if os.path.isfile(str(options.logfile)):
+            logging.config.fileConfig(options.logfile)
+        else:
+            logging.basicConfig(level=logging.INFO)
+            log = logging.getLogger("main")
+            log.error("Logfile configuration file '%s' was not found." % (options.logfile))
+            sys.exit(1)
+    else:
+        logging.basicConfig(level=logging.INFO)
     if options.cache_dir:
         dir_cache = options.cache_dir
     if options.partial_dir:
@@ -476,5 +487,4 @@ def main():
     
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
     main()
