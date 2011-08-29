@@ -13,9 +13,9 @@ if sys.version_info < (2, 5):
     for name in os.listdir(module_dir):
         lowername = name.lower()
         if lowername[0:10] == 'sqlalchemy' and 'egg' in lowername:
-            sqlalchemy_dir = os.path.join(module_dir, name) 
+            sqlalchemy_dir = os.path.join(module_dir, name)
             if os.path.isdir(sqlalchemy_dir):
-                site.addsitedir(sqlalchemy_dir) 
+                site.addsitedir(sqlalchemy_dir)
                 found = True
                 break
     if not found:
@@ -44,11 +44,11 @@ except:
     import json
 
 class db_actions:
-    
+
     def __init__(self,session):
         self.session = session
         self.log = logging.getLogger("vmlisub_sub.db_actions")
-    
+
 
     def image_lister(self):
         outputlist = []
@@ -78,10 +78,10 @@ class db_actions:
                     available = 1
                 bimappedOutput = imagedef.cache + (available << 1)
             outputlist.append("%s\t%s\t%s" % (imagedef.identifier,bimappedOutput,subscription.identifier))
-        
+
         seperator = '\n'
         return seperator.join(outputlist)
-    
+
     def image_by_sha512_writefile_imagelist(self,treess,sha512,path):
         query_image = self.session.query(model.ImageInstance).\
             filter(model.ImageInstance.fkimagelistinstance == model.ImageListInstance.id).\
@@ -94,8 +94,8 @@ class db_actions:
             fp.write(image.data)
         fp.close()
         return True
-        
-        
+
+
     def image_by_sha512_writefile_json(self,treess,sha512,path):
         query_image = self.session.query(model.ImageInstance,model.ImageListInstance).\
             filter(model.ImageInstance.fkimagelistinstance == model.ImageListInstance.id).\
@@ -124,7 +124,7 @@ class db_actions:
         for query_row in query_image:
             image = query_row[0]
             imagelist = query_row[1]
-            
+
             print ('dc:identifier=%s' % (image.identifier))
             print ('dc:description=%s' % (image.description))
             print ('hv:hypervisor=%s' % (image.hypervisor))
@@ -165,16 +165,16 @@ class queryby_base:
         subscriptionlist = self.session.query(model.ImageListInstance).\
                 filter(model.ImageListInstance.id==private_id)
         return subscriptionlist
-    
+
         # Now the virtual class
     def subscription_get(self,by_id):
         return self.subscription_by_id(by_id)
-    
+
     def imageDefinition_by_imageUuid(self,uuid):
         imagelistImage = self.session.query(model.ImageDefinition).\
                 filter(model.ImageDefinition.identifier == uuid)
-                
-                
+
+
         return imagelistImage
     def imageDefinition_by_imageSha512(self,sha512):
         imagelistImage = self.session.query(model.ImageDefinition).\
@@ -182,8 +182,8 @@ class queryby_base:
                 filter(model.ImageInstance.sha512 == sha512).\
                 filter(model.ImageInstance.fkIdentifier == model.ImageDefinition.id)
         return imagelistImage
-    
-    
+
+
 class queryby_sha512(queryby_base):
     def imageDefinition_get(self,sha512):
         return self.imageDefinition_by_imageSha512(sha512)
@@ -200,7 +200,7 @@ class output_driver_base:
         self.anchor = anchor
     def display_subscription_imagelist(self,subscription,imagelist):
         status = None
-        
+
         self.display_subscription(subscription)
         if not self.display_imagelist(imagelist):
             return False
@@ -222,12 +222,12 @@ class output_driver_smime(output_driver_base):
         if not self.display_imagelist(imagelist):
             return False
         return True
-    
+
 class output_driver_message(output_driver_base):
     def display_subscription(self,subscription):
         pass
     def display_imagelist(self,imagelist):
-        try:        
+        try:
             validated_data = self.anchor.validate_text(str(imagelist.data))
         except SmimeX509ValidationError,E:
             self.log.error("Failed to validate text for '%s' " % (imagelist))
@@ -260,7 +260,7 @@ class output_driver_lines(output_driver_base):
         self.file_pointer.write ('imagelist.dc:date:expires=%s\n' % (imagelist.expires.strftime(time_format_definition)))
         self.file_pointer.write ('imagedef.dc:identifier=%s\n' % (imagedef.identifier))
         self.file_pointer.write ('imagedef.cache=%s\n' % (imagedef.cache))
-        self.file_pointer.write ('image.dc:description=%s\n' % (image.description))       
+        self.file_pointer.write ('image.dc:description=%s\n' % (image.description))
         self.file_pointer.write ('image.dc:title=%s\n' % (image.title))
         self.file_pointer.write ('image.hv:hypervisor=%s\n' % (image.hypervisor))
         self.file_pointer.write ('image.hv:size=%s\n' % (image.size))
@@ -274,10 +274,10 @@ class output_driver_lines(output_driver_base):
         return True
 
 
-        
-        
+
+
     def subscriptions_lister(self):
-        
+
         subauthq = self.session.query(model.Subscription).all()
         for item in subauthq:
             self.file_pointer.write ("%s\t%s\t%s\n" % (item.uuid,item.authorised,item.url))
@@ -297,26 +297,26 @@ class db_controler:
         self.factory_view = factory
     def images_info(self,images_selected,outputfiles):
         pairs, extra_selectors ,extra_paths = pairsNnot(images_selected,outputfiles)
-        
+
         for item in extra_selectors:
             pairs.append([item,None])
-            
+
         NoErrorHappened = True
         Session = self.SessionFactory()
         selector = self.factory_selector(Session)
         for pair in pairs:
             selector_filter = pair[0]
-            output_file_name = pair[1]        
+            output_file_name = pair[1]
             output_fileptr = sys.stdout
             if output_file_name != None:
                 output_fileptr = open(output_file_name,'w+')
                 output_fileptr.flush()
-            
+
             queryImageDef = selector.imageDefinition_get(selector_filter)
             view = self.factory_view(output_fileptr,Session,self.anchor)
-            
+
             for imagedef in queryImageDef:
-                
+
                 details = Session.query(model.ImageListInstance,model.ImageInstance).\
                     filter(model.ImageListInstance.id==model.ImageInstance.fkimagelistinstance).\
                     filter(model.ImageDefinition.id == imagedef.id).\
@@ -370,7 +370,7 @@ def pairsNnot(list_a,list_b):
     notpairs_b = []
     for i in diff_b:
         notpairs_b.append(list_b[i])
-    
+
     return arepairs,notpairs_a,notpairs_b
 
 
@@ -382,9 +382,9 @@ def main():
     p.add_option('-c', '--cert-dir', action ='store',help='Certificate directory.', metavar='INPUTDIR',
         default='/etc/grid-security/certificates/')
     p.add_option('-a', '--add', action ='store_true',help='Add image to Cache.')
-    p.add_option('-r', '--remove', action ='store_true',help='Remove image from Cache.')    
+    p.add_option('-r', '--remove', action ='store_true',help='Remove image from Cache.')
     p.add_option('-s', '--sha512', action ='append',help='Select images by sha512.', metavar='SHA512')
-    p.add_option('-u', '--uuid', action ='append',help='Select images by uuid.', metavar='UUID')    
+    p.add_option('-u', '--uuid', action ='append',help='Select images by uuid.', metavar='UUID')
     p.add_option('-D', '--delete', action ='store_true',help='Delete subscription', metavar='OUTPUTFILE')
     p.add_option('-i', '--info', action ='store_true',help='Info on selected images')
     p.add_option('-f', '--format', action ='store',help='Sets the output format')
@@ -443,7 +443,7 @@ def main():
     if options.database:
         databaseConnectionString = options.database
     # 1 So we have some command line validation
-    
+
     if databaseConnectionString == None:
         databaseConnectionString = 'sqlite:///vmilsubscriber.db'
         log.info("Defaulting DB connection to '%s'" % (databaseConnectionString))
@@ -460,7 +460,7 @@ def main():
     if format_needed and len(output_format_selected) == 0:
         log.error("No output format selected")
         sys.exit(1)
-    
+
     if options.format:
         if options.format in outputformats:
             output_format_selected.add(options.format)
@@ -469,7 +469,7 @@ def main():
             log.error("Invalid format '%s' allowed formats are '%s'" % (options.format,outputformats))
             sys.exit(1)
     # 1 So we have some actions to process
-    
+
     # 1.1 Initate DB
     database = db_controler(databaseConnectionString)
     # 2 Initate CA's to manage files
@@ -477,24 +477,24 @@ def main():
         if anchor_needed:
             database.setup_trust_anchor(options.cert_dir)
     # Handle conflicting identifiers
-    
+
     selectors_types = inputformats.intersection(input_format_selected)
     selectors_types_len = len(selectors_types)
     if selectors_types_len > 1:
         log.error('Conflicting selectors.')
         sys.exit(1)
-    
+
     selector_str = 'uuid'
-    
+
     if selectors_types_len == 1:
         selector_str = selectors_types.pop()
-    
+
     mapper = {'uuid' : queryby_uuid,
             'sha512' : queryby_sha512,
         }
     database.setup_selector_factory(mapper[selector_str])
     # Handle the output_view
-    
+
     outputformats_selections = outputformats.intersection(output_format_selected)
     outputformats_selections_len = len(outputformats_selections)
     if outputformats_selections_len > 1:
@@ -505,7 +505,7 @@ def main():
         selector_str = outputformats_selections.pop()
     mapper = {'lines' : output_driver_lines,
         'SMIME' : output_driver_smime,
-        'message' : output_driver_message,    
+        'message' : output_driver_message,
     }
     database.setup_view_factory(mapper[selector_str])
     # Handle actions
@@ -513,14 +513,14 @@ def main():
         Session = SessionFactory()
         db = db_actions(Session)
         for uri in subscription_url_list:
-            db.subscribe_file(anchor,uri)         
+            db.subscribe_file(anchor,uri)
     if 'list' in actions:
         database.image_list()
     if 'update' in actions:
         Session = SessionFactory()
         db = db_actions(Session)
         db.subscriptions_update(anchor)
-    
+
     if 'delete' in actions:
         database.image_subscription_delete(images_selected)
     if 'dump' in actions:
@@ -550,7 +550,7 @@ def main():
                 log.warning('sha512 ignored.')
                 for path in extra_uuid:
                     log.info('Ignoring sha512 %s' % (path))
-            
+
             Session = SessionFactory()
             db = db_actions(Session)
             for item in pairs:
@@ -558,7 +558,7 @@ def main():
     if 'info' in actions:
         if not database.images_info(images_selected,outputfiles):
             sys.exit(1)
-        
+
     if 'add' in actions:
         database.images_subscribe(images_selected,1)
     if 'remove' in actions:

@@ -13,9 +13,9 @@ if sys.version_info < (2, 5):
     for name in os.listdir(module_dir):
         lowername = name.lower()
         if lowername[0:10] == 'sqlalchemy' and 'egg' in lowername:
-            sqlalchemy_dir = os.path.join(module_dir, name) 
+            sqlalchemy_dir = os.path.join(module_dir, name)
             if os.path.isdir(sqlalchemy_dir):
-                site.addsitedir(sqlalchemy_dir) 
+                site.addsitedir(sqlalchemy_dir)
                 found = True
                 break
     if not found:
@@ -44,7 +44,7 @@ except:
     import json
 
 class db_actions:
-    
+
     def __init__(self,session):
         self.session = session
         self.log = logging.getLogger("db_actions")
@@ -61,7 +61,7 @@ class db_actions:
         self.session.add(newlist)
         self.session.commit()
         new_endorser = model.EndorserPrincible(newlist.id,metadata)
-        
+
         self.session.add(new_endorser)
         self.session.commit()
         return self.endorser_get(metadata)
@@ -69,7 +69,7 @@ class db_actions:
         subscriptionlist = self.session.query(model.Subscription).\
                 filter(model.Subscription.uri==metadata[u'hv:uri'])
         return subscriptionlist
-        
+
     def subscription_create(self,metadata,authorised=True):
         subscription_query = self.subscription_get(metadata)
         if subscription_query.count() > 0:
@@ -86,13 +86,13 @@ class db_actions:
         self.session.add(new_auth)
         self.session.commit()
         return self.subscription_get(metadata)
-        
+
     def ImageDefinition_get(self,subscriptionKey,metadata):
         subscriptionlist = self.session.query(model.ImageDefinition).\
                 filter(model.ImageDefinition.subscription==subscriptionKey).\
                 filter(model.ImageDefinition.identifier == metadata[u'dc:identifier'])
         return subscriptionlist
-        
+
     def ImageDefinition_create(self,subscriptionKey,metadata):
         ImageDefinitionQuery = self.ImageDefinition_get(subscriptionKey,metadata)
         if ImageDefinitionQuery.count() > 0:
@@ -102,9 +102,9 @@ class db_actions:
         self.session.commit()
         ImageDefinitionQuery = self.ImageDefinition_get(subscriptionKey,metadata)
         return ImageDefinitionQuery
-    
+
     def subscribe_file(self,anchor,filename):
-        req = urllib2.Request(url=filename) 
+        req = urllib2.Request(url=filename)
         f = urllib2.urlopen(req)
         try:
             validated_data = anchor.validate_text(f.read())
@@ -150,16 +150,16 @@ class db_actions:
 
 
     def subscriptions_update(self,anchor):
-        
+
         subscriptionlist = self.session.query(model.Subscription).all()
         for subscription in subscriptionlist:
             subscriptionKey = int(subscription.id)
-            ProcessingSubscriptionUuid = str(subscription.identifier)            
+            ProcessingSubscriptionUuid = str(subscription.identifier)
             self.log.info("Updating:%s" % (ProcessingSubscriptionUuid))
             req = urllib2.Request(url=subscription.uri)
             f = urllib2.urlopen(req)
             update_unprocessed = f.read()
-            # Now we have the update lets first check its hash 
+            # Now we have the update lets first check its hash
             messagehash = hashlib.sha512(update_unprocessed).hexdigest()
             messagehash_q = self.session.query(model.ImageListInstance).\
                 filter(model.ImageListInstance.data_hash==messagehash)
@@ -184,11 +184,11 @@ class db_actions:
             ca = validated_data['issuer_dn']
             jsontext = json.loads(data)
             vmilist = VMimageListDecoder(jsontext)
-            
+
             metadata = vmilist.metadata
             metadata[u'data'] = update_unprocessed
             metadata[u'data-hash'] = messagehash
-            
+
             if vmilist.endorser.metadata[u'hv:dn'] != dn:
                 self.log.error("Endorser DN does not match signature for '%s'" (ProcessingSubscriptionUuid))
                 continue
@@ -209,7 +209,7 @@ class db_actions:
                 self.log.warning("Image list '%s' has expired." % (ProcessingSubscriptionUuid))
                 removeauthorsiation = True
                 metadata[u'expired'] = now
-            
+
             # Now we know the data better check the SubscriptionAuth
             subauthq = self.session.query(model.SubscriptionAuth).\
                 filter(model.Endorser.id==model.EndorserPrincible.id).\
@@ -218,7 +218,7 @@ class db_actions:
                 filter(model.SubscriptionAuth.endorser == model.Endorser.id).\
                 filter(model.SubscriptionAuth.subscription == model.Subscription.id).\
                 filter(model.Subscription.id == subscription.id)
-                
+
             count = subauthq.count()
             if count == 0:
                 self.log.error('Endorser not authorised on subscription')
@@ -247,7 +247,7 @@ class db_actions:
                     failedToAdd.append(imageObj)
                     continue
                 ThisImageDef = imageDefQuery.one()
-                
+
                 ThisImageDefId = int(ThisImageDef.id)
                 #print ("ThisImageDefId=%s" % (ThisImageDefId))
                 try:
@@ -265,7 +265,7 @@ class db_actions:
                     self.log.debug(E.params)
                     self.session.rollback()
                     continue
-                
+
                 latestimageInstanceQuery = self.session.query(model.ImageInstance).\
                     filter(model.ImageInstance.fkimagelistinstance == imagelistref).\
                     filter(model.ImageInstance.fkIdentifier == ThisImageDefId)
@@ -283,15 +283,15 @@ class db_actions:
                 ThisImageDef.latest = imageInstancelatest.id
                 self.session.add(ThisImageDef)
                 self.session.commit()
-                
+
             if subscription.imagelist_latest != None:
                 oldimagelist_q = self.session.query(model.ImageListInstance).\
                     filter(model.ImageListInstance.id == subscription.imagelist_latest)
                 for imagelist in oldimagelist_q:
                     imagelist.authorised = False
                     self.session.add(imagelist)
-            subscription.updated = datetime.datetime.utcnow() 
-              
+            subscription.updated = datetime.datetime.utcnow()
+
             subscription.imagelist_latest = imagelistref
             self.session.add(subscription)
             self.session.commit()
@@ -327,12 +327,12 @@ class queryby_base:
         subscriptionlist = self.session.query(model.ImageListInstance).\
                 filter(model.ImageListInstance.id==private_id)
         return subscriptionlist
-    
+
         # Now the virtual class
     def subscription_get(self,by_id):
         return self.subscription_by_id(private_id)
-    
-    
+
+
 class queryby_uri(queryby_base):
     def subscription_get(self,url):
         return self.subscription_by_uri(url)
@@ -350,10 +350,10 @@ class output_driver_base:
         self.anchor = anchor
     def display_subscription_imagelist(self,subscription,imagelist):
         status = None
-        
+
         self.display_subscription(subscription)
         self.display_imagelist(imagelist)
-        
+
         return True
     def display_subscription(self,subscription):
         pass
@@ -414,7 +414,7 @@ class output_driver_lines(output_driver_base):
         subauthq = self.session.query(model.Subscription).all()
         for item in subauthq:
             self.file_pointer.write ("%s\t%s\t%s\n" % (item.identifier,item.authorised,item.uri))
-            
+
 class db_controler:
     def __init__(self,dboptions):
         self.log = logging.getLogger("db_controler")
@@ -432,7 +432,7 @@ class db_controler:
         self.factory_selector = factory
     def setup_view_factory(self,factory):
         self.factory_view = factory
-        
+
     # Utility functions
     def check_factories(self):
         if self.factory_view == None:
@@ -441,15 +441,15 @@ class db_controler:
         if self.factory_selector == None:
             self.log.warning("selector not available.")
             return False
-        return True    
+        return True
     def unsigned_message_by_identifier_tofilepath(self,instructions):
-        
-        
+
+
         Session = self.SessionFactory()
         db = db_actions(Session)
         for instruction in instructions:
             print instruction
-        
+
         for selection_uuid in subscriptions_selected:
             db.sdsdsd(selection_uuid)
         Session.commit()
@@ -482,39 +482,39 @@ class db_controler:
             if not db.subscribe_file(self.anchor,uri):
                 rc = False
         return rc
-    
-            
+
+
     def subscriptions_info(self,subscriptions_selected,outputfiles):
         if not self.check_factories():
             return False
         pairs, extra_selectors ,extra_paths = pairsNnot(subscriptions_selected,outputfiles)
-        
+
         for item in extra_selectors:
             pairs.append([item,None])
-            
+
         errorhappened = False
         Session = self.SessionFactory()
         selector = self.factory_selector(Session)
         for pair in pairs:
             selector_filter = pair[0]
-            output_file_name = pair[1]        
+            output_file_name = pair[1]
             output_fileptr = sys.stdout
             if output_file_name != None:
                 output_fileptr = open(output_file_name,'w+')
                 output_fileptr.flush()
-            
+
             query_subscription = selector.subscription_get(selector_filter)
             view = self.factory_view(output_fileptr,Session,self.anchor)
-            
+
             for item in query_subscription:
                 view.display_subscription(item)
                 query_imagelist = selector.imagelist_by_id(item.imagelist_latest)
                 for imagelist in query_imagelist:
                     view.display_imagelist(imagelist)
-                    
+
             if output_file_name != None:
                 output_fileptr.close()
-                        
+
 
 # User interface
 
@@ -535,11 +535,11 @@ def pairsNnot(list_a,list_b):
     notpairs_b = []
     for i in diff_b:
         notpairs_b.append(list_b[i])
-    
+
     return arepairs,notpairs_a,notpairs_b
 
 
-           
+
 def main():
     log = logging.getLogger("main")
     """Runs program and handles command line options"""
@@ -618,9 +618,9 @@ def main():
         outputfiles = options.output
     if options.database:
         databaseConnectionString = options.database
-    
+
     # 1 So we have some command line validation
-    
+
     if databaseConnectionString == None:
         databaseConnectionString = 'sqlite:///vmilsubscriber.db'
         log.info("Defaulting DB connection to '%s'" % (databaseConnectionString))
@@ -633,20 +633,20 @@ def main():
     if format_needed and len(output_format_selected) == 0:
         log.error("No output format selected")
         sys.exit(1)
-    
+
     # 1.1 Initate DB
     database = db_controler(databaseConnectionString)
-    
+
     # 2 Initate CA's to manage files
     if anchor_needed:
         database.setup_trust_anchor(options.cert_dir)
-    
+
     # Handle conflicting actions
     actions_req_sel = actionsrequiring_selections.intersection(actions)
-    
+
     actions_req_sel_len = len(actions_req_sel)
     if actions_req_sel_len == 1:
-        
+
         if len(subscriptions_selected) == 0:
             log.error('No selections made.')
             sys.exit(1)
@@ -654,26 +654,26 @@ def main():
         log.error('Conflicting functions.')
         sys.exit(1)
     # Handle conflicting identifiers
-    
+
     selectors_types = inputformats.intersection(input_format_selected)
     selectors_types_len = len(selectors_types)
     if selectors_types_len > 1:
         log.error('Conflicting selectors.')
         sys.exit(1)
-    
+
     selector_str = 'uuid'
-    
+
     if selectors_types_len == 1:
         selector_str = selectors_types.pop()
-    
+
     mapper = {'uuid' : queryby_uuid,
             'url' : queryby_uri,
         }
-        
+
     database.setup_selector_factory(mapper[selector_str])
-    
+
     # Handle the output_view
-    
+
     outputformats_selections = outputformats.intersection(output_format_selected)
     outputformats_selections_len = len(outputformats_selections)
     if outputformats_selections_len > 1:
@@ -684,7 +684,7 @@ def main():
         selector_str = outputformats_selections.pop()
     mapper = {'lines' : output_driver_lines,
         'SMIME' : output_driver_smime,
-        'message' : output_driver_message,    
+        'message' : output_driver_message,
     }
     database.setup_view_factory(mapper[selector_str])
     if 'subscribe' in actions:
@@ -701,10 +701,10 @@ def main():
         if not 'select' in actions:
             log.error('No subscriptions selected.')
         database.message_files(subscriptions_selected,outputfiles)
-    if 'json' in actions:   
+    if 'json' in actions:
         database.dumpfiles(subscriptions_selected,outputfiles)
     if 'info' in actions:
         database.subscriptions_info(subscriptions_selected,outputfiles)
-    
+
 if __name__ == "__main__":
     main()

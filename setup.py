@@ -14,8 +14,8 @@ else:
 setup(name='hepixvmilsubscriber',
     version=version,
     description="VM Image list subscribing tool.",
-    long_description="""This application attempts to be the equivalent of a modern Linux package update 
-manager but for lists of virtual machines signed with x509. It uses a database 
+    long_description="""This application attempts to be the equivalent of a modern Linux package update
+manager but for lists of virtual machines signed with x509. It uses a database
 back end, and caches available image lists.""",
     author="O M Synge",
     author_email="owen.synge@desy.de",
@@ -35,7 +35,7 @@ back end, and caches available image lists.""",
         'Operating System :: POSIX',
         'Programming Language :: Python',
         ],
-    
+
     scripts=['vmlisub_image','vmlisub_sub','vmlisub_cache'],
     data_files=[('/usr/share/doc/hepixvmilsubscriber-%s' % (version),['README','LICENSE','logger.conf'])]
     )

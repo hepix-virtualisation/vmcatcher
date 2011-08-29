@@ -32,12 +32,12 @@ class Endorser(Base):
 
 class EndorserPrincible(Base):
     __tablename__ = 'endorserPrincible'
-    id = Column(Integer, primary_key=True)    
+    id = Column(Integer, primary_key=True)
     hv_dn = Column(String(50),unique=True,nullable = False)
     hv_ca = Column(String(50),nullable = False)
     ca_pubkey = Column(String(50))
     endorser = Column(Integer, ForeignKey(Endorser.id, ondelete="CASCADE", onupdate="CASCADE"))
-    
+
     def __init__(self, endorser, metadata):
         hv_dn = None
         hv_dn_str = u'hv:dn'
@@ -47,7 +47,7 @@ class EndorserPrincible(Base):
         hv_ca_str = u'hv:ca'
         if hv_ca_str in metadata.keys():
             hv_ca = metadata[hv_ca_str]
-        
+
         self.endorser = endorser
         self.hv_ca = hv_ca
         self.hv_dn = hv_dn
@@ -92,7 +92,7 @@ class SubscriptionAuth(Base):
         self.subscription = subscription
         self.endorser = endorser
         self.authorised = authorised
-        
+
     def __repr__(self):
         return "<SubscriptionAuth('%s','%s', '%s')>" % (self.subscription, self.authorised,self.endorser)
 
@@ -101,9 +101,9 @@ class SubscriptionAuth(Base):
 class ImageDefinition(Base):
     __tablename__ = 'ImageDefinition'
     # The table stores the definitions of image UUID.
-    # This table stores information on the image 
+    # This table stores information on the image
     id = Column(Integer, primary_key = True)
-    # All identifier for image instances must never clash.    
+    # All identifier for image instances must never clash.
     identifier = Column(String(50),nullable = False,unique=True)
     # This stores the Latest Image Instance
     latest = Column(Integer)
@@ -139,10 +139,10 @@ class ImageListInstance(Base):
         self.sub_auth = SubscriptionAuthKey
         self.data = metadata[u'data']
         self.data_hash = metadata[u'data-hash']
-        
+
         # All times are in UTC at all times, except display.
         self.imported = datetime.datetime.utcnow()
-        self.created = metadata[u'dc:date:created']       
+        self.created = metadata[u'dc:date:created']
         self.expires = metadata[u'dc:date:expires']
         if u'expired' in metadata.keys():
             self.expired = metadata[u'expired']
@@ -151,9 +151,9 @@ class ImageListInstance(Base):
 
 class ImageInstance(Base):
     __tablename__ = 'ImageInstance'
-    # Stores the parsed Images status 
+    # Stores the parsed Images status
     # Only accepted Image instances Get commited.
-    # refused are stored 
+    # refused are stored
     id = Column(Integer, primary_key = True)
     description = Column(String(50),nullable = False)
     hypervisor = Column(String(50),nullable = False)
@@ -182,7 +182,7 @@ class ImageInstance(Base):
         self.size = metadata[u'hv:size']
         self.title = metadata[u'dc:title']
         self.comments = metadata[u'sl:comments']
-        
+
     def __repr__(self):
         return "<ImageInstance('%s','%s', '%s')>" % (self.fkIdentifier, self.description,self.uri)
 

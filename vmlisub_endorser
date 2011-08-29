@@ -43,7 +43,7 @@ class queryby_base:
         subscriptionlist = self.session.query(model.Imagelist).\
                 filter(model.Imagelist.id==private_id)
         return subscriptionlist
-    
+
         # Now the virtual class
     def subscription_get(self,by_id):
         return self.subscription_by_id(private_id)
@@ -78,10 +78,10 @@ class output_driver_base:
         self.anchor = anchor
     def display_subscription_imagelist(self,subscription,imagelist):
         status = None
-        
+
         self.display_subscription(subscription)
         self.display_imagelist(imagelist)
-        
+
         return True
     def display_subscription(self,subscription):
         pass
@@ -100,7 +100,7 @@ class output_driver_message(output_driver_base):
     def display_subscription(self,subscription):
         pass
     def display_imagelist(self,imagelist):
-        
+
         validated_data = self.anchor.validate_text(str(imagelist.data))
         self.file_pointer.write (validated_data['data'])
 
@@ -116,7 +116,7 @@ class output_driver_lines(output_driver_base):
             self.file_pointer.write ('subscription.dc:date:updated=%s\n'% (False))
         return True
     def display_imagelist(self,imagelist):
-        
+
         validated_data = self.anchor.validate_text(str(imagelist.data))
         self.file_pointer.write (validated_data['data'])
     def display_imagelist(self,imagelist):
@@ -127,7 +127,7 @@ class output_driver_lines(output_driver_base):
     def endorser_lister(self,allendorsers):
         for endorser in allendorsers:
             print endorser.identifier
-        
+
         subauthq = self.session.query(model.Endorser,model.EndorserPrincible,model.Subscription,model.SubscriptionAuth).\
             filter(model.Endorser.id==model.EndorserPrincible.endorser).\
             filter(model.Subscription.id==model.SubscriptionAuth.subscription).\
@@ -155,7 +155,7 @@ class output_driver_lines(output_driver_base):
             subscription_query = self.query.subscription_by_id(subauth.subscription)
             for subscription in subscription_query:
                 self.display_subscription(subscription)
-        
+
 class db_controler:
     def __init__(self,dboptions):
         self.log = logging.getLogger("db_controler")
@@ -181,35 +181,35 @@ class db_controler:
         if self.factory_selector == None:
             self.log.warning("selector not available.")
             return False
-        return True   
+        return True
     def endosers_list(self):
         Session = self.SessionFactory()
         selector = self.factory_selector(Session)
         view = self.factory_view(sys.stdout,Session,self.anchor)
-        
+
         view.endorser_lister(selector.endorser_all())
         return True
     def endorsers_info(self,selected,outputfiles):
         if not self.check_factories():
             return False
         pairs, extra_selectors ,extra_paths = pairsNnot(selected,outputfiles)
-        
+
         for item in extra_selectors:
             pairs.append([item,None])
-            
+
         errorhappened = False
         Session = self.SessionFactory()
         selector = self.factory_selector(Session)
         for pair in pairs:
             selector_filter = pair[0]
-            output_file_name = pair[1]        
+            output_file_name = pair[1]
             output_fileptr = sys.stdout
             if output_file_name != None:
                 output_fileptr = open(output_file_name,'w+')
                 output_fileptr.flush()
             query_endorser = selector.endorser_by_uuid(selector_filter)
             if query_endorser.count() == 0:
-                self.log.error("endorser '%s' not found" % (selector_filter)) 
+                self.log.error("endorser '%s' not found" % (selector_filter))
                 continue
             view = self.factory_view(output_fileptr,Session,self.anchor)
             view.query = selector
@@ -229,7 +229,7 @@ class db_controler:
         }
         Session = self.SessionFactory()
         print metadata
-        
+
 def pairsNnot(list_a,list_b):
     len_generate_list = len(list_a)
     len_image_list = len(list_b)
@@ -247,11 +247,11 @@ def pairsNnot(list_a,list_b):
     notpairs_b = []
     for i in diff_b:
         notpairs_b.append(list_b[i])
-    
+
     return arepairs,notpairs_a,notpairs_b
 
 
-           
+
 def main():
     """Runs program and handles command line options"""
     p = optparse.OptionParser(version = "%prog " + version)
@@ -268,7 +268,7 @@ def main():
     p.add_option('-D', '--delete', action ='store_true',help='Delete subscription')
     p.add_option('-k', '--link', action ='store_true',help='Add endorser to subscription.')
     p.add_option('-u', '--unlink', action ='store_true',help='remove endorser from Subscription.')
-    p.add_option('-A', '--authorise', action ='store_true',help='authoriase endorser to update subscription.')    
+    p.add_option('-A', '--authorise', action ='store_true',help='authoriase endorser to update subscription.')
     p.add_option('-i', '--info', action ='store_true',help='Information on subscription')
     p.add_option('-o', '--output', action ='append',help='Export File.', metavar='OUTPUTFILE')
     p.add_option('-L', '--logfile', action ='store',help='Logfile configuration file.', metavar='LOGFILE')
@@ -303,8 +303,8 @@ def main():
     if options.list:
         actions.add('list')
         output_format_selected.add('lines')
-    
-    
+
+
     if options.format:
         if options.format in outputformats:
             output_format_selected.add(options.format)
@@ -328,18 +328,18 @@ def main():
         actions.add('link')
     if options.unlink:
         actions.add('unlink')
-    
+
     if options.authorise:
         actions.add('authorise')
     if options.info:
         actions.add('info')
-    
+
     if options.output:
         format_needed = True
         outputfiles = options.output
     if options.database:
         databaseConnectionString = options.database
-     
+
     # 1 So we have some command line validation
     if databaseConnectionString == None:
         databaseConnectionString = 'sqlite:///vmilsubscriber.db'
@@ -355,23 +355,23 @@ def main():
         sys.exit(1)
     # 1.1 Initate DB
     database = db_controler(databaseConnectionString)
-    
+
     # 2 Initate CA's to manage files
     if anchor_needed:
         database.setup_trust_anchor(options.cert_dir)
-    
+
     # Handle actions selections beign required.
     actions_req_endorser = actionsrequiring_endorser.intersection(actions)
-    
+
     actions_req_endorser_len = len(actions_req_endorser)
     if actions_req_endorser_len == 1:
         if len(endorsers_selected) == 0:
             log.error('No endorsers selected.')
             sys.exit(1)
-    
+
 
     actions_req_subscription = actionsrequiring_subscription.intersection(actions)
-    
+
     actions_req_subscription_len = len(actions_req_subscription)
     if actions_req_subscription_len == 1:
         if len(subscriptions_selected) == 0:
@@ -380,12 +380,12 @@ def main():
 
 
     # Handle conflicting identifiers
-    
-    
+
+
     database.setup_selector_factory(queryby_uuid)
-    
+
     # Handle the output_view
-    
+
     outputformats_selections = outputformats.intersection(output_format_selected)
     outputformats_selections_len = len(outputformats_selections)
     if outputformats_selections_len > 1:
@@ -396,10 +396,10 @@ def main():
         selector_str = outputformats_selections.pop()
     mapper = {'lines' : output_driver_lines,
         'SMIME' : output_driver_smime,
-        'message' : output_driver_message,    
+        'message' : output_driver_message,
     }
     database.setup_view_factory(mapper[selector_str])
-    
+
     if 'subscribe' in actions:
         database.subscriptions_subscribe(subscription_url_list)
     if 'list' in actions:
@@ -412,7 +412,7 @@ def main():
         if not 'select' in actions:
             log.error('No subscriptions selected.')
         database.message_files(subscriptions_selected,outputfiles)
-    if 'json' in actions:   
+    if 'json' in actions:
         database.dumpfiles(subscriptions_selected,outputfiles)
     if 'info' in actions:
         database.endorsers_info(endorsers_selected,outputfiles)

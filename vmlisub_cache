@@ -13,9 +13,9 @@ if sys.version_info < (2, 5):
     for name in os.listdir(module_dir):
         lowername = name.lower()
         if lowername[0:10] == 'sqlalchemy' and 'egg' in lowername:
-            sqlalchemy_dir = os.path.join(module_dir, name) 
+            sqlalchemy_dir = os.path.join(module_dir, name)
             if os.path.isdir(sqlalchemy_dir):
-                site.addsitedir(sqlalchemy_dir) 
+                site.addsitedir(sqlalchemy_dir)
                 found = True
                 break
     if not found:
@@ -39,7 +39,7 @@ import datetime
 from hepixvmitrust.vmitrustlib import VMimageListDecoder as VMimageListDecoder
 from hepixvmitrust.vmitrustlib import time_format_definition as time_format_definition
 from hepixvmitrust.vmitrustlib import file_extract_metadata as file_extract_metadata
-import os, statvfs 
+import os, statvfs
 import shutil
 import commands
 try:
@@ -86,12 +86,12 @@ class BaseDir(object):
         directoryList = os.listdir(self.directory)
         for item in directoryList:
             if item == self.indexFile:
-                continue            
+                continue
             filepath = os.path.join(self.directory,item)
             if os.path.isfile(filepath):
                 output.add(item)
         return output
-        
+
     def indexLoad(self):
         indexFilePath = os.path.join(self.directory,self.indexFile)
         if os.path.isfile(indexFilePath):
@@ -103,7 +103,7 @@ class BaseDir(object):
         else:
             self.index = {}
         return True
-        
+
     def indexSave(self):
         self.indexUnknownClear()
         indexFilePath = os.path.join(self.directory,self.indexFile)
@@ -112,7 +112,7 @@ class BaseDir(object):
         fp.flush()
         fp.close()
         return True
-    
+
     def indexUnknownClear(self):
         allfiles = self.getFiles()
         for filename in allfiles:
@@ -149,7 +149,7 @@ class BaseDir(object):
         self.index[uuid]['filename'] = uuid
         del aDir.index[uuid]
         return True
-        
+
 class DownloadDir(BaseDir):
     def __init__(self, dir_download):
         BaseDir.__init__(self,dir_download)
@@ -170,13 +170,13 @@ class DownloadDir(BaseDir):
         self.index[uuid]['filename'] = uuid
         self.indexSave()
         if self.index[uuid]['size'] != None:
-            stats = os.statvfs(self.directory) 
+            stats = os.statvfs(self.directory)
             if self.index[uuid]['size'] > (stats[statvfs.F_BSIZE] * stats[statvfs.F_BAVAIL]):
                 self.log.error("Image '%s' is too large %s bytes." % (uuid,self.index[uuid]['size']))
                 return False
         self.log.info("Downloading '%s'." % (uuid))
         filepath = os.path.join(self.directory,self.index[uuid]['filename'])
-        uriParsed = uglyUriParser(self.index[uuid]['uri'])        
+        uriParsed = uglyUriParser(self.index[uuid]['uri'])
         unknownTransport = True
         if uriParsed['scheme'] == u'http':
             cmd = "wget -q -O %s %s" % (filepath,self.index[uuid]['uri'])
@@ -217,8 +217,8 @@ class DownloadDir(BaseDir):
                 os.remove(filepath)
                 self.log.error("Image '%s' is incorrect size." % (uuid))
                 return False
-        return True 
-        
+        return True
+
 class CacheDir(BaseDir):
     def __init__(self, dir_cache):
         BaseDir.__init__(self,dir_cache)
@@ -232,7 +232,7 @@ class ExpireDir(BaseDir):
     def __init__(self, dir_cache):
         BaseDir.__init__(self,dir_cache)
         self.log = logging.getLogger("ExpireDir")
-    
+
     def moveFrom(self,aDir,uuid):
         if not isinstance(aDir,BaseDir):
             self.log.error("not a BaseDir object code error")
@@ -251,8 +251,8 @@ class ExpireDir(BaseDir):
         self.index[idStr] = aDir.index[uuid]
         self.index[idStr]['filename'] = idStr
         del aDir.index[uuid]
-        return True   
-        
+        return True
+
 class CacheMan(object):
     def __init__(self,database, dir_cache, dir_partial, dir_expired):
         self.log = logging.getLogger("CacheMan")
@@ -263,8 +263,8 @@ class CacheMan(object):
         self.cacheDir = CacheDir(dir_cache)
         self.DownloadDir = DownloadDir(dir_partial)
         self.ExpireDir = ExpireDir(dir_expired)
-    
-        
+
+
     def checkSumCache(self):
         self.cacheDir.indexUnknownClear()
         uuid2del = set()
@@ -280,7 +280,7 @@ class CacheMan(object):
                 self.log.error("Image '%s' size incorrect." % (uuid))
                 uuid2del.add(uuid)
                 continue
-            if file_metadata[u'sl:checksum:sha512'] != self.cacheDir.index[uuid]['sha512']:   
+            if file_metadata[u'sl:checksum:sha512'] != self.cacheDir.index[uuid]['sha512']:
                 self.log.error("Image '%s' sha512 incorrect." % (uuid))
                 uuid2del.add(uuid)
                 continue
@@ -376,9 +376,9 @@ class CacheMan(object):
             self.DownloadDir.indexSave()
             self.cacheDir.indexSave()
             self.log.info("moved file %s" % (key))
-        return True  
-                
-                
+        return True
+
+
     def load(self):
         self.cacheDir.indexLoad()
         self.DownloadDir.indexLoad()
@@ -387,7 +387,7 @@ class CacheMan(object):
         self.cacheDir.indexSave()
         self.DownloadDir.indexSave()
         self.ExpireDir.indexSave()
-            
+
 def main():
     """Runs program and handles command line options"""
     p = optparse.OptionParser(version = "%prog " + version)
@@ -402,7 +402,7 @@ def main():
     p.add_option('-L', '--logfile', action ='store',help='Logfile configuration file.', metavar='LOGFILE')
 
     options, arguments = p.parse_args()
-    
+
     dir_cache = None
     dir_partial = None
     dir_expired = None
@@ -435,9 +435,9 @@ def main():
         actions.add("download")
     if options.database:
         databaseConnectionString = options.database
-    
+
     # 1 So we have some command line validation
-    
+
     if databaseConnectionString == None:
         databaseConnectionString = 'sqlite:///vmilsubscriber.db'
         log.info("Defaulting DB connection to '%s'" % (databaseConnectionString))
@@ -450,7 +450,7 @@ def main():
     if dir_cache == None:
         dir_cache = "cache"
         log.info("Defaulting cache-dir to '%s'." % (dir_cache))
-        
+
     if dir_partial == None:
         dir_partial = os.path.join(dir_cache,"partial")
         log.info("Defaulting partial-dir to '%s'." % (dir_partial))
@@ -469,8 +469,8 @@ def main():
         directories_good = False
     if not directories_good:
         sys.exit(1)
-        
-    
+
+
     ThisCacheManager = CacheMan(databaseConnectionString,dir_cache, dir_partial, dir_expired)
     ThisCacheManager.load()
     if "expire" in actions:
@@ -486,7 +486,7 @@ def main():
             log.error("Failed to download new images")
             sys.exit(1)
     ThisCacheManager.save()
-    
+
 
 if __name__ == "__main__":
     main()

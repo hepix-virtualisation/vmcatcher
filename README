@@ -4,32 +4,32 @@
 Introduction
 ---------------------------------------
 
-This application attempts to be the equivalent of a modern Linux package update 
-manager but for lists of virtual machines signed with x509. It uses a database 
-back end, and caches available image lists. This application provides no control 
-over what virtual machines are 
+This application attempts to be the equivalent of a modern Linux package update
+manager but for lists of virtual machines signed with x509. It uses a database
+back end, and caches available image lists. This application provides no control
+over what virtual machines are
 
-This set of applications are designed to provide a similar command line from each 
+This set of applications are designed to provide a similar command line from each
 perspective to the imagelist archive.
 
 vmlisub_image    - Image details.
 vmlisub_sub      - Subscription list details.
 vmlisub_cache    - Cache selected images.
 
-They work in conjunction with a database to ease navigation, a local cache of 
-image list subscriptions. The database is message format agnostic, but it 
-authenticates and validates all messages in import. Because these are just 
-caches of imagelists they are meant to be used the majority of the time without 
+They work in conjunction with a database to ease navigation, a local cache of
+image list subscriptions. The database is message format agnostic, but it
+authenticates and validates all messages in import. Because these are just
+caches of imagelists they are meant to be used the majority of the time without
 intervention.
 
-If you are signing a list using the hepix image list signer, you should also 
-install this application and subscribe to your current image. 
+If you are signing a list using the hepix image list signer, you should also
+install this application and subscribe to your current image.
 
-It is intended to with a couple of cron scripts to be informed at any time if 
+It is intended to with a couple of cron scripts to be informed at any time if
 your local images are matching signatures in the image list.
 
-Anyone curious about this application should consider this application a 
-software application similar to Debian's 'aptitude' or redhats 'yum', but rather 
+Anyone curious about this application should consider this application a
+software application similar to Debian's 'aptitude' or redhats 'yum', but rather
 for virtual machines, authenticated by the x509 signatures.
 
 Instalation
@@ -44,7 +44,7 @@ Install EPEL for dependacies.
 
 Install DESY yum repository.
 
-    $ cat /etc/yum.repos.d/desyvirt.repo 
+    $ cat /etc/yum.repos.d/desyvirt.repo
 [desyvirt]
 name=desyvirt
 baseurl=http://grid.desy.de/vm/repo/yum/sl6/noarch/RPMS.stable/
@@ -83,14 +83,14 @@ Install EPEL for dependacies.
 
 Install DESY yum repository.
 
-    $ cat /etc/yum.repos.d/desyvirt.repo 
+    $ cat /etc/yum.repos.d/desyvirt.repo
 [desyvirt]
 name=desyvirt
 baseurl=http://grid.desy.de/vm/repo/yum/sl5/noarch/RPMS.stable/
 enabled=1
 gpgcheck=0
 
-Install the Grid CA repository for details please see 
+Install the Grid CA repository for details please see
 https://wiki.egi.eu/wiki/EGI_IGTF_Release
 
     $ cat /etc/yum.repos.d/egi-trust-anchor.repo
@@ -113,8 +113,8 @@ Install the hepix image list subscriber.
 
     # yum install hepixvmilsubscriber
 
-This may fail due to a dependacy of m2crypto that cannot be satisfied. This is 
-due to known bugs in m2crypto in the version shipped in RHEL5. If this is a 
+This may fail due to a dependacy of m2crypto that cannot be satisfied. This is
+due to known bugs in m2crypto in the version shipped in RHEL5. If this is a
 problem please download the following
 
 http://ftp.informatik.uni-frankfurt.de/fedora-archive/fedora/linux/releases/8/Everything/source/SRPMS/m2crypto-0.18-2.src.rpm
@@ -140,9 +140,9 @@ Note: The INFO message is stating that the database parameter is defaulted to a
 Add a subscription, Secure method.
     $ wget https://particle.phys.uvic.ca/~igable/hepix/hepix_signed_image_list
 
-Now you can check the image list by visiual inspection.  
+Now you can check the image list by visiual inspection.
 
-    $ vmlisub_sub -s file:////`pwd`/hepix_signed_image_list 
+    $ vmlisub_sub -s file:////`pwd`/hepix_signed_image_list
 INFO:main:Defaulting DB connection to 'sqlite:///vmilsubscriber.db'
 WARNING:db_actions:list hv:uri does not match subscription uri
 
@@ -154,13 +154,13 @@ INFO:vmlisub_sub.main:Defaulting DB connection to 'sqlite:///vmilsubscriber.db'
 ecfbc671-eaee-439c-b1a3-db85dbef5e7b    0       63175437-7d59-4851-b333-c96cb6545a86
 da42ca85-179b-4873-b12e-32d549bf02b6    0       63175437-7d59-4851-b333-c96cb6545a86
 
-The results show the UUID of the image, the availablity state and the 
-subscription UUID. The state value is a bitmap, 1 is subscribed, 2 means its 
+The results show the UUID of the image, the availablity state and the
+subscription UUID. The state value is a bitmap, 1 is subscribed, 2 means its
 available in the current image lists. Now we will seelct an image for local caching.
 
 Next update the subscription.
 
-    $ vmlisub_sub -U 
+    $ vmlisub_sub -U
 INFO:main:Defaulting DB connection to 'sqlite:///vmilsubscriber.db'
 INFO:db_actions:Updating:63175437-7d59-4851-b333-c96cb6545a86
 
@@ -178,7 +178,7 @@ Thsi now shows the images are available in the latest image list.
     $ vmlisub_image -a -u ecfbc671-eaee-439c-b1a3-db85dbef5e7b
 INFO:vmlisub_sub.main:Defaulting DB connection to 'sqlite:///vmilsubscriber.db'
 
-The image list state is now changed to 
+The image list state is now changed to
 
     $ vmlisub_image -l
 INFO:vmlisub_sub.main:Defaulting DB connection to 'sqlite:///vmilsubscriber.db'
@@ -194,7 +194,7 @@ Make the directories for caching the images.
 
 Now cache the images.
 
-    $ vmlisub_cache 
+    $ vmlisub_cache
 INFO:vmlisub_sub.main:Defaulting DB connection to 'sqlite:///vmilsubscriber.db'
 INFO:DownloadDir:Downloading 'ecfbc671-eaee-439c-b1a3-db85dbef5e7b'.
 INFO:CacheMan:moved file ecfbc671-eaee-439c-b1a3-db85dbef5e7b
@@ -252,9 +252,9 @@ To get a complete list of available commands do:
 Formats
 ---------------------------------------
 
-Three formats exist SMIME, message, lines. SMIME for applications that wish to 
-process the signature as if from the endorser directly. "message" for 
-applications that have no interest in processing the SMIME signature. "lines" 
+Three formats exist SMIME, message, lines. SMIME for applications that wish to
+process the signature as if from the endorser directly. "message" for
+applications that have no interest in processing the SMIME signature. "lines"
 for human users of this application.
 
 Examples
@@ -323,13 +323,13 @@ List the available images
 ecfbc671-eaee-439c-b1a3-db85dbef5e7b    3       63175437-7d59-4851-b333-c96cb6545a86
 da42ca85-179b-4873-b12e-32d549bf02b6    2       63175437-7d59-4851-b333-c96cb6545a86
 
-The results show the UUID of the image, the availablity state and the 
-subscription UUID. The state value is a bitmap, 1 is subscribed, 2 means its 
+The results show the UUID of the image, the availablity state and the
+subscription UUID. The state value is a bitmap, 1 is subscribed, 2 means its
 available in the current image lists. Now we will seelct an image for local caching.
 
  *Selecting Images*
 
-Images can be selected by either UUID or Sha512 hash. This allows explisit 
+Images can be selected by either UUID or Sha512 hash. This allows explisit
 selection of images or by the sha512 from an old image.
 
 Delete the subscription by image.
@@ -346,10 +346,10 @@ Unsubscribe an image
 
 *vmlisub_cache*
 
-This application downloads images. By default it will download images, check the sha512 
+This application downloads images. By default it will download images, check the sha512
 hash of cached images and expire images from old image lists.
 
-    $ vmlisub_cache 
+    $ vmlisub_cache
 INFO:vmlisub_sub.main:Defaulting DB connection to 'sqlite:///vmilsubscriber.db'
 INFO:vmlisub_sub.main:Defaulting actions as 'expire', 'sha512' and 'download'.
 INFO:vmlisub_sub.main:Defaulting cache-dir to 'cache'.
@@ -369,12 +369,12 @@ Ian Gables images from University of Victoria Canada.
 
 https://particle.phys.uvic.ca/~igable/hepix/hepix_signed_image_list
 
-Andrea Chierici images from CNAF the Italian National Center for Research and 
+Andrea Chierici images from CNAF the Italian National Center for Research and
 Development about Information and Data transmission Technologies.
 
 http://www.cnaf.infn.it/~chierici/repo/andrea-list
 
-Predrag Buncic images from the CernVM project and is based at CERN, the European 
+Predrag Buncic images from the CernVM project and is based at CERN, the European
 Organization for Nuclear Research
 
 https://cernvm.cern.ch/releases/image.list
