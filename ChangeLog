@@ -1,0 +1,77 @@
+Changelog 
+
+hepixvmilsubscriber-0.1.2
+
+* Added and Apache License, Version 2.0
+* Added instructions about using fetch-crl
+* Added Connad line option to use python log file.
+    Allows setting log levels for componenets of the code.
+    Allows setting log file formatting.
+    Allows sending messages direct to syslog.
+* Added and example logfile coniguration file.
+* Added this Changelog file.
+
+hepixvmilsubscriber-0.1.1
+
+* Better documentation 
+* Fix an uncaught exception for failing to verify messages.
+
+hepixvmilsubscriber-0.1.0
+
+* Data base schema has changed adding a new table ImageDefinition and 
+   renaming or tables and field for constancy reasons.
+* Images are now selected to be cached. (reason 1 for new table)
+    '-a', '--add' and '-r', '--remove' options added to vmlisub_image.
+* When subscribing to an image list the imagelists images UUID's are 
+    registered to the subscription, all UUID's that clash in a later 
+    added subscriptions will be ignored. All image UUID's that are not 
+    registered for a subscription will be ignored, and an error message
+    will be logged. (reason 2 for new table)
+* New format of cache.index files. Allowing better tracking of images 
+    without accessing DB. (old format had issues with expiring images)
+* Made a class for each cache directory, inheriting from a base class.
+    (easier maintenance)
+* Clearly logging all defaulted command line values. 
+    (hopefully easier to use/support.)
+* Allowing cache management to do separate tasks of downloading, 
+    check sum testing and expiring. 
+    (You might want to check the check sums more frequently)
+* Renamed the default database from "tutorial.db" to
+    "vmilsubscriber.db" (To avoid people trying to use old DB with new
+    code).
+* Renamed "image.dc:identifier" field on image queries to 
+    "imagedef.dc:identifier" as this is in my opinion more clear.
+* Removed "imagelist.authorised" from image queries as it was
+    misleading.
+* Added 'imagedef.cache' to image queries so you know if image is
+    cached.
+* Added more information to image information including,
+    'image.dc:description', 'image.dc:title', 'image.hv:hypervisor',
+    'image.hv:size', 'image.hv:uri', 'image.hv:version', 'image.sl:arch',
+    'image.sl:checksum', 'image.sl:comments', 'image.sl:os',
+    'image.sl:osversion' This is to make image selection easier.
+* Removed 'sha512' from general image listing as images may not be
+    available so may not have a current hash, you can still find an image
+    UUID by 'sha512'.
+* Fixed bug about expiring images immediately rather than on second
+    DB update.
+* Changed 'imagelist.authorised' to 'imagelist.expired' for
+    subscription queries, as previous title was misleading.
+* Images listing now shows all images assigned to a subscription, 
+    rather than available images, images now have a state number, this 
+    is a bitmask in a way similar to directory permissions in UNIX.
+    1 == should be cached. 2 == Available, hence images with status 3 
+    will be cached.
+
+hepixvmilsubscriber-0.0.15
+
+* Changes to handle differences in python 2.4 (SL5) and python 2.6
+    (SL6) url parsing libraries.
+* Cleaner error handling and spelling correction stating clearly if the
+    file fails to verify, by size or sha512, rather than always stating size.
+
+hepixvmilsubscriber-0.0.14
+
+* Improved error message when images pass disk space limit.
+* Support https as a image download format (being used by CERN VM).
+* Catch exception correctly for corrupted signed images lists.
