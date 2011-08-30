@@ -4,7 +4,7 @@ hepixvmilsubscriber-0.1.2
 
 * Added and Apache License, Version 2.0
 * Added instructions about using fetch-crl
-* Added Connad line option to use python log file.
+* Added commad line option to use python log file.
     Allows setting log levels for componenets of the code.
     Allows setting log file formatting.
     Allows sending messages direct to syslog.
@@ -75,3 +75,9 @@ hepixvmilsubscriber-0.0.14
 * Improved error message when images pass disk space limit.
 * Support https as a image download format (being used by CERN VM).
 * Catch exception correctly for corrupted signed images lists.
+
+hepixvmilsubscriber-0.0.13
+
+* More robust to image lists with data that does not pass
+  validation. No new features have been added.
+
