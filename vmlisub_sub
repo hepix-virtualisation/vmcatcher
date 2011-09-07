@@ -84,7 +84,12 @@ class db_actions:
         self.session.commit()
         new_auth = model.SubscriptionAuth(new_subscription.id,endorser.id,authorised)
         self.session.add(new_auth)
-        self.session.commit()
+        try:
+            self.session.commit()
+        except IntegrityError,E:
+             self.log.error("Database integrity error '%s' while subscribing to  '%s'." % (E.args,metadata))
+             self.log.debug(E.params)
+             self.session.rollback()
         return self.subscription_get(metadata)
 
     def ImageDefinition_get(self,subscriptionKey,metadata):
