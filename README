@@ -342,7 +342,7 @@ Subscribe to an image.
 
 Unsubscribe an image
 
-    $ vmlisub_image -a -r 327016b0-6508-41d2-bce0-c1724cb3d3e2
+    $ vmlisub_image -r -u 327016b0-6508-41d2-bce0-c1724cb3d3e2
 
 *vmlisub_cache*
 
