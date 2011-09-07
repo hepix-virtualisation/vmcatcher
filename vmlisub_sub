@@ -295,14 +295,6 @@ class db_actions:
             subscription.imagelist_latest = imagelistref
             self.session.add(subscription)
             self.session.commit()
-    def subscriptions_delete(self,uuid):
-        subscriptionlist = self.session.query(model.Subscription).\
-            filter(model.Subscription.identifier==uuid)
-        for item in subscriptionlist:
-            #print item.SubscriptionAuth
-            self.session.delete(item)
-        self.session.commit()
-        return
 
 
 
@@ -468,12 +460,18 @@ class db_controler:
         db.subscriptions_update(self.anchor)
         return True
     def subscriptions_delete(self,subscriptions_selected):
+        foundOne = False
         Session = self.SessionFactory()
         db = db_actions(Session)
-        for selection_uuid in subscriptions_selected:
-            db.subscriptions_delete(selection_uuid)
+        selector = self.factory_selector(Session)
+        query_subscription = selector.subscription_get(subscriptions_selected)
+        for selection_item in subscriptions_selected:
+            query_subscription = selector.subscription_get(selection_item)
+            for a_sub in query_subscription:
+                Session.delete(a_sub)
+                foundOne = True
         Session.commit()
-        return True
+        return foundOne
     def subscriptions_subscribe(self,urls_selected):
         rc = True
         Session = self.SessionFactory()
@@ -664,12 +662,11 @@ def main():
     selector_str = 'uuid'
 
     if selectors_types_len == 1:
-        selector_str = selectors_types.pop()
-
+        selector_str = input_format_selected.pop()
+    
     mapper = {'uuid' : queryby_uuid,
             'url' : queryby_uri,
         }
-
     database.setup_selector_factory(mapper[selector_str])
 
     # Handle the output_view
@@ -686,6 +683,8 @@ def main():
         'SMIME' : output_driver_smime,
         'message' : output_driver_message,
     }
+    # set default return code
+    rc = 0
     database.setup_view_factory(mapper[selector_str])
     if 'subscribe' in actions:
         if not database.subscriptions_subscribe(subscription_url_list):
@@ -696,7 +695,9 @@ def main():
     if 'update' in actions:
         database.subscriptions_update()
     if 'delete' in actions:
-        database.subscriptions_delete(subscriptions_selected)
+        if not database.subscriptions_delete(subscriptions_selected):
+            log.error("Failed to remove a subscription from '%s'" % (subscriptions_selected))
+            rc = 1
     if 'dump' in actions:
         if not 'select' in actions:
             log.error('No subscriptions selected.')
@@ -705,6 +706,6 @@ def main():
         database.dumpfiles(subscriptions_selected,outputfiles)
     if 'info' in actions:
         database.subscriptions_info(subscriptions_selected,outputfiles)
-
+    sys.exit(rc)
 if __name__ == "__main__":
     main()
