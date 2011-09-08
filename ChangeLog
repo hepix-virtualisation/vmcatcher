@@ -1,5 +1,14 @@
 Changelog 
 
+hepixvmilsubscriber-0.1.3
+
+* README fixed for removing a subscription.
+* Failing to remove a subscription now returns a non zero error code.
+* Removing a subscription by URI now works as well as removing a subscription by
+    UUID.
+* Database integrity exceptions when subscribing to a database are now handled 
+    better.
+
 hepixvmilsubscriber-0.1.2
 
 * Added and Apache License, Version 2.0
