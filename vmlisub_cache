@@ -442,10 +442,9 @@ def main():
         databaseConnectionString = 'sqlite:///vmilsubscriber.db'
         log.info("Defaulting DB connection to '%s'" % (databaseConnectionString))
     if len(actions) == 0:
-        actions.add("sha512")
         actions.add("download")
         actions.add("expire")
-        log.info("Defaulting actions as 'expire', 'sha512' and 'download'.")
+        log.info("Defaulting actions as 'expire', and 'download'.")
 
     if dir_cache == None:
         dir_cache = "cache"
