@@ -133,8 +133,8 @@ class output_driver_lines(output_driver_base):
             for item in subauthq:
                 endorser = item[0]
                 princible = item[1]
-                self.file_pointer.write ("%s\t%s\t%s\n" % (endorser.identifier,princible.hv_dn,
-                    princible.hv_ca))
+                self.file_pointer.write ("%s\t%s\n" % (endorser.identifier,princible.hv_dn))
+                self.file_pointer.write ("%s\t%s\n" % (endorser.identifier,princible.hv_ca))
             subauthq = self.session.query(model.Endorser,model.Subscription,model.SubscriptionAuth).\
                 filter(model.Subscription.id==model.SubscriptionAuth.subscription).\
                 filter(model.Endorser.id==model.SubscriptionAuth.endorser).\
