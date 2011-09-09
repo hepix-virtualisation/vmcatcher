@@ -586,7 +586,7 @@ def main():
     p.add_option('-s', '--subscribe', action ='append',help='Subscribe to imagelist available at URI', metavar='INPUTURL')
     p.add_option('-c', '--cert-dir', action ='store',help='Certificate directory.', metavar='INPUTDIR',
         default='/etc/grid-security/certificates/')
-    p.add_option('-U', '--update', action ='store_true',help='update image lists')
+    p.add_option('-U', '--update', action ='store_true',help='update image metadata')
     p.add_option('-u', '--uuid', action ='append',help='Select subscription', metavar='UUID')
     p.add_option('-r', '--uri', action ='append',help='Select subscription', metavar='URL')
     p.add_option('-f', '--format', action ='store',help='Sets the output format')
