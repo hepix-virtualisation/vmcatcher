@@ -43,6 +43,16 @@ try:
 except:
     import json
 
+# command line error codes.
+#  10 failed to download image list.
+#  11 failed to validate image list.
+#  12 metadata and certificate dont match.
+#  13 Endorser not authorised on subscription.
+#  14 trust anchor missing
+#  15 Database integrity error.
+
+#  31 imagelist dc:identifier invalid.
+#  32 image dc:identifier invalid.
 class db_actions:
 
     def __init__(self,session):
@@ -155,14 +165,20 @@ class db_actions:
 
 
     def subscriptions_update(self,anchor):
-
+        rc = 0
         subscriptionlist = self.session.query(model.Subscription).all()
         for subscription in subscriptionlist:
             subscriptionKey = int(subscription.id)
             ProcessingSubscriptionUuid = str(subscription.identifier)
             self.log.info("Updating:%s" % (ProcessingSubscriptionUuid))
             req = urllib2.Request(url=subscription.uri)
-            f = urllib2.urlopen(req)
+            try:
+                f = urllib2.urlopen(req)
+            except urllib2.URLError,E:
+                self.log.error("Download of url '%s' failed." % (subscription.uri))
+                # Error code - failed to download image list.
+                rc = 10
+                continue
             update_unprocessed = f.read()
             # Now we have the update lets first check its hash
             messagehash = hashlib.sha512(update_unprocessed).hexdigest()
@@ -183,6 +199,8 @@ class db_actions:
                 validated_data = anchor.validate_text(update_unprocessed)
             except loadcanamespace.SmimeX509ValidationError,E:
                 self.log.error("Failed to process validate text for '%s' " % (subscriptionKey))
+                # Error code - failed to validate image list.
+                rc = 11
                 continue
             data = validated_data['data']
             dn = validated_data['signer_dn']
@@ -196,15 +214,23 @@ class db_actions:
 
             if vmilist.endorser.metadata[u'hv:dn'] != dn:
                 self.log.error("Endorser DN does not match signature for '%s'" (ProcessingSubscriptionUuid))
+                # Error code - metadata and certificate dont match.
+                rc = 12
                 continue
             if vmilist.endorser.metadata[u'hv:ca'] != ca:
                 self.log.error("list hv:ca does not match signature for '%s'" % (ProcessingSubscriptionUuid))
+                # Error code - metadata and certificate dont match.
+                rc = 12
                 continue
             if vmilist.metadata[u'hv:uri'] != subscription.uri:
                 self.log.error("list hv:uri does not match subscription uri for '%s'" % (ProcessingSubscriptionUuid))
+                # Error code - metadata and certificate dont match.
+                rc = 12
                 continue
             if vmilist.metadata[u'dc:identifier'] != subscription.identifier:
                 self.log.error("list dc:identifier does not match subscription uuid for '%s'" % ProcessingSubscriptionUuid)
+                # Error code - imagelist dc:identifier invalid.
+                rc = 31
                 continue
             now = datetime.datetime.utcnow()
             if now < vmilist.metadata[u'dc:date:created']:
@@ -226,8 +252,10 @@ class db_actions:
 
             count = subauthq.count()
             if count == 0:
-                self.log.error('Endorser not authorised on subscription')
-                return False
+                self.log.error('Endorser not authorised on subscription %s' % (ProcessingSubscriptionUuid))
+                # Error code - Endorser not authorised on subscription.
+                rc = 13
+                continue
             authsub = subauthq.one()
             imagelist = model.ImageListInstance(authsub.id,metadata)
             self.session.add(imagelist)
@@ -237,6 +265,8 @@ class db_actions:
                 self.log.error("Database integrity error '%s' processing '%s'." % (E.args,ProcessingSubscriptionUuid))
                 self.log.debug(E.params)
                 self.session.rollback()
+                # Error code - Database integrity error.
+                rc = 15
                 continue
             imagelistref = int(imagelist.id)
             failedToAdd = []
@@ -244,12 +274,16 @@ class db_actions:
                 if not u'dc:identifier' in imageObj.metadata.keys():
                     failedToAdd.append(imageObj)
                     self.log.error('Image had no ID so ignored')
+                    # Error code - imagelist dc:identifier invalid.
+                    rc = 31
                     continue
                 imageDefQuery = self.ImageDefinition_get(subscriptionKey,imageObj.metadata)
                 if imageDefQuery.count() != 1:
                     self.log.error("ImageId '%s' not accepted for subscription '%s'" %
                         (imageObj.metadata[u'dc:identifier'],ProcessingSubscriptionUuid))
                     failedToAdd.append(imageObj)
+                    # Error code - image dc:identifier invalid.
+                    rc = 32
                     continue
                 ThisImageDef = imageDefQuery.one()
 
@@ -300,7 +334,7 @@ class db_actions:
             subscription.imagelist_latest = imagelistref
             self.session.add(subscription)
             self.session.commit()
-
+        return rc
 
 
 
@@ -459,11 +493,11 @@ class db_controler:
     def subscriptions_update(self):
         if self.anchor == None:
             self.log.warning("No enabled certificates, check your x509 dir.")
-            return False
+            return 12
         Session = self.SessionFactory()
         db = db_actions(Session)
-        db.subscriptions_update(self.anchor)
-        return True
+        rc = db.subscriptions_update(self.anchor)
+        return rc
     def subscriptions_delete(self,subscriptions_selected):
         foundOne = False
         Session = self.SessionFactory()
@@ -698,7 +732,7 @@ def main():
     if 'list' in actions:
         database.sessions_list()
     if 'update' in actions:
-        database.subscriptions_update()
+        rc = database.subscriptions_update()
     if 'delete' in actions:
         if not database.subscriptions_delete(subscriptions_selected):
             log.error("Failed to remove a subscription from '%s'" % (subscriptions_selected))
