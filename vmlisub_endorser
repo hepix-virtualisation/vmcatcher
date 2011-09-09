@@ -190,6 +190,63 @@ class db_controler:
 
         view.endorser_lister(selector.endorser_all())
         return True
+
+    def link(self,endorsers_selected,subscriptions_selected):
+        if not self.check_factories():
+            return False
+        pairs, extra_selectors ,extra_paths = pairsNnot(endorsers_selected,subscriptions_selected)
+        Session = self.SessionFactory()
+        for pair in pairs:
+            endorser = pair[0]
+            subscription = pair[1]
+            subauth_list = Session.query(model.Endorser,model.Subscription,model.SubscriptionAuth).\
+                filter(model.Endorser.identifier == endorser).\
+                filter(model.Subscription.identifier == subscription).\
+                filter(model.SubscriptionAuth.endorser == model.Endorser.id).\
+                filter(model.SubscriptionAuth.subscription == model.Subscription.id)
+            if subauth_list.count() == 0:
+                endorser_list = Session.query(model.Endorser).\
+                    filter(model.Endorser.identifier == endorser)
+                if endorser_list.count() == 0:
+                    self.log.warning("endorser not available.")
+                    continue
+                sub_list = Session.query(model.Subscription).\
+                    filter(model.Subscription.identifier == subscription)
+                if sub_list.count() == 0:
+                    self.log.warning("subscription not available.")
+                    continue
+                db_endorser = endorser_list.one()
+                db_sub = sub_list.one()
+                newsubauth = model.SubscriptionAuth(db_sub.id,db_endorser.id,True)
+                Session.add(newsubauth)
+                Session.commit()
+            else:
+                self.log.warning("endorser and subscription already linked.")
+                
+                
+    def unlink(self,endorsers_selected,subscriptions_selected):
+        if not self.check_factories():
+            return False
+        Session = self.SessionFactory()
+        pairs, extra_selectors ,extra_paths = pairsNnot(endorsers_selected,subscriptions_selected)
+        for pair in pairs:
+            endorser = pair[0]
+            subscription = pair[1]
+            subauth_list = Session.query(model.Endorser,model.Subscription,model.SubscriptionAuth).\
+                filter(model.Endorser.identifier == endorser).\
+                filter(model.Subscription.identifier == subscription).\
+                filter(model.SubscriptionAuth.endorser == model.Endorser.id).\
+                filter(model.SubscriptionAuth.subscription == model.Subscription.id)
+            if subauth_list.count() == 0:
+                self.log.warning("endorser and subscription are not linked.")
+            else:
+                for query_row in subauth_list:
+                    db_endorser = query_row[0]
+                    db_sub = query_row[1]
+                    db_subAuthEnd = query_row[2]
+                    Session.delete(db_subAuthEnd)
+                    Session.commit()
+
     def endorsers_info(self,selected,outputfiles):
         if not self.check_factories():
             return False
@@ -405,8 +462,10 @@ def main():
         database.subscriptions_subscribe(subscription_url_list)
     if 'list' in actions:
         database.endosers_list()
-    if 'update' in actions:
-        database.subscriptions_update()
+    if 'link' in actions:
+        database.link(endorsers_selected,subscriptions_selected)
+    if 'unlink' in actions:
+        database.unlink(endorsers_selected,subscriptions_selected)
     if 'delete' in actions:
         database.subscriptions_delete(subscriptions_selected)
     if 'dump' in actions:
