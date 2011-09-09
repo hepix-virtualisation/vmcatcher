@@ -106,10 +106,10 @@ class output_driver_message(output_driver_base):
 
 class output_driver_lines(output_driver_base):
     def display_subscription(self,subscription):
-        self.file_pointer.write ('subscription.dc:identifier=%s\n' % (subscription.uuid))
+        self.file_pointer.write ('subscription.dc:identifier=%s\n' % (subscription.identifier))
         self.file_pointer.write ('subscription.dc:description=%s\n' % (subscription.description))
         self.file_pointer.write ('subscription.sl:authorised=%s\n' % (subscription.authorised))
-        self.file_pointer.write ('subscription.hv:uri=%s\n' % (subscription.url))
+        self.file_pointer.write ('subscription.hv:uri=%s\n' % (subscription.uri))
         if subscription.updated:
             self.file_pointer.write ('subscription.dc:date:updated=%s\n' % (subscription.updated.strftime(time_format_definition)))
         else:
