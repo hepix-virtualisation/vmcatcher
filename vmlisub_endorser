@@ -127,20 +127,24 @@ class output_driver_lines(output_driver_base):
     def endorser_lister(self,allendorsers):
         for endorser in allendorsers:
             EndId = str(endorser.identifier)
-            print endorser.identifier
-            subauthq = self.session.query(model.Endorser,model.EndorserPrincible,model.Subscription,model.SubscriptionAuth).\
+            subauthq = self.session.query(model.Endorser,model.EndorserPrincible).\
                 filter(model.Endorser.id==model.EndorserPrincible.endorser).\
+                filter(model.Endorser.identifier==EndId)
+            for item in subauthq:
+                endorser = item[0]
+                princible = item[1]
+                self.file_pointer.write ("%s\t%s\t%s\n" % (endorser.identifier,princible.hv_dn,
+                    princible.hv_ca))
+            subauthq = self.session.query(model.Endorser,model.Subscription,model.SubscriptionAuth).\
                 filter(model.Subscription.id==model.SubscriptionAuth.subscription).\
                 filter(model.Endorser.id==model.SubscriptionAuth.endorser).\
                 filter(model.Endorser.identifier==EndId)
             for item in subauthq:
                 endorser = item[0]
-                princible = item[1]
-                subscription = item[2]
-                auth = item[3]
-                self.file_pointer.write ("%s\t'%s'\t%s\t%s\n" % (endorser.identifier,
-                    princible.hv_dn,subscription.identifier,auth.authorised))
-
+                subscription = item[1]
+                auth = item[2]
+                self.file_pointer.write ("%s\t%s\t%s\n" % (endorser.identifier,
+                    subscription.identifier,auth.authorised))
     def display_endorser(self,endorser):
         self.file_pointer.write ("endorser.dc:identifier=%s\n" % (endorser.identifier))
         princible_query = self.query.princible_by_endorserId(endorser.id)
