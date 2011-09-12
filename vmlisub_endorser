@@ -342,11 +342,25 @@ class db_controler:
                 filter(model.Endorser.identifier==endorser)
             if endorserQuery.count() > 0:
                 EndorserToDel = endorserQuery.one()
-                session.delete(EndorserToDel)
+                Session.delete(EndorserToDel)
                 Session.commit()
-                print 'foo'
                 
-            
+    def endorser_delete(self,endorsers):
+        # Check input parameters.
+        if not self.check_factories():
+            return False
+        Session = self.SessionFactory()
+        for endorser in endorsers:
+            endorserQuery = Session.query(model.Endorser).\
+                filter(model.Endorser.identifier==endorser)
+            if endorserQuery.count() == 0:
+                self.log.warning("Failed to find endorser '%s'." % (endorser))
+                continue
+            for obj in endorserQuery:
+                Session.delete(obj)
+                self.log.info("Deleting endorser '%s'." % (endorser))
+            Session.commit()
+                
                 
                 
             
@@ -561,7 +575,7 @@ def main():
     if 'unlink' in actions:
         database.unlink(endorsers_selected,subscriptions_selected)
     if 'delete' in actions:
-        database.subscriptions_delete(subscriptions_selected)
+        database.endorser_delete(endorsers_selected)
     if 'dump' in actions:
         if not 'select' in actions:
             log.error('No subscriptions selected.')
