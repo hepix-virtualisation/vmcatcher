@@ -425,14 +425,7 @@ class output_driver_lines(output_driver_base):
         else:
             self.file_pointer.write ('subscription.dc:date:updated=%s\n'% (False))
         return True
-    def display_imagelist(self,imagelist):
-        try:
-            validated_data = self.anchor.validate_text(str(imagelist.data))
-        except loadcanamespace.SmimeX509ValidationError,E:
-            self.log.error("Failed to validate text for '%s' " % (imagelist))
-            return False
-        self.file_pointer.write (validated_data['data'])
-        return True
+
     def display_imagelist(self,imagelist):
         self.file_pointer.write ('imagelist.dc:date:imported=%s\n' % (imagelist.imported.strftime(time_format_definition)))
         self.file_pointer.write ('imagelist.dc:date:created=%s\n' % (imagelist.created.strftime(time_format_definition)))
