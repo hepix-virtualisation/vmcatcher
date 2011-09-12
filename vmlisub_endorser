@@ -9,6 +9,7 @@ import sys
 from hepixvmlis.__version__ import version
 
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.exc import IntegrityError, DatabaseError, ProgrammingError
 import hepixvmlis
 import urllib2
 import urllib
@@ -283,14 +284,73 @@ class db_controler:
                 else:
                     pass
         return True
-    def endorsers_create(self,uuid,x509_dn,x509_ca_dn):
-        metadata = {
-            u'dc:identifier' : uuid,
-            u'hv:dn' :x509_dn,
-            u'hv:ca' : x509_ca_dn
-        }
+    
+    def endorser_create(self,endorser,subjects,issuers):
+        # Check input parameters.
+        if not self.check_factories():
+            return False
+        pairs, extra_subs ,extra_issuers = pairsNnot(subjects,issuers)
+        if len(extra_subs) > 0:
+            if len(issuers) > 1:
+                self.log.warning("Unsure how to add subjects credentials without issuer credentials.")
+                return False
+            else:
+                if len (issuers) > 0:
+                    thisissuer = issuers[0]
+                    for this_sub in extra_subs:
+                        pairs.append([this_sub,thisissuer])
+                else:
+                    self.log.warning("Cant add subjects credentials without issuer credentials.")
+                    return False
+        if len (extra_issuers) > 0:
+            self.log.warning("Cant add issuer credentials, without a subject.")
+            return False
+        if len(pairs) == 0:
+            return True
+        # Now we process requests
+        error = False
+        deleteOnError = False
         Session = self.SessionFactory()
-        print metadata
+        endorserQuery = Session.query(model.Endorser).\
+                filter(model.Endorser.identifier==endorser)
+        endorserObj = None
+        if endorserQuery.count() == 0:
+            endorserObj = model.Endorser({'dc:identifier' : str(endorser)})
+            Session.add(endorserObj)
+            Session.commit()
+            deleteOnError = True
+            endorserQuery = Session.query(model.Endorser).\
+                filter(model.Endorser.identifier==endorser)
+            
+        endorserObj = endorserQuery.one()
+        endorserObjId = int(endorserObj.id)
+        for pair in pairs:
+            dn = pair[0]
+            issuer = pair[1]
+            cred = model.EndorserPrincible(endorserObjId,{u'hv:dn' : dn, u'hv:ca' : issuer})
+            Session.add(cred)
+            try:
+                Session.commit()
+            except IntegrityError,E:
+                self.log.error("Database integrity error while adding '%s' credentials to  '%s'." % (dn,endorser))
+                self.log.debug(E.params)
+                Session.rollback()
+                error = True
+                break
+        if error and deleteOnError:
+            endorserQuery = Session.query(model.Endorser).\
+                filter(model.Endorser.identifier==endorser)
+            if endorserQuery.count() > 0:
+                EndorserToDel = endorserQuery.one()
+                session.delete(EndorserToDel)
+                Session.commit()
+                print 'foo'
+                
+            
+                
+                
+            
+            
 
 def pairsNnot(list_a,list_b):
     len_generate_list = len(list_a)
@@ -327,6 +387,9 @@ def main():
     p.add_option('-a', '--x509_ca_dn', action ='append',help='DN of endorser CA', metavar='DN')
     p.add_option('-f', '--format', action ='store',help='Sets the output format')
     p.add_option('-C', '--create', action ='store_true',help='Create an endorser.')
+    p.add_option('-S','--subject',action ='append',help='Endorsers certificate subject', metavar='SUBJECT')
+    p.add_option('-I','--issuer',action ='append',help='Endorsers certificate issuer.', metavar='SUBJECT')
+    
     p.add_option('-D', '--delete', action ='store_true',help='Delete subscription')
     p.add_option('-k', '--link', action ='store_true',help='Add endorser to subscription.')
     p.add_option('-u', '--unlink', action ='store_true',help='remove endorser from Subscription.')
@@ -341,8 +404,12 @@ def main():
     actions = set([])
     endorsers_selected = []
     subscriptions_selected = []
+    subjects_selected = []
+    issuers_selected = []
     actionsrequiring_endorser = set(['create','delete','link','unlink','authorise','info'])
-    actionsrequiring_subscription = set(['link','unlink','authorise'])
+    actionsrequiring_subscription = set(['link','unlink'])
+    actionsrequiring_subject = set(['create'])
+    actionsrequiring_issuer = set(['create'])
     outputformats = set(['SMIME','message','lines'])
     output_format_selected = set([])
     outputfiles = []
@@ -401,6 +468,11 @@ def main():
         outputfiles = options.output
     if options.database:
         databaseConnectionString = options.database
+    if options.subject:
+        subjects_selected = options.subject
+    if options.issuer:
+        issuers_selected = options.issuer
+        
 
     # 1 So we have some command line validation
     if databaseConnectionString == None:
@@ -423,24 +495,39 @@ def main():
         database.setup_trust_anchor(options.cert_dir)
 
     # Handle actions selections beign required.
+    
+    # Check endorser selected
     actions_req_endorser = actionsrequiring_endorser.intersection(actions)
-
     actions_req_endorser_len = len(actions_req_endorser)
     if actions_req_endorser_len == 1:
         if len(endorsers_selected) == 0:
             log.error('No endorsers selected.')
             sys.exit(1)
 
-
+    # Check subscription selected
     actions_req_subscription = actionsrequiring_subscription.intersection(actions)
-
     actions_req_subscription_len = len(actions_req_subscription)
     if actions_req_subscription_len == 1:
         if len(subscriptions_selected) == 0:
             log.error('No subscriptions selected.')
             sys.exit(1)
 
-
+    
+    # Check subject selected
+    actions_req_subject = actionsrequiring_subject.intersection(actions)
+    actions_req_subject_len = len(actions_req_subject)
+    if actions_req_subject_len == 1:
+        if len(subjects_selected) == 0:
+            log.error('No subjects selected.')
+            sys.exit(1) 
+    
+    # Check issuer selected
+    actions_req_issuer = actionsrequiring_issuer.intersection(actions)
+    actions_req_issuer_len = len(actions_req_issuer)
+    if actions_req_issuer_len == 1:
+        if len(issuers_selected) == 0:
+            log.error('No issuers selected.')
+            sys.exit(1)
     # Handle conflicting identifiers
 
 
@@ -461,9 +548,12 @@ def main():
         'message' : output_driver_message,
     }
     database.setup_view_factory(mapper[selector_str])
-
-    if 'subscribe' in actions:
-        database.subscriptions_subscribe(subscription_url_list)
+    
+    if 'create' in actions:
+        if len(endorsers_selected) > 1:
+            log.error("More than one endorser cannot be created at a time.")
+            sys.exit(1)
+        database.endorser_create(endorsers_selected[0],subjects_selected,issuers_selected)
     if 'list' in actions:
         database.endosers_list()
     if 'link' in actions:
@@ -480,28 +570,6 @@ def main():
         database.dumpfiles(subscriptions_selected,outputfiles)
     if 'info' in actions:
         database.endorsers_info(endorsers_selected,outputfiles)
-    if 'create' in actions:
-        if len(endorsers_selected) == 0:
-            log.error("Endorser UUID must be specified.")
-            sys.exit(1)
-        pairs_dn, extra_x509_dn, extra_x509_ca_dn = pairsNnot(x509_dn,x509_ca_dn)
-        if len(extra_x509_ca_dn):
-            log.error("Not enough x509_dn on command line.")
-            sys.exit(1)
-        if len(extra_x509_dn):
-            log.error("Not enough x509_ca_dn on command line.")
-            sys.exit(1)
-        pairs, extra_uuid, extra_dn = pairsNnot(endorsers_selected,pairs_dn)
-        if len(extra_uuid):
-            log.error("Endorser dn's must be specified.")
-            sys.exit(1)
-        if len(extra_dn):
-            log.error("Endorser UID must be specified for each DN pair.")
-            sys.exit(1)
-        for item in pairs:
-            uuid = item[0]
-            x509_dn = item[1][0]
-            x509_ca_dn = item[1][1]
-            database.endorsers_create(uuid,x509_dn,x509_ca_dn)
+    
 if __name__ == "__main__":
     main()
