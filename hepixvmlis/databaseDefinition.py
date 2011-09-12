@@ -23,6 +23,7 @@ class Endorser(Base):
     id = Column(Integer, primary_key=True)
     identifier = Column(String(50))
     princibles = relationship("EndorserPrincible", backref="Endorser",cascade='all, delete')
+    subscriptionauth = relationship("SubscriptionAuth", backref="Endorser",cascade='all, delete')
     def __init__(self, metadata):
         identifier = ''
         identifier_str = u'dc:identifier'
