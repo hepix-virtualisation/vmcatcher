@@ -344,7 +344,8 @@ class db_controler:
                 EndorserToDel = endorserQuery.one()
                 Session.delete(EndorserToDel)
                 Session.commit()
-                
+                return False
+        return True
     def endorser_delete(self,endorsers):
         # Check input parameters.
         if not self.check_factories():
@@ -397,8 +398,6 @@ def main():
         default='/etc/grid-security/certificates/')
     p.add_option('-s', '--subscription_uuid', action ='append',help='Select subscription by uuid', metavar='UUID')
     p.add_option('-e', '--endorser_uuid', action ='append',help='Select endorser by uuid', metavar='UUID')
-    p.add_option('-n', '--x509_dn', action ='append',help='DN of endorser', metavar='DN')
-    p.add_option('-a', '--x509_ca_dn', action ='append',help='DN of endorser CA', metavar='DN')
     p.add_option('-f', '--format', action ='store',help='Sets the output format')
     p.add_option('-C', '--create', action ='store_true',help='Create an endorser.')
     p.add_option('-S','--subject',action ='append',help='Endorsers certificate subject', metavar='SUBJECT')
@@ -427,8 +426,6 @@ def main():
     outputformats = set(['SMIME','message','lines'])
     output_format_selected = set([])
     outputfiles = []
-    x509_dn = []
-    x509_ca_dn = []
     databaseConnectionString = None
     # Set up log file
     if options.logfile:
@@ -459,10 +456,6 @@ def main():
         endorsers_selected = options.endorser_uuid
     if options.subscription_uuid:
         subscriptions_selected = options.subscription_uuid
-    if options.x509_dn:
-        x509_dn = options.x509_dn
-    if options.x509_ca_dn:
-        x509_ca_dn = options.x509_ca_dn
     if options.create:
         actions.add('create')
     if options.delete:
@@ -487,7 +480,6 @@ def main():
     if options.issuer:
         issuers_selected = options.issuer
         
-
     # 1 So we have some command line validation
     if databaseConnectionString == None:
         databaseConnectionString = 'sqlite:///vmilsubscriber.db'
@@ -509,7 +501,7 @@ def main():
         database.setup_trust_anchor(options.cert_dir)
 
     # Handle actions selections beign required.
-    
+
     # Check endorser selected
     actions_req_endorser = actionsrequiring_endorser.intersection(actions)
     actions_req_endorser_len = len(actions_req_endorser)
@@ -562,12 +554,12 @@ def main():
         'message' : output_driver_message,
     }
     database.setup_view_factory(mapper[selector_str])
-    
     if 'create' in actions:
         if len(endorsers_selected) > 1:
             log.error("More than one endorser cannot be created at a time.")
             sys.exit(1)
-        database.endorser_create(endorsers_selected[0],subjects_selected,issuers_selected)
+        if not database.endorser_create(endorsers_selected[0],subjects_selected,issuers_selected):
+            sys.exit(12)
     if 'list' in actions:
         database.endosers_list()
     if 'link' in actions:
