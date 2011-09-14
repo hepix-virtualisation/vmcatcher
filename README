@@ -12,6 +12,7 @@ over what virtual machines are
 This set of applications are designed to provide a similar command line from each
 perspective to the imagelist archive.
 
+vmlisub_endorser - Endorsers of imagelist subscriptions.
 vmlisub_image    - Image details.
 vmlisub_sub      - Subscription list details.
 vmlisub_cache    - Cache selected images.
@@ -130,17 +131,24 @@ First make sure that all the Certificate Revocation Lists (CRL) are upto date.
 
 Add a subscription, Insecure method.
 
-    $ vmlisub_sub \
-       -s https://particle.phys.uvic.ca/~igable/hepix/hepix_signed_image_list
-INFO:main:Defaulting DB connection to 'sqlite:///vmilsubscriber.db'
-
-Note: The INFO message is stating that the database parameter is defaulted to a
-      file in the local directory 'vmilsubscriber.db'.
-
-Add a subscription, Secure method.
-    $ wget https://particle.phys.uvic.ca/~igable/hepix/hepix_signed_image_list
+    $ wget --no-check-certificate https://particle.phys.uvic.ca/~igable/hepix/hepix_signed_image_list
 
 Now you can check the image list by visiual inspection.
+
+    $ grep 'hv:[cd][an]' hepix_signed_image_list
+                "hv:ca": "/C=CA/O=Grid/CN=Grid Canada Certificate Authority", 
+                "hv:dn": "/C=CA/O=Grid/OU=phys.uvic.ca/CN=Ian Gable", 
+
+Now create this endorser. The endorser_uuid can be any string but its recomended this is a 
+short string following the uuid standard,
+
+    $ vmlisub_endorser --create \
+       --endorser_uuid=63175437-7d59-4851-b333-c96cb6545a86 \
+       --subject='/C=CA/O=Grid/OU=phys.uvic.ca/CN=Ian Gable' \
+       --issuer='/C=CA/O=Grid/CN=Grid Canada Certificate Authority'
+
+Now we can add the subscription, this will automatically link the endorser 
+with this subscription.
 
     $ vmlisub_sub -s file:////`pwd`/hepix_signed_image_list
 INFO:main:Defaulting DB connection to 'sqlite:///vmilsubscriber.db'
