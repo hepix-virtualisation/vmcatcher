@@ -364,14 +364,12 @@ def pairsNnot(list_a,list_b):
 def main():
     """Runs program and handles command line options"""
     p = optparse.OptionParser(version = "%prog " + version)
-    p.add_option('-l', '--list', action ='store_true',help='List endorsers')
-    p.add_option('-d', '--database', action ='store', help='Database Initiation string')
-    p.add_option('-c', '--cert-dir', action ='store',help='Certificate directory.', metavar='INPUTDIR',
-        default='/etc/grid-security/certificates/')
-    p.add_option('-s', '--subscription_uuid', action ='append',help='Select subscription by uuid', metavar='UUID')
-    p.add_option('-e', '--endorser_uuid', action ='append',help='Select endorser by uuid', metavar='UUID')
+    p.add_option('-l', '--list', action ='store_true',help='List endorsers.')
+    p.add_option('-d', '--database', action ='store', help='Database Initiation string.')
+    p.add_option('-s', '--subscription_uuid', action ='append',help='Select subscription by uuid.', metavar='UUID')
+    p.add_option('-e', '--endorser_uuid', action ='append',help='Select endorser by uuid.', metavar='UUID')
     p.add_option('-C', '--create', action ='store_true',help='Create an endorser.')
-    p.add_option('-S','--subject',action ='append',help='Endorsers certificate subject', metavar='SUBJECT')
+    p.add_option('-S','--subject',action ='append',help='Endorsers certificate subject.', metavar='SUBJECT')
     p.add_option('-I','--issuer',action ='append',help='Endorsers certificate issuer.', metavar='SUBJECT')
     
     p.add_option('-D', '--delete', action ='store_true',help='Delete an endorser.')
