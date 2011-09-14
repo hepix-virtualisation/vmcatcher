@@ -95,7 +95,7 @@ class output_driver_lines(output_driver_base):
     def display_subscription(self,subscription):
         self.file_pointer.write ('subscription.dc:identifier=%s\n' % (subscription.identifier))
         self.file_pointer.write ('subscription.dc:description=%s\n' % (subscription.description))
-        self.file_pointer.write ('subscription.sl:authorised=%s\n' % (subscription.authorised))
+        #self.file_pointer.write ('subscription.sl:authorised=%s\n' % (subscription.authorised))
         self.file_pointer.write ('subscription.hv:uri=%s\n' % (subscription.uri))
         if subscription.updated:
             self.file_pointer.write ('subscription.dc:date:updated=%s\n' % (subscription.updated.strftime(time_format_definition)))
@@ -110,7 +110,7 @@ class output_driver_lines(output_driver_base):
         self.file_pointer.write ('imagelist.dc:date:imported=%s\n' % (imagelist.imported.strftime(time_format_definition)))
         self.file_pointer.write ('imagelist.dc:date:created=%s\n' % (imagelist.created.strftime(time_format_definition)))
         self.file_pointer.write ('imagelist.dc:date:expires=%s\n' % (imagelist.expires.strftime(time_format_definition)))
-        self.file_pointer.write ('imagelist.authorised=%s\n' % (imagelist.authorised))
+        #self.file_pointer.write ('imagelist.authorised=%s\n' % (imagelist.authorised))
     def endorser_lister(self,allendorsers):
         for endorser in allendorsers:
             EndId = str(endorser.identifier)
@@ -130,8 +130,8 @@ class output_driver_lines(output_driver_base):
                 endorser = item[0]
                 subscription = item[1]
                 auth = item[2]
-                self.file_pointer.write ("%s\t%s\t%s\n" % (endorser.identifier,
-                    subscription.identifier,auth.authorised))
+                self.file_pointer.write ("%s\t%s\n" % (endorser.identifier,
+                    subscription.identifier))
     def display_endorser(self,endorser):
         self.file_pointer.write ("endorser.dc:identifier=%s\n" % (endorser.identifier))
         princible_query = self.query.princible_by_endorserId(endorser.id)
@@ -143,7 +143,7 @@ class output_driver_lines(output_driver_base):
             self.file_pointer.write("endorser.hv:ca=%s\n" % (princible.hv_ca))
         subauth_query = self.query.subscriptionAuth_by_endorserId(endorser.id)
         for subauth in subauth_query:
-            self.file_pointer.write("subauth.authorised=%s\n" % (subauth.authorised))
+            #self.file_pointer.write("subauth.authorised=%s\n" % (subauth.authorised))
             subscription_query = self.query.subscription_by_id(subauth.subscription)
             for subscription in subscription_query:
                 self.display_subscription(subscription)
@@ -377,7 +377,6 @@ def main():
     p.add_option('-D', '--delete', action ='store_true',help='Delete subscription')
     p.add_option('-k', '--link', action ='store_true',help='Add endorser to subscription.')
     p.add_option('-u', '--unlink', action ='store_true',help='remove endorser from Subscription.')
-    p.add_option('-A', '--authorise', action ='store_true',help='authoriase endorser to update subscription.')
     p.add_option('-i', '--info', action ='store_true',help='Information on subscription')
     p.add_option('-L', '--logfile', action ='store',help='Logfile configuration file.', metavar='LOGFILE')
 
@@ -389,7 +388,7 @@ def main():
     subscriptions_selected = []
     subjects_selected = []
     issuers_selected = []
-    actionsrequiring_endorser = set(['create','delete','link','unlink','authorise','info'])
+    actionsrequiring_endorser = set(['create','delete','link','unlink','info'])
     actionsrequiring_subscription = set(['link','unlink'])
     actionsrequiring_subject = set(['create'])
     actionsrequiring_issuer = set(['create'])
@@ -423,9 +422,6 @@ def main():
         actions.add('link')
     if options.unlink:
         actions.add('unlink')
-
-    if options.authorise:
-        actions.add('authorise')
     if options.info:
         actions.add('info')
 
