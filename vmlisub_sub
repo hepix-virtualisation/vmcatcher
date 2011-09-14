@@ -80,11 +80,13 @@ class db_actions:
                 filter(model.Subscription.uri==metadata[u'hv:uri'])
         return subscriptionlist
 
-    def subscription_create(self,metadata,authorised=True):
+    def subscription_create(self,metadata,authorised):
         subscription_query = self.subscription_get(metadata)
         if subscription_query.count() > 0:
             return subscription_query
-        endorser_list = self.endorser_create(metadata)
+        endorser_list = self.endorser_get(metadata)
+        if endorser_list.count() == 0:
+            return subscription_query
         endorser = endorser_list.one()
         endorserId = int(endorser.id)
         new_subscription = model.Subscription(metadata)
@@ -118,7 +120,7 @@ class db_actions:
         ImageDefinitionQuery = self.ImageDefinition_get(subscriptionKey,metadata)
         return ImageDefinitionQuery
 
-    def subscribe_file(self,anchor,filename):
+    def subscribe_file(self,anchor,filename,autoEndorse):
         req = urllib2.Request(url=filename)
         f = urllib2.urlopen(req)
         try:
@@ -142,7 +144,20 @@ class db_actions:
             return False
         if metadata[u'hv:uri'] != filename:
             self.log.warning('list hv:uri does not match subscription uri')
-        subscription_query = self.subscription_create(metadata,authorised=True)
+        endorser_list = self.endorser_get(metadata)
+        if endorser_list.count() == 0:
+            if not autoEndorse:
+                self.log.error("Endorser '%s':'%s' was found in database." % (metadata[u'hv:dn'],metadata[u'hv:ca']))
+                return False
+            else:
+                # We can create an endorser.
+                endorser_list = self.endorser_create(metadata)
+                self.log.warning("Endorser '%s':'%s' added to database." % (metadata[u'hv:dn'],metadata[u'hv:ca']))
+                
+                if endorser_list.count() == 0:
+                    self.log.error('Failed to create an authorised endorser in Database.')
+                    return False
+        subscription_query = self.subscription_create(metadata,True)
         if subscription_query.count() != 1:
             self.log.error('Creation of Subscription referance failed.')
             return False
@@ -504,12 +519,12 @@ class db_controler:
                 foundOne = True
         Session.commit()
         return foundOne
-    def subscriptions_subscribe(self,urls_selected):
+    def subscriptions_subscribe(self,urls_selected,autoEndorse):
         rc = True
         Session = self.SessionFactory()
         db = db_actions(Session)
         for uri in urls_selected:
-            if not db.subscribe_file(self.anchor,uri):
+            if not db.subscribe_file(self.anchor,uri,autoEndorse):
                 rc = False
         return rc
 
@@ -577,6 +592,7 @@ def main():
     p.add_option('-l', '--list', action ='store_true',help='list subscriptions')
     p.add_option('-d', '--database', action ='store', help='Database Initiation string')
     p.add_option('-s', '--subscribe', action ='append',help='Subscribe to imagelist available at URI', metavar='INPUTURL')
+    p.add_option('-e', '--auto-endorse', action ='store_true',help='Add endorser in your subscribe to imagelist action.')
     p.add_option('-c', '--cert-dir', action ='store',help='Certificate directory.', metavar='INPUTDIR',
         default='/etc/grid-security/certificates/')
     p.add_option('-U', '--update', action ='store_true',help='update image metadata')
@@ -589,6 +605,7 @@ def main():
     p.add_option('-L', '--logfile', action ='store',help='Logfile configuration file.', metavar='LOGFILE')
 
     options, arguments = p.parse_args()
+    autoEndorse = False
     anchor_needed = False
     format_needed = False
     actions = set([])
@@ -648,6 +665,8 @@ def main():
         outputfiles = options.output
     if options.database:
         databaseConnectionString = options.database
+    if options.auto_endorse:
+        autoEndorse = True
 
     # 1 So we have some command line validation
 
@@ -719,7 +738,7 @@ def main():
     rc = 0
     database.setup_view_factory(mapper[selector_str])
     if 'subscribe' in actions:
-        if not database.subscriptions_subscribe(subscription_url_list):
+        if not database.subscriptions_subscribe(subscription_url_list,autoEndorse):
             log.error("Failed to subscribe to '%s'" % (subscription_url_list))
             sys.exit(1)
     if 'list' in actions:
