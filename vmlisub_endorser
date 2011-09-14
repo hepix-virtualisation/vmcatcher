@@ -91,20 +91,6 @@ class output_driver_base:
     def subscriptions_lister(self):
         pass
 
-class output_driver_smime(output_driver_base):
-    def display_subscription(self,subscription):
-        pass
-    def display_imagelist(self,imagelist):
-        self.file_pointer.write (imagelist.data)
-
-class output_driver_message(output_driver_base):
-    def display_subscription(self,subscription):
-        pass
-    def display_imagelist(self,imagelist):
-
-        validated_data = self.anchor.validate_text(str(imagelist.data))
-        self.file_pointer.write (validated_data['data'])
-
 class output_driver_lines(output_driver_base):
     def display_subscription(self,subscription):
         self.file_pointer.write ('subscription.dc:identifier=%s\n' % (subscription.identifier))
@@ -170,20 +156,16 @@ class db_controler:
         self.SessionFactory = sessionmaker(bind=self.engine)
         self.anchor = None
         self.factory_selector = None
-        self.factory_view = None
+        
 
     def setup_trust_anchor(self,directory):
         self.anchor = loadcanamespace.ViewTrustAnchor()
         self.anchor.update_ca_list(directory)
     def setup_selector_factory(self,factory):
         self.factory_selector = factory
-    def setup_view_factory(self,factory):
-        self.factory_view = factory
+    
     # Utility functions
     def check_factories(self):
-        if self.factory_view == None:
-            self.log.warning("factory_view not available.")
-            return False
         if self.factory_selector == None:
             self.log.warning("selector not available.")
             return False
@@ -191,7 +173,7 @@ class db_controler:
     def endosers_list(self):
         Session = self.SessionFactory()
         selector = self.factory_selector(Session)
-        view = self.factory_view(sys.stdout,Session,self.anchor)
+        view = output_driver_lines(sys.stdout,Session,self.anchor)
 
         view.endorser_lister(selector.endorser_all())
         return True
@@ -252,29 +234,19 @@ class db_controler:
                     Session.delete(db_subAuthEnd)
                     Session.commit()
 
-    def endorsers_info(self,selected,outputfiles):
+    def endorsers_info(self,selected):
         if not self.check_factories():
             return False
-        pairs, extra_selectors ,extra_paths = pairsNnot(selected,outputfiles)
-
-        for item in extra_selectors:
-            pairs.append([item,None])
-
         errorhappened = False
         Session = self.SessionFactory()
         selector = self.factory_selector(Session)
-        for pair in pairs:
-            selector_filter = pair[0]
-            output_file_name = pair[1]
+        for selector_filter in selected:
             output_fileptr = sys.stdout
-            if output_file_name != None:
-                output_fileptr = open(output_file_name,'w+')
-                output_fileptr.flush()
             query_endorser = selector.endorser_by_uuid(selector_filter)
             if query_endorser.count() == 0:
                 self.log.error("endorser '%s' not found" % (selector_filter))
                 continue
-            view = self.factory_view(output_fileptr,Session,self.anchor)
+            view = output_driver_lines(output_fileptr,Session,self.anchor)
             view.query = selector
             for endorser in query_endorser:
                 view.display_endorser(endorser)
@@ -392,13 +364,12 @@ def pairsNnot(list_a,list_b):
 def main():
     """Runs program and handles command line options"""
     p = optparse.OptionParser(version = "%prog " + version)
-    p.add_option('-l', '--list', action ='store_true',help='list subscriptions')
+    p.add_option('-l', '--list', action ='store_true',help='List endorsers')
     p.add_option('-d', '--database', action ='store', help='Database Initiation string')
     p.add_option('-c', '--cert-dir', action ='store',help='Certificate directory.', metavar='INPUTDIR',
         default='/etc/grid-security/certificates/')
     p.add_option('-s', '--subscription_uuid', action ='append',help='Select subscription by uuid', metavar='UUID')
     p.add_option('-e', '--endorser_uuid', action ='append',help='Select endorser by uuid', metavar='UUID')
-    p.add_option('-f', '--format', action ='store',help='Sets the output format')
     p.add_option('-C', '--create', action ='store_true',help='Create an endorser.')
     p.add_option('-S','--subject',action ='append',help='Endorsers certificate subject', metavar='SUBJECT')
     p.add_option('-I','--issuer',action ='append',help='Endorsers certificate issuer.', metavar='SUBJECT')
@@ -408,12 +379,11 @@ def main():
     p.add_option('-u', '--unlink', action ='store_true',help='remove endorser from Subscription.')
     p.add_option('-A', '--authorise', action ='store_true',help='authoriase endorser to update subscription.')
     p.add_option('-i', '--info', action ='store_true',help='Information on subscription')
-    p.add_option('-o', '--output', action ='append',help='Export File.', metavar='OUTPUTFILE')
     p.add_option('-L', '--logfile', action ='store',help='Logfile configuration file.', metavar='LOGFILE')
 
     options, arguments = p.parse_args()
     anchor_needed = False
-    format_needed = False
+
     actions = set([])
     endorsers_selected = []
     subscriptions_selected = []
@@ -423,9 +393,6 @@ def main():
     actionsrequiring_subscription = set(['link','unlink'])
     actionsrequiring_subject = set(['create'])
     actionsrequiring_issuer = set(['create'])
-    outputformats = set(['SMIME','message','lines'])
-    output_format_selected = set([])
-    outputfiles = []
     databaseConnectionString = None
     # Set up log file
     if options.logfile:
@@ -442,16 +409,8 @@ def main():
     # Now logging is set up process other options
     if options.list:
         actions.add('list')
-        output_format_selected.add('lines')
 
 
-    if options.format:
-        if options.format in outputformats:
-            output_format_selected.add(options.format)
-            anchor_needed = True
-        else:
-            log.error("Invalid format '%s' allowed formats are '%s'" % (options.format,outputformats))
-            sys.exit(1)
     if options.endorser_uuid:
         endorsers_selected = options.endorser_uuid
     if options.subscription_uuid:
@@ -470,9 +429,6 @@ def main():
     if options.info:
         actions.add('info')
 
-    if options.output:
-        format_needed = True
-        outputfiles = options.output
     if options.database:
         databaseConnectionString = options.database
     if options.subject:
@@ -490,15 +446,9 @@ def main():
     if len(actions) > 1:
         log.error("More than one action selected.")
         sys.exit(1)
-    if format_needed and len(output_format_selected) == 0:
-        log.error("No output format selected")
-        sys.exit(1)
     # 1.1 Initate DB
     database = db_controler(databaseConnectionString)
 
-    # 2 Initate CA's to manage files
-    if anchor_needed:
-        database.setup_trust_anchor(options.cert_dir)
 
     # Handle actions selections beign required.
 
@@ -538,22 +488,6 @@ def main():
 
 
     database.setup_selector_factory(queryby_uuid)
-
-    # Handle the output_view
-
-    outputformats_selections = outputformats.intersection(output_format_selected)
-    outputformats_selections_len = len(outputformats_selections)
-    if outputformats_selections_len > 1:
-        log.error('Conflicting output formats.')
-        sys.exit(1)
-    selector_str = 'lines'
-    if outputformats_selections_len == 1:
-        selector_str = outputformats_selections.pop()
-    mapper = {'lines' : output_driver_lines,
-        'SMIME' : output_driver_smime,
-        'message' : output_driver_message,
-    }
-    database.setup_view_factory(mapper[selector_str])
     if 'create' in actions:
         if len(endorsers_selected) > 1:
             log.error("More than one endorser cannot be created at a time.")
@@ -568,14 +502,10 @@ def main():
         database.unlink(endorsers_selected,subscriptions_selected)
     if 'delete' in actions:
         database.endorser_delete(endorsers_selected)
-    if 'dump' in actions:
-        if not 'select' in actions:
-            log.error('No subscriptions selected.')
-        database.message_files(subscriptions_selected,outputfiles)
-    if 'json' in actions:
-        database.dumpfiles(subscriptions_selected,outputfiles)
+    
+
     if 'info' in actions:
-        database.endorsers_info(endorsers_selected,outputfiles)
+        database.endorsers_info(endorsers_selected)
     
 if __name__ == "__main__":
     main()
