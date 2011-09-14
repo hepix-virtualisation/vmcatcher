@@ -374,10 +374,10 @@ def main():
     p.add_option('-S','--subject',action ='append',help='Endorsers certificate subject', metavar='SUBJECT')
     p.add_option('-I','--issuer',action ='append',help='Endorsers certificate issuer.', metavar='SUBJECT')
     
-    p.add_option('-D', '--delete', action ='store_true',help='Delete subscription')
+    p.add_option('-D', '--delete', action ='store_true',help='Delete an endorser.')
     p.add_option('-k', '--link', action ='store_true',help='Add endorser to subscription.')
-    p.add_option('-u', '--unlink', action ='store_true',help='remove endorser from Subscription.')
-    p.add_option('-i', '--info', action ='store_true',help='Information on subscription')
+    p.add_option('-u', '--unlink', action ='store_true',help='Remove endorser from Subscription.')
+    p.add_option('-i', '--info', action ='store_true',help='Information on endoser.')
     p.add_option('-L', '--logfile', action ='store',help='Logfile configuration file.', metavar='LOGFILE')
 
     options, arguments = p.parse_args()
