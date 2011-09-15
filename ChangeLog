@@ -1,5 +1,11 @@
 Changelog 
 
+hepixvmilsubscriber-0.1.5
+
+* vmlisub_sub Fixed missleading error message.
+* Corrected misleading text in Changelog.
+* vmlisub_endorser Changed format of list command to make parsing easier.
+
 hepixvmilsubscriber-0.1.4
 
 * vmlisub_cache changed default behaviour to not check integrity of already downloaded 
