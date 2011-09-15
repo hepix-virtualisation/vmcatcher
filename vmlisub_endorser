@@ -120,18 +120,9 @@ class output_driver_lines(output_driver_base):
             for item in subauthq:
                 endorser = item[0]
                 princible = item[1]
-                self.file_pointer.write ("%s\t%s\n" % (endorser.identifier,princible.hv_dn))
-                self.file_pointer.write ("%s\t%s\n" % (endorser.identifier,princible.hv_ca))
-            subauthq = self.session.query(model.Endorser,model.Subscription,model.SubscriptionAuth).\
-                filter(model.Subscription.id==model.SubscriptionAuth.subscription).\
-                filter(model.Endorser.id==model.SubscriptionAuth.endorser).\
-                filter(model.Endorser.identifier==EndId)
-            for item in subauthq:
-                endorser = item[0]
-                subscription = item[1]
-                auth = item[2]
-                self.file_pointer.write ("%s\t%s\n" % (endorser.identifier,
-                    subscription.identifier))
+                self.file_pointer.write ("%s\t'%s'\t'%s'\n" % (endorser.identifier,princible.hv_dn,princible.hv_ca))
+
+
     def display_endorser(self,endorser):
         self.file_pointer.write ("endorser.dc:identifier=%s\n" % (endorser.identifier))
         princible_query = self.query.princible_by_endorserId(endorser.id)
