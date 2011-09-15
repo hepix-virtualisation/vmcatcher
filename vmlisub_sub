@@ -190,7 +190,14 @@ class db_actions:
             try:
                 f = urllib2.urlopen(req)
             except urllib2.URLError,E:
+                # Python 2.6 Exception
                 self.log.error("Download of url '%s' failed." % (subscription.uri))
+                # Error code - failed to download image list.
+                rc = 10
+                continue
+            except OSError:
+                # Python 2.4 Exception
+    	        self.log.error("Download of url '%s' failed." % (subscription.uri))
                 # Error code - failed to download image list.
                 rc = 10
                 continue
