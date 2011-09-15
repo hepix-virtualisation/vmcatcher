@@ -1,5 +1,29 @@
 Changelog 
 
+hepixvmilsubscriber-0.1.4
+
+* vmlisub_cache changed default behaviour to not check integrity of downloaded 
+    images. This is still possible using a command line option but no longer default.
+* Added vmlisub_endorser to main package, so endorsers can be managed directly. Please 
+    see README for full details.
+* vmlisub_endorser now works with current database schema, and changed command line to 
+    be moreconistent with other applications in this suite.
+        10 failed to download image list.
+        11 failed to validate image list.
+        12 metadata and certificate dont match.
+        13 Endorser not authorised on subscription.
+        14 trust anchor missing
+        15 Database integrity error.
+        31 imagelist dc:identifier invalid.
+        32 image dc:identifier invalid.
+* vmlisub_sub now has more error return codes to allow test suite to check for errors.
+* vmlisub_sub no longer by default adds endorser when subscribing to a imagelist. Old 
+    behaviour can be restored with the --auto-endorse option.
+* vmlisub_sub Now handles cleanly the exception of imagelists being unavailable.
+* vmlisub_sub Errors with registering or failing to register endorsers has better logging.
+* Spelling corrections on command line help.
+* Updated README and Changlog.
+
 hepixvmilsubscriber-0.1.3
 
 * README fixed for removing a subscription.
