@@ -6,6 +6,7 @@ hepixvmilsubscriber-0.1.5
 * Corrected misleading text in Changelog.
 * vmlisub_endorser Changed format of list command to make parsing easier.
 * vmlisub_endorser fixed sqlalchamy import error on RHEL/SL 5
+* vmlisub_sub urllib2 with python 2.4 thows OSError rather than urllib2.URLError
 
 hepixvmilsubscriber-0.1.4
 
