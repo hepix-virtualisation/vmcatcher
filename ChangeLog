@@ -2,7 +2,7 @@ Changelog
 
 hepixvmilsubscriber-0.1.4
 
-* vmlisub_cache changed default behaviour to not check integrity of downloaded 
+* vmlisub_cache changed default behaviour to not check integrity of already downloaded 
     images. This is still possible using a command line option but no longer default.
 * Added vmlisub_endorser to main package, so endorsers can be managed directly. Please 
     see README for full details.
