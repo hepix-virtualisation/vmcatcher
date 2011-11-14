@@ -554,8 +554,9 @@ class db_controler:
             if output_file_name != None:
                 output_fileptr = open(output_file_name,'w+')
                 output_fileptr.flush()
-
             query_subscription = selector.subscription_get(selector_filter)
+            if query_subscription.count() == 0:
+                self.log.warning("Selections '%s' does not match any known subscriptions." % (selector_filter))
             view = self.factory_view(output_fileptr,Session,self.anchor)
 
             for item in query_subscription:
