@@ -229,7 +229,7 @@ class output_driver_message(output_driver_base):
     def display_imagelist(self,imagelist):
         try:
             validated_data = self.anchor.validate_text(str(imagelist.data))
-        except SmimeX509ValidationError,E:
+        except loadcanamespace.SmimeX509ValidationError,E:
             self.log.error("Failed to validate text for '%s' " % (imagelist))
             return False
         self.file_pointer.write (validated_data['data'])
@@ -248,7 +248,7 @@ class output_driver_lines(output_driver_base):
     def display_imagelist(self,imagelist):
         try:
             validated_data = self.anchor.validate_text(str(imagelist.data))
-        except SmimeX509ValidationError,E:
+        except loadcanamespace.SmimeX509ValidationError,E:
             self.log.error("Failed to validate text for '%s' " % (imagelist))
             return False
         self.file_pointer.write (validated_data['data'])
