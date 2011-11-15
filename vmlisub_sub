@@ -557,6 +557,7 @@ class db_controler:
             query_subscription = selector.subscription_get(selector_filter)
             if query_subscription.count() == 0:
                 self.log.warning("Selections '%s' does not match any known subscriptions." % (selector_filter))
+                continue
             view = self.factory_view(output_fileptr,Session,self.anchor)
 
             for item in query_subscription:
