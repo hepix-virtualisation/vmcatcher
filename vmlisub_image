@@ -313,6 +313,9 @@ class db_controler:
                 output_fileptr.flush()
 
             queryImageDef = selector.imageDefinition_get(selector_filter)
+            if queryImageDef.count() == 0:
+                self.log.warning("Selections '%s' does not match any known images." % (selector_filter))
+                continue
             view = self.factory_view(output_fileptr,Session,self.anchor)
 
             for imagedef in queryImageDef:
