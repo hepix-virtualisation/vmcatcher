@@ -1,5 +1,12 @@
 Changelog 
 
+hepixvmilsubscriber-0.1.6
+
+* Stability improvements.
+* Authentication / verification error logging improvements.
+* Invalid selection logging improvements.
+* Removed duplicate method display_imagelist
+
 hepixvmilsubscriber-0.1.5
 
 * vmlisub_sub Fixed missleading error message.
