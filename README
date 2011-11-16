@@ -403,6 +403,17 @@ Removing an individuals right to update a subscription.
        --subscription_uuid=e55c1afe-0a62-4d31-a8d7-fb8c825f92a2
 
 
+Logging configuration
+---------------------------------------
+
+All scripts have a loggging option. This is used to configure pythons logging 
+library. An example is shown below.
+
+vmlisub_image -L /usr/share/doc/hepixvmilsubscriber/logger.conf \
+ -l
+
+Logging can be independently set up for each object to multiple locations, and 
+with different log levels.
 
 
 Example image lists
