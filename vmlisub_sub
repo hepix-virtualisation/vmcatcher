@@ -148,6 +148,7 @@ class db_actions:
         if endorser_list.count() == 0:
             if not autoEndorse:
                 self.log.error("Endorser '%s':'%s' was not found in database." % (metadata[u'hv:dn'],metadata[u'hv:ca']))
+                self.log.info("Use '--auto-endorse' to add endorser '%s':'%s' to subscription database." % (metadata[u'hv:dn'],metadata[u'hv:ca']))
                 return False
             else:
                 # We can create an endorser.
