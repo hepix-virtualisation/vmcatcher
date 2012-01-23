@@ -129,7 +129,7 @@ First make sure that all the Certificate Revocation Lists (CRL) are upto date.
 
     # fetch-crl
 
-Add a subscription, Insecure method.
+To add a subscription,
 
     $ wget --no-check-certificate https://particle.phys.uvic.ca/~igable/hepix/hepix_signed_image_list
 
@@ -140,7 +140,7 @@ Now you can check the image list by visiual inspection.
                 "hv:dn": "/C=CA/O=Grid/OU=phys.uvic.ca/CN=Ian Gable", 
 
 Now create this endorser. The endorser_uuid can be any string but its recommended this is a 
-short string following the uuid standard,
+short string possibly following the uuid standard:
 
     $ vmlisub_endorser --create \
        --endorser_uuid=63175437-7d59-4851-b333-c96cb6545a86 \
@@ -150,9 +150,28 @@ short string following the uuid standard,
 Now we can add the subscription, this will automatically link the endorser 
 with this subscription.
 
+    $ vmlisub_endorser -l
+0001    '/C=CA/O=Grid/OU=phys.uvic.ca/CN=Ian Gable'        '/C=CA/O=Grid/CN=Grid Canada Certificate Authority'
+
+The above command will show you the endorsers. Note the first column is the 
+identifier. In this case its shorter than a UUID. The second column is the 
+users certificate subject (some times know as distinguished name) while the 
+third column is the subject of the issuing certificate authority.
+
+
     $ vmlisub_sub -s file:////`pwd`/hepix_signed_image_list
 INFO:main:Defaulting DB connection to 'sqlite:///vmilsubscriber.db'
 WARNING:db_actions:list hv:uri does not match subscription uri
+
+
+Although less secure it is also possible to add the option '--auto-endorse'
+to the command line so that the users, and issuer's certificates are auto added
+to the database when subscribing.
+
+    $ vmlisub_sub  --auto-endorse -s file:////`pwd`/hepix_signed_image_list
+INFO:main:Defaulting DB connection to 'sqlite:///vmilsubscriber.db'
+WARNING:db_actions:list hv:uri does not match subscription uri
+
 
 List the registered Images.
 
