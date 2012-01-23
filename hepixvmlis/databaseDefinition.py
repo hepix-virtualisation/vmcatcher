@@ -30,6 +30,8 @@ class Endorser(Base):
         if identifier_str in metadata.keys():
             identifier = metadata[identifier_str]
         self.identifier = identifier
+    def __repr__(self):
+        return "<Endorser(%s,%s,%s)>" % (self.identifier,self.princibles,self.subscriptionauth)
 
 class EndorserPrincible(Base):
     __tablename__ = 'endorserPrincible'
@@ -52,6 +54,8 @@ class EndorserPrincible(Base):
         self.endorser = endorser
         self.hv_ca = hv_ca
         self.hv_dn = hv_dn
+    def __repr__(self):
+        return "<EndorserPrincible(%s,%s)>" % (self.hv_dn,self.hv_ca)
 
 
 class Subscription(Base):
