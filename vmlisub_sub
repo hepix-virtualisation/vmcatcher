@@ -53,7 +53,7 @@ except:
 
 #  31 imagelist dc:identifier invalid.
 #  32 image dc:identifier invalid.
-
+#  33 imagelist dc:date:created invalid.
 
 
 
@@ -122,7 +122,7 @@ class db_actions:
                 filter(model.ImageDefinition.identifier == metadata[u'dc:identifier'])
         return subscriptionlist
 
-    def _ImageDefinition_create(self,subscriptionKey,metadata):
+    def ImageDefinition_create(self,subscriptionKey,metadata):
         ImageDefinitionQuery = self.ImageDefinition_get(subscriptionKey,metadata)
         if ImageDefinitionQuery.count() > 0:
             return ImageDefinitionQuery
@@ -131,68 +131,6 @@ class db_actions:
         self.session.commit()
         ImageDefinitionQuery = self.ImageDefinition_get(subscriptionKey,metadata)
         return ImageDefinitionQuery
-
-    def subscribe_file(self,anchor,filename,autoEndorse):
-        req = urllib2.Request(url=filename)
-        f = urllib2.urlopen(req)
-        try:
-            validated_data = anchor.validate_text(f.read())
-        except loadcanamespace.SmimeX509ValidationError,E:
-            self.log.error("Validate text '%s' produced error '%s'" % (filename,E))
-            return False
-        jsontext = json.loads(validated_data['data'])
-        vmilist = VMimageListDecoder(jsontext)
-        metadata = {}
-        metadata.update(vmilist.metadata)
-        metadata.update(vmilist.endorser.metadata)
-        if u'dc:identifier' not in metadata.keys():
-            self.log.error('list dc:identifier does not found')
-            return False
-        if metadata[u'hv:dn'] != validated_data['signer_dn']:
-            self.log.error('Endorser DN does not match signature')
-            return False
-        if metadata[u'hv:ca'] != validated_data['issuer_dn']:
-            self.log.error('list hv:ca does not match signature')
-            return False
-        if metadata[u'hv:uri'] != filename:
-            self.log.warning('list hv:uri does not match subscription uri')
-        endorser_list = self.endorser_get(metadata)
-        if endorser_list.count() == 0:
-            if not autoEndorse:
-                self.log.error("Endorser '%s':'%s' was not found in database." % (metadata[u'hv:dn'],metadata[u'hv:ca']))
-                self.log.info("Use '--auto-endorse' to add endorser '%s':'%s' to subscription database." % (metadata[u'hv:dn'],metadata[u'hv:ca']))
-                return False
-            else:
-                # We can create an endorser.
-                endorser_list = self.endorser_create(metadata)
-                self.log.warning("Endorser '%s':'%s' added to database." % (metadata[u'hv:dn'],metadata[u'hv:ca']))
-                
-                if endorser_list.count() == 0:
-                    self.log.error('Failed to create an authorised endorser in Database.')
-                    return False
-        subscription_query = self.subscription_create(metadata,True)
-        if subscription_query.count() != 1:
-            self.log.error('Creation of Subscription referance failed.')
-            return False
-        subscription = subscription_query.one()
-        subscriptionKey = int(subscription.id)
-        failedToCreateImages = []
-        for imageReferance in vmilist.images:
-            # Now we creat image definitions
-            metadata = {}
-            metadata.update(imageReferance.metadata)
-            metadata['cache'] = 0
-            ImageDefinition_query = self._ImageDefinition_create(subscriptionKey,metadata)
-            if ImageDefinition_query.count() != 1:
-                self.log.error('Creation of ImageDefinition referance failed.')
-                failedToCreateImages.append(imageReferance)
-                continue
-        if len(failedToCreateImages) > 0:
-            return False
-        return True
-
-
-    
 
 
 class queryby_base:
@@ -296,7 +234,7 @@ class output_driver_lines(output_driver_base):
         for item in subauthq:
             self.file_pointer.write ("%s\t%s\t%s\n" % (item.identifier,item.authorised,item.uri))
 
-class db_controler:
+class db_controler():
     def __init__(self,dboptions):
         self.log = logging.getLogger("db_controler")
         self.engine = create_engine(dboptions, echo=False)
@@ -405,190 +343,245 @@ class db_controler:
                 output_fileptr.close()
     def setEventObj(self,obj):
         self.eventObj = obj
+
+    def subscribe_file(self,anchor,filename,autoEndorse):
+        req = urllib2.Request(url=filename)
+        f = urllib2.urlopen(req)
+        try:
+            validated_data = anchor.validate_text(f.read())
+        except loadcanamespace.SmimeX509ValidationError,E:
+            self.log.error("Validate text '%s' produced error '%s'" % (filename,E))
+            return False
+        jsontext = json.loads(validated_data['data'])
+        vmilist = VMimageListDecoder(jsontext)
+        metadata = {}
+        metadata.update(vmilist.metadata)
+        metadata.update(vmilist.endorser.metadata)
+        if u'dc:identifier' not in metadata.keys():
+            self.log.error('list dc:identifier does not found')
+            return False
+        if metadata[u'hv:dn'] != validated_data['signer_dn']:
+            self.log.error('Endorser DN does not match signature')
+            return False
+        if metadata[u'hv:ca'] != validated_data['issuer_dn']:
+            self.log.error('list hv:ca does not match signature')
+            return False
+        if metadata[u'hv:uri'] != filename:
+            self.log.warning('list hv:uri does not match subscription uri')
+        endorser_list = self.endorser_get(metadata)
+        if endorser_list.count() == 0:
+            if not autoEndorse:
+                self.log.error("Endorser '%s':'%s' was not found in database." % (metadata[u'hv:dn'],metadata[u'hv:ca']))
+                self.log.info("Use '--auto-endorse' to add endorser '%s':'%s' to subscription database." % (metadata[u'hv:dn'],metadata[u'hv:ca']))
+                return False
+            else:
+                # We can create an endorser.
+                endorser_list = self.endorser_create(metadata)
+                self.log.warning("Endorser '%s':'%s' added to database." % (metadata[u'hv:dn'],metadata[u'hv:ca']))
+                
+                if endorser_list.count() == 0:
+                    self.log.error('Failed to create an authorised endorser in Database.')
+                    return False
+        subscription_query = self.subscription_create(metadata,True)
+        if subscription_query.count() != 1:
+            self.log.error('Creation of Subscription referance failed.')
+            return False
+        subscription = subscription_query.one()
+        subscriptionKey = int(subscription.id)
+        failedToCreateImages = []
+        for imageReferance in vmilist.images:
+            # Now we creat image definitions
+            metadata = {}
+            metadata.update(imageReferance.metadata)
+            metadata['cache'] = 0
+            ImageDefinition_query = self.ImageDefinition_create(subscriptionKey,metadata)
+            if ImageDefinition_query.count() != 1:
+                self.log.error('Creation of ImageDefinition referance failed.')
+                failedToCreateImages.append(imageReferance)
+                continue
+        if len(failedToCreateImages) > 0:
+            return False
+        return True
     
+    
+    def subscript_update_image(self,Session,imageObj):
+        if not u'dc:identifier' in imageObj.metadata.keys():
+            failedToAdd.append(imageObj)
+            self.log.error('Image had no ID so ignored')
+            # Error code - imagelist dc:identifier invalid.
+            return 31
+        imageDefQuery = self.ImageDefinition_get(subscriptionKey,imageObj.metadata)
+        if imageDefQuery.count() != 1:
+            self.log.error("ImageId '%s' not accepted for subscription '%s'" %
+                (imageObj.metadata[u'dc:identifier'],ProcessingSubscriptionUuid))
+            failedToAdd.append(imageObj)
+            # Error code - image dc:identifier invalid.
+            return 32
+        ThisImageDef = imageDefQuery.one()
+
+        ThisImageDefId = int(ThisImageDef.id)
+        #print ("ThisImageDefId=%s" % (ThisImageDefId))
+        try:
+            imageinstance = model.ImageInstance(imagelistref,ThisImageDefId,imageObj.metadata)
+        except KeyError, E:
+            failedToAdd.append(imageObj)
+            self.log.error("missing parameters '%s'" % E.message)
+            Session.rollback()
+            return 0
+        Session.add(imageinstance)
+        try:
+            Session.commit()
+        except IntegrityError,E:
+            self.log.error("Database integrity error '%s' processing '%s'." % (E.args,ProcessingSubscriptionUuid))
+            self.log.debug(E.params)
+            Session.rollback()
+            return 0
+
+        latestimageInstanceQuery = Session.query(model.ImageInstance).\
+            filter(model.ImageInstance.fkimagelistinstance == imagelistref).\
+            filter(model.ImageInstance.fkIdentifier == ThisImageDefId)
+        if latestimageInstanceQuery.count() != 1:
+            return 0
+        imageInstancelatest = latestimageInstanceQuery.one()
+        #print ("imageInstancelatest=%s" % (imageInstancelatest))
+        imageDefQuery = self.ImageDefinition_get(subscriptionKey,imageObj.metadata)
+        if imageDefQuery.count() != 1:
+            self.log.error("ImageId '%s' not accepted for subscription '%s'" %
+                (imageObj.metadata[u'dc:identifier'],ProcessingSubscriptionUuid))
+            failedToAdd.append(imageObj)
+            return 0
+        ThisImageDef = imageDefQuery.one()
+        ThisImageDef.latest = imageInstancelatest.id
+        Session.add(ThisImageDef)
+        Session.commit()
+        return 0
+
+    def subscription_update(self,Session,subscription):
+        subscriptionKey = int(subscription.id)
+        ProcessingSubscriptionUuid = str(subscription.identifier)
+        self.log.info("Updating:%s" % (ProcessingSubscriptionUuid))
+        req = urllib2.Request(url=subscription.uri)
+        try:
+            f = urllib2.urlopen(req)
+        except urllib2.URLError,E:
+            # Python 2.6 Exception
+            self.log.error("Download of url '%s' failed." % (subscription.uri))
+            # Error code - failed to download image list.
+            return 10
+        except OSError:
+            # Python 2.4 Exception
+    	    self.log.error("Download of url '%s' failed." % (subscription.uri))
+            # Error code - failed to download image list.
+            return 10
+        update_unprocessed = f.read()
+        # Now we have the update lets first check its hash
+        messagehash = hashlib.sha512(update_unprocessed).hexdigest()
+        messagehash_q = Session.query(model.ImageListInstance).\
+            filter(model.ImageListInstance.data_hash==messagehash)
+        count = messagehash_q.count()
+        now = datetime.datetime.utcnow()
+        if count != 0:
+            self.log.debug('Hash already found')
+            for message in messagehash_q:
+                if now > message.expires:
+                    self.log.warning("Image list '%s' has expired on: '%s'" % (ProcessingSubscriptionUuid,message.expires))
+                    message.expired = now
+                    Session.commit()
+            return 0
+        #Now we check its authenticity
+        try:
+            validated_data = self.anchor.validate_text(update_unprocessed)
+        except loadcanamespace.SmimeX509ValidationError,E:
+            self.log.error("Failed to process validate text for '%s' produced error '%s'" % (subscriptionKey,E))
+            # Error code - failed to validate image list.
+            return 11
+        data = validated_data['data']
+        dn = validated_data['signer_dn']
+        ca = validated_data['issuer_dn']
+        jsontext = json.loads(data)
+        vmilist = VMimageListDecoder(jsontext)
+
+        metadata = vmilist.metadata
+        metadata[u'data'] = update_unprocessed
+        metadata[u'data-hash'] = messagehash
+
+        if vmilist.endorser.metadata[u'hv:dn'] != dn:
+            self.log.error("Endorser DN does not match signature for '%s'" (ProcessingSubscriptionUuid))
+            # Error code - metadata and certificate dont match.
+            return 12
+        if vmilist.endorser.metadata[u'hv:ca'] != ca:
+            self.log.error("list hv:ca does not match signature for '%s'" % (ProcessingSubscriptionUuid))
+            # Error code - metadata and certificate dont match.
+            return 12
+        if vmilist.metadata[u'hv:uri'] != subscription.uri:
+            self.log.error("list hv:uri does not match subscription uri for '%s'" % (ProcessingSubscriptionUuid))
+            # Error code - metadata and certificate dont match.
+            return 12
+        if vmilist.metadata[u'dc:identifier'] != subscription.identifier:
+            self.log.error("list dc:identifier does not match subscription uuid for '%s'" % ProcessingSubscriptionUuid)
+            # Error code - imagelist dc:identifier invalid.
+            return 31
+        now = datetime.datetime.utcnow()
+        if now < vmilist.metadata[u'dc:date:created']:
+            self.log.error("Image list '%s' has an invalid creation date as in the3 future." % (ProcessingSubscriptionUuid))
+            return 33
+        if now > vmilist.metadata[u'dc:date:expires']:
+            self.log.warning("Image list '%s' has expired." % (ProcessingSubscriptionUuid))
+            removeauthorsiation = True
+            metadata[u'expired'] = now
+
+        # Now we know the data better check the SubscriptionAuth
+        subauthq = Session.query(model.SubscriptionAuth).\
+            filter(model.Endorser.id==model.EndorserPrincible.id).\
+            filter(model.EndorserPrincible.hv_dn==dn).\
+            filter(model.EndorserPrincible.hv_ca==ca).\
+            filter(model.SubscriptionAuth.endorser == model.Endorser.id).\
+            filter(model.SubscriptionAuth.subscription == model.Subscription.id).\
+            filter(model.Subscription.id == subscription.id)
+
+        count = subauthq.count()
+        if count == 0:
+            self.log.error('Endorser not authorised on subscription %s' % (ProcessingSubscriptionUuid))
+            # Error code - Endorser not authorised on subscription.
+            return 13
+        authsub = subauthq.one()
+        imagelist = model.ImageListInstance(authsub.id,metadata)
+        Session.add(imagelist)
+        try:
+            Session.commit()
+        except IntegrityError,E:
+            self.log.error("Database integrity error '%s' processing '%s'." % (E.args,ProcessingSubscriptionUuid))
+            self.log.debug(E.params)
+            Session.rollback()
+            # Error code - Database integrity error.
+            return 15
+        imagelistref = int(imagelist.id)
+        failedToAdd = []
+        for imageObj in vmilist.images:
+            self.subscript_update_image(Session,imageObj)
+
+        if subscription.imagelist_latest != None:
+            oldimagelist_q = Session.query(model.ImageListInstance).\
+                filter(model.ImageListInstance.id == subscription.imagelist_latest)
+            for imagelist in oldimagelist_q:
+                imagelist.authorised = False
+                Session.add(imagelist)
+        subscription.updated = datetime.datetime.utcnow()
+
+        subscription.imagelist_latest = imagelistref
+        Session.add(subscription)
+        Session.commit()
+        
     def subscriptions_update(self):
         if self.anchor == None:
             self.log.warning("No enabled certificates, check your x509 dir.")
             return 12
         Session = self.SessionFactory()
         db = db_actions(Session)
-        Session = self.SessionFactory()
         rc = 0
         subscriptionlist = Session.query(model.Subscription).all()
         for subscription in subscriptionlist:
-            subscriptionKey = int(subscription.id)
-            ProcessingSubscriptionUuid = str(subscription.identifier)
-            self.log.info("Updating:%s" % (ProcessingSubscriptionUuid))
-            req = urllib2.Request(url=subscription.uri)
-            try:
-                f = urllib2.urlopen(req)
-            except urllib2.URLError,E:
-                # Python 2.6 Exception
-                self.log.error("Download of url '%s' failed." % (subscription.uri))
-                # Error code - failed to download image list.
-                rc = 10
-                continue
-            except OSError:
-                # Python 2.4 Exception
-    	        self.log.error("Download of url '%s' failed." % (subscription.uri))
-                # Error code - failed to download image list.
-                rc = 10
-                continue
-            update_unprocessed = f.read()
-            # Now we have the update lets first check its hash
-            messagehash = hashlib.sha512(update_unprocessed).hexdigest()
-            messagehash_q = Session.query(model.ImageListInstance).\
-                filter(model.ImageListInstance.data_hash==messagehash)
-            count = messagehash_q.count()
-            now = datetime.datetime.utcnow()
-            if count != 0:
-                self.log.debug('Hash already found')
-                for message in messagehash_q:
-                    if now > message.expires:
-                        self.log.warning("Image list '%s' has expired on: '%s'" % (ProcessingSubscriptionUuid,message.expires))
-                        message.expired = now
-                        Session.commit()
-                continue
-            #Now we check its authenticity
-            try:
-                validated_data = self.anchor.validate_text(update_unprocessed)
-            except loadcanamespace.SmimeX509ValidationError,E:
-                self.log.error("Failed to process validate text for '%s' produced error '%s'" % (subscriptionKey,E))
-                # Error code - failed to validate image list.
-                rc = 11
-                continue
-            data = validated_data['data']
-            dn = validated_data['signer_dn']
-            ca = validated_data['issuer_dn']
-            jsontext = json.loads(data)
-            vmilist = VMimageListDecoder(jsontext)
-
-            metadata = vmilist.metadata
-            metadata[u'data'] = update_unprocessed
-            metadata[u'data-hash'] = messagehash
-
-            if vmilist.endorser.metadata[u'hv:dn'] != dn:
-                self.log.error("Endorser DN does not match signature for '%s'" (ProcessingSubscriptionUuid))
-                # Error code - metadata and certificate dont match.
-                rc = 12
-                continue
-            if vmilist.endorser.metadata[u'hv:ca'] != ca:
-                self.log.error("list hv:ca does not match signature for '%s'" % (ProcessingSubscriptionUuid))
-                # Error code - metadata and certificate dont match.
-                rc = 12
-                continue
-            if vmilist.metadata[u'hv:uri'] != subscription.uri:
-                self.log.error("list hv:uri does not match subscription uri for '%s'" % (ProcessingSubscriptionUuid))
-                # Error code - metadata and certificate dont match.
-                rc = 12
-                continue
-            if vmilist.metadata[u'dc:identifier'] != subscription.identifier:
-                self.log.error("list dc:identifier does not match subscription uuid for '%s'" % ProcessingSubscriptionUuid)
-                # Error code - imagelist dc:identifier invalid.
-                rc = 31
-                continue
-            now = datetime.datetime.utcnow()
-            if now < vmilist.metadata[u'dc:date:created']:
-                self.log.error("Image list '%s' has an invalid creation date." % (ProcessingSubscriptionUuid))
-                continue
-            if now > vmilist.metadata[u'dc:date:expires']:
-                self.log.warning("Image list '%s' has expired." % (ProcessingSubscriptionUuid))
-                removeauthorsiation = True
-                metadata[u'expired'] = now
-
-            # Now we know the data better check the SubscriptionAuth
-            subauthq = Session.query(model.SubscriptionAuth).\
-                filter(model.Endorser.id==model.EndorserPrincible.id).\
-                filter(model.EndorserPrincible.hv_dn==dn).\
-                filter(model.EndorserPrincible.hv_ca==ca).\
-                filter(model.SubscriptionAuth.endorser == model.Endorser.id).\
-                filter(model.SubscriptionAuth.subscription == model.Subscription.id).\
-                filter(model.Subscription.id == subscription.id)
-
-            count = subauthq.count()
-            if count == 0:
-                self.log.error('Endorser not authorised on subscription %s' % (ProcessingSubscriptionUuid))
-                # Error code - Endorser not authorised on subscription.
-                rc = 13
-                continue
-            authsub = subauthq.one()
-            imagelist = model.ImageListInstance(authsub.id,metadata)
-            Session.add(imagelist)
-            try:
-                Session.commit()
-            except IntegrityError,E:
-                self.log.error("Database integrity error '%s' processing '%s'." % (E.args,ProcessingSubscriptionUuid))
-                self.log.debug(E.params)
-                Session.rollback()
-                # Error code - Database integrity error.
-                rc = 15
-                continue
-            imagelistref = int(imagelist.id)
-            failedToAdd = []
-            for imageObj in vmilist.images:
-                if not u'dc:identifier' in imageObj.metadata.keys():
-                    failedToAdd.append(imageObj)
-                    self.log.error('Image had no ID so ignored')
-                    # Error code - imagelist dc:identifier invalid.
-                    rc = 31
-                    continue
-                imageDefQuery = self.ImageDefinition_get(subscriptionKey,imageObj.metadata)
-                if imageDefQuery.count() != 1:
-                    self.log.error("ImageId '%s' not accepted for subscription '%s'" %
-                        (imageObj.metadata[u'dc:identifier'],ProcessingSubscriptionUuid))
-                    failedToAdd.append(imageObj)
-                    # Error code - image dc:identifier invalid.
-                    rc = 32
-                    continue
-                ThisImageDef = imageDefQuery.one()
-
-                ThisImageDefId = int(ThisImageDef.id)
-                #print ("ThisImageDefId=%s" % (ThisImageDefId))
-                try:
-                    imageinstance = model.ImageInstance(imagelistref,ThisImageDefId,imageObj.metadata)
-                except KeyError, E:
-                    failedToAdd.append(imageObj)
-                    self.log.error("missing parameters '%s'" % E.message)
-                    Session.rollback()
-                    continue
-                Session.add(imageinstance)
-                try:
-                    Session.commit()
-                except IntegrityError,E:
-                    self.log.error("Database integrity error '%s' processing '%s'." % (E.args,ProcessingSubscriptionUuid))
-                    self.log.debug(E.params)
-                    Session.rollback()
-                    continue
-
-                latestimageInstanceQuery = Session.query(model.ImageInstance).\
-                    filter(model.ImageInstance.fkimagelistinstance == imagelistref).\
-                    filter(model.ImageInstance.fkIdentifier == ThisImageDefId)
-                if latestimageInstanceQuery.count() != 1:
-                    continue
-                imageInstancelatest = latestimageInstanceQuery.one()
-                #print ("imageInstancelatest=%s" % (imageInstancelatest))
-                imageDefQuery = self.ImageDefinition_get(subscriptionKey,imageObj.metadata)
-                if imageDefQuery.count() != 1:
-                    self.log.error("ImageId '%s' not accepted for subscription '%s'" %
-                        (imageObj.metadata[u'dc:identifier'],ProcessingSubscriptionUuid))
-                    failedToAdd.append(imageObj)
-                    continue
-                ThisImageDef = imageDefQuery.one()
-                ThisImageDef.latest = imageInstancelatest.id
-                Session.add(ThisImageDef)
-                Session.commit()
-
-            if subscription.imagelist_latest != None:
-                oldimagelist_q = Session.query(model.ImageListInstance).\
-                    filter(model.ImageListInstance.id == subscription.imagelist_latest)
-                for imagelist in oldimagelist_q:
-                    imagelist.authorised = False
-                    Session.add(imagelist)
-            subscription.updated = datetime.datetime.utcnow()
-
-            subscription.imagelist_latest = imagelistref
-            Session.add(subscription)
-            Session.commit()
+            self.subscription_update(Session,subscription)
         return rc
          
 
