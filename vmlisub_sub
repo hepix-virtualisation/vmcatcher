@@ -122,7 +122,7 @@ class db_actions:
                 filter(model.ImageDefinition.identifier == metadata[u'dc:identifier'])
         return subscriptionlist
 
-    def ImageDefinition_create(self,subscriptionKey,metadata):
+    def _ImageDefinition_create(self,subscriptionKey,metadata):
         ImageDefinitionQuery = self.ImageDefinition_get(subscriptionKey,metadata)
         if ImageDefinitionQuery.count() > 0:
             return ImageDefinitionQuery
@@ -182,7 +182,7 @@ class db_actions:
             metadata = {}
             metadata.update(imageReferance.metadata)
             metadata['cache'] = 0
-            ImageDefinition_query = self.ImageDefinition_create(subscriptionKey,metadata)
+            ImageDefinition_query = self._ImageDefinition_create(subscriptionKey,metadata)
             if ImageDefinition_query.count() != 1:
                 self.log.error('Creation of ImageDefinition referance failed.')
                 failedToCreateImages.append(imageReferance)
