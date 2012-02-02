@@ -53,6 +53,18 @@ except:
 
 #  31 imagelist dc:identifier invalid.
 #  32 image dc:identifier invalid.
+
+
+
+
+class EventInterface:
+    def __init__(self,commandString):
+        self.commandString = commandString
+    def EventExpireSubscription(self,uuid):
+        print "Exirpring %s" % (uuid)
+
+
+
 class db_actions:
 
     def __init__(self,session):
@@ -569,7 +581,9 @@ class db_controler:
 
             if output_file_name != None:
                 output_fileptr.close()
-
+    def setEventObj(self,obj):
+        self.eventObj = obj
+                
 
 # User interface
 
@@ -613,7 +627,7 @@ def main():
     p.add_option('-i', '--info', action ='store_true',help='Information on subscription')
     p.add_option('-o', '--output', action ='append',help='Export File.', metavar='OUTPUTFILE')
     p.add_option('-L', '--logfile', action ='store',help='Logfile configuration file.', metavar='LOGFILE')
-
+    p.add_option('-E', '--even-action', action ='store',help='Event Command line.', metavar='LOGFILE')
     options, arguments = p.parse_args()
     autoEndorse = False
     anchor_needed = False
@@ -628,6 +642,7 @@ def main():
     input_format_selected = set([])
     outputfiles = []
     databaseConnectionString = None
+    eventCmd = None
     # Set up log file
     if options.logfile:
         if os.path.isfile(str(options.logfile)):
@@ -677,6 +692,8 @@ def main():
         databaseConnectionString = options.database
     if options.auto_endorse:
         autoEndorse = True
+    if options.even_action:
+        eventCmd = EventInterface(options.even_action)
 
     # 1 So we have some command line validation
 
@@ -705,7 +722,6 @@ def main():
 
     actions_req_sel_len = len(actions_req_sel)
     if actions_req_sel_len == 1:
-
         if len(subscriptions_selected) == 0:
             log.error('No selections made.')
             sys.exit(1)
@@ -744,9 +760,15 @@ def main():
         'SMIME' : output_driver_smime,
         'message' : output_driver_message,
     }
+    database.setup_view_factory(mapper[selector_str])
+    # Add Event action if needed.
+    
+    if eventCmd != None:
+        database.setEventObj(EventInterface)
+    
     # set default return code
     rc = 0
-    database.setup_view_factory(mapper[selector_str])
+    
     if 'subscribe' in actions:
         if not database.subscriptions_subscribe(subscription_url_list,autoEndorse):
             log.error("Failed to subscribe to '%s'" % (subscription_url_list))
