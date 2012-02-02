@@ -304,7 +304,7 @@ class db_controler():
         Session = self.SessionFactory()
         db = db_actions(Session)
         for uri in urls_selected:
-            if not db.subscribe_file(self.anchor,uri,autoEndorse):
+            if not self.subscribe_file(Session,self.anchor,uri,autoEndorse):
                 rc = False
         return rc
 
@@ -344,7 +344,7 @@ class db_controler():
     def setEventObj(self,obj):
         self.eventObj = obj
 
-    def subscribe_file(self,anchor,filename,autoEndorse):
+    def subscribe_file(self,Session,anchor,filename,autoEndorse):
         req = urllib2.Request(url=filename)
         f = urllib2.urlopen(req)
         try:
@@ -368,7 +368,8 @@ class db_controler():
             return False
         if metadata[u'hv:uri'] != filename:
             self.log.warning('list hv:uri does not match subscription uri')
-        endorser_list = self.endorser_get(metadata)
+        db = db_actions(Session)
+        endorser_list = db.endorser_get(metadata)
         if endorser_list.count() == 0:
             if not autoEndorse:
                 self.log.error("Endorser '%s':'%s' was not found in database." % (metadata[u'hv:dn'],metadata[u'hv:ca']))
@@ -376,13 +377,13 @@ class db_controler():
                 return False
             else:
                 # We can create an endorser.
-                endorser_list = self.endorser_create(metadata)
+                endorser_list = db.endorser_create(metadata)
                 self.log.warning("Endorser '%s':'%s' added to database." % (metadata[u'hv:dn'],metadata[u'hv:ca']))
                 
                 if endorser_list.count() == 0:
                     self.log.error('Failed to create an authorised endorser in Database.')
                     return False
-        subscription_query = self.subscription_create(metadata,True)
+        subscription_query = db.subscription_create(metadata,True)
         if subscription_query.count() != 1:
             self.log.error('Creation of Subscription referance failed.')
             return False
@@ -394,7 +395,7 @@ class db_controler():
             metadata = {}
             metadata.update(imageReferance.metadata)
             metadata['cache'] = 0
-            ImageDefinition_query = self.ImageDefinition_create(subscriptionKey,metadata)
+            ImageDefinition_query = db.ImageDefinition_create(subscriptionKey,metadata)
             if ImageDefinition_query.count() != 1:
                 self.log.error('Creation of ImageDefinition referance failed.')
                 failedToCreateImages.append(imageReferance)
@@ -410,7 +411,8 @@ class db_controler():
             self.log.error('Image had no ID so ignored')
             # Error code - imagelist dc:identifier invalid.
             return 31
-        imageDefQuery = self.ImageDefinition_get(subscriptionKey,imageObj.metadata)
+        db = db_actions(Session)
+        imageDefQuery = db.ImageDefinition_get(subscriptionKey,imageObj.metadata)
         if imageDefQuery.count() != 1:
             self.log.error("ImageId '%s' not accepted for subscription '%s'" %
                 (imageObj.metadata[u'dc:identifier'],ProcessingSubscriptionUuid))
