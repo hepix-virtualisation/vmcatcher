@@ -278,14 +278,7 @@ class db_controler():
         view = self.factory_view(sys.stdout,Session,self.anchor)
         view.subscriptions_lister()
         return True
-    def subscriptions_update(self):
-        if self.anchor == None:
-            self.log.warning("No enabled certificates, check your x509 dir.")
-            return 12
-        Session = self.SessionFactory()
-        db = db_actions(Session)
-        rc = db.subscriptions_update(self.anchor)
-        return rc
+    
     def subscriptions_delete(self,subscriptions_selected):
         foundOne = False
         Session = self.SessionFactory()
@@ -559,8 +552,13 @@ class db_controler():
             return 15
         imagelistref = int(imagelist.id)
         failedToAdd = []
+        # Now make a global return number
+        globalRc = 0
         for imageObj in vmilist.images:
-            self.subscript_update_image(Session,imageObj)
+            # Now update each Image
+            thisRc = self.subscript_update_image(Session,imageObj)
+            if thisRc != 0:
+                globalRc = thisRc
 
         if subscription.imagelist_latest != None:
             oldimagelist_q = Session.query(model.ImageListInstance).\
@@ -573,6 +571,7 @@ class db_controler():
         subscription.imagelist_latest = imagelistref
         Session.add(subscription)
         Session.commit()
+        return globalRc
         
     def subscriptions_update(self):
         if self.anchor == None:
@@ -583,7 +582,9 @@ class db_controler():
         rc = 0
         subscriptionlist = Session.query(model.Subscription).all()
         for subscription in subscriptionlist:
-            self.subscription_update(Session,subscription)
+            thisRc = self.subscription_update(Session,subscription)
+            if thisRc != 0:
+                rc = thisRc
         return rc
          
 
