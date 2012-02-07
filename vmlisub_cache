@@ -154,6 +154,7 @@ class DownloadDir(BaseDir):
     def __init__(self, dir_download):
         BaseDir.__init__(self,dir_download)
         self.log = logging.getLogger("DownloadDir")
+
     def download(self,uuid):
         if not uuid in self.index.keys():
             self.log.error("Image '%s' is not known" % (uuid))
@@ -253,6 +254,23 @@ class ExpireDir(BaseDir):
         del aDir.index[uuid]
         return True
 
+class EventObj(object):
+    def __init__(self,eventExecutionString):
+        self.eventExecutionString = eventExecutionString
+    
+    def eventAvailablePrefix(self,uuid):
+        print "eventAvailablePrefix uuid %s" % (self.eventExecutionString)
+
+    def eventAvailablePostfix(self,uuid):
+        print "eventAvailablePostfix uuid %s" % (self.eventExecutionString)
+
+    def eventExpirePrefix(self, uuid):
+        print "eventExpirePrefix uuid %s" % (self.eventExecutionString)
+        
+    def eventExpirePosfix(self, uuid):
+        print "eventExpirePosfix uuid %s" % (self.eventExecutionString)
+    
+
 class CacheMan(object):
     def __init__(self,database, dir_cache, dir_partial, dir_expired):
         self.log = logging.getLogger("CacheMan")
@@ -263,7 +281,10 @@ class CacheMan(object):
         self.cacheDir = CacheDir(dir_cache)
         self.DownloadDir = DownloadDir(dir_partial)
         self.ExpireDir = ExpireDir(dir_expired)
-
+        self.callbackEventExpirePrefix = None
+        self.callbackEventExpirePostfix = None
+        self.callbackEventAvailablePrefix = None
+        self.callbackEventAvailablePostfix = None
 
     def checkSumCache(self):
         self.cacheDir.indexUnknownClear()
@@ -325,6 +346,8 @@ class CacheMan(object):
                 self.cacheDir.index[key]['message'] = DbImageListInst.data
                 self.cacheDir.index[key]['msgHash'] = DbImageListInst.data_hash
         for uuid in uuids2expire:
+            if self.callbackEventExpirePrefix != None:
+                self.callbackEventExpirePrefix(uuid)
             if self.ExpireDir.moveFrom(self.cacheDir,uuid):
                 self.log.info("Expired image '%s'" % (uuid))
             else:
@@ -332,6 +355,8 @@ class CacheMan(object):
                 rc = False
             self.cacheDir.indexSave()
             self.ExpireDir.indexSave()
+            if self.callbackEventExpirePostfix != None:
+                self.callbackEventExpirePostfix(uuid)
         return rc
     def download(self):
         downloadsneeded = {}
@@ -370,12 +395,16 @@ class CacheMan(object):
                 self.log.error("Failed to download file '%s'." % (key))
                 self.DownloadDir.indexSave()
                 continue
+            if self.callbackEventAvailablePrefix != None:
+                self.callbackEventAvailablePrefix(uuid)
             if not self.cacheDir.moveFrom(self.DownloadDir,key):
                 self.log.error("Failed to Move file '%s' into the enbdorsed directory." % (key))
                 continue
             self.DownloadDir.indexSave()
             self.cacheDir.indexSave()
             self.log.info("moved file %s" % (key))
+            if self.callbackEventAvailablePostfix != None:
+                self.callbackEventAvailablePostfix(uuid)
         return True
 
 
@@ -400,7 +429,8 @@ def main():
     p.add_option('-s', '--sha512', action ='store_true',help='check Sha512 for images in cache.')
     p.add_option('-E', '--expire', action ='store_true',help='expire images from cache.')
     p.add_option('-L', '--logfile', action ='store',help='Logfile configuration file.', metavar='LOGFILE')
-
+    p.add_option('-x', '--execute', action ='store',help='Event application to launch.', metavar='EVENT CMD')
+    
     options, arguments = p.parse_args()
 
     dir_cache = None
@@ -408,6 +438,7 @@ def main():
     dir_expired = None
     actions = set()
     databaseConnectionString = None
+    eventExecutionString = None
     # Set up log file
     if options.logfile:
         if os.path.isfile(str(options.logfile)):
@@ -435,7 +466,8 @@ def main():
         actions.add("download")
     if options.database:
         databaseConnectionString = options.database
-
+    if options.execute:
+        eventExecutionString = options.execute
     # 1 So we have some command line validation
 
     if databaseConnectionString == None:
@@ -471,6 +503,12 @@ def main():
 
 
     ThisCacheManager = CacheMan(databaseConnectionString,dir_cache, dir_partial, dir_expired)
+    if eventExecutionString != None:
+        EventInstance = EventObj(eventExecutionString)
+        ThisCacheManager.callbackEventAvailablePrefix = EventInstance.eventAvailablePrefix
+        ThisCacheManager.callbackEventAvailablePostfix = EventInstance.eventAvailablePostfix
+        ThisCacheManager.callbackEventExpirePrefix = EventInstance.eventExpirePrefix
+        ThisCacheManager.callbackEventExpirePostfix = EventInstance.eventExpirePosfix
     ThisCacheManager.load()
     if "expire" in actions:
         if not ThisCacheManager.expire():
