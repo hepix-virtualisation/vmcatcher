@@ -48,6 +48,8 @@ except:
     import json
 
 import urlparse
+import subprocess
+import time
 
 
 def uglyUriParser(uri):
@@ -257,19 +259,83 @@ class ExpireDir(BaseDir):
 class EventObj(object):
     def __init__(self,eventExecutionString):
         self.eventExecutionString = eventExecutionString
-    
+        self.env = os.environ
+        self.log = logging.getLogger("Events")
+    def launch(self,env):
+        process = subprocess.Popen([self.eventExecutionString], shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,env=env)
+        processRc = None
+        handleprocess = True
+        counter = 0
+        stdout = ''
+        stderr = ''
+        timeout = 10
+        while handleprocess:
+            counter += 1
+            cout,cerr = process.communicate()
+            stdout += cout
+            stderr += cerr
+            process.poll()
+            processRc = process.returncode
+            if processRc != None:
+                break
+            if counter == timeout:
+                os.kill(process.pid, signal.SIGQUIT)
+            if counter > timeout:
+                os.kill(process.pid, signal.SIGKILL)
+                processRc = -9
+                break
+            time.sleep(1)
+        return (processRc,stdout,stderr)
+
     def eventAvailablePrefix(self,uuid):
-        print "eventAvailablePrefix uuid %s" % (self.eventExecutionString)
-
-    def eventAvailablePostfix(self,uuid):
-        print "eventAvailablePostfix uuid %s" % (self.eventExecutionString)
-
-    def eventExpirePrefix(self, uuid):
-        print "eventExpirePrefix uuid %s" % (self.eventExecutionString)
+        newEnv = self.env
+        newEnv['VMILS_EVENT'] = "AvailablePrefix"
+        newEnv['VMILS_IMAGE_UUID'] = str(uuid)
+        rc,stdout,stderr = self.launch(newEnv)
+        if rc != 0:
+            self.log.error("Event command '%s' exit code '%s' failed for VMILS_EVENT='%s'." % (self.eventExecutionString,rc,newEnv['VMILS_EVENT']))
+            self.log.info("stdout=%s" % (stdout))
+            self.log.info("stderr=%s" % (stderr))
+            return
+        self.log.debug("stdout=%s" % (stdout))
+        return
         
+    def eventAvailablePostfix(self,uuid):
+        newEnv = self.env
+        newEnv['VMILS_EVENT'] = "AvailablePostfix"
+        newEnv['VMILS_IMAGE_UUID'] = str(uuid)
+        rc,stdout,stderr = self.launch(newEnv)
+        if rc != 0:
+            self.log.error("Event command '%s' exit code '%s' failed for VMILS_EVENT='%s'." % (self.eventExecutionString,rc,newEnv['VMILS_EVENT']))
+            self.log.info("stdout=%s" % (stdout))
+            self.log.info("stderr=%s" % (stderr))
+            return
+        self.log.debug("stdout=%s" % (stdout))
+        return
+    def eventExpirePrefix(self, uuid):
+        newEnv = self.env
+        newEnv['VMILS_EVENT'] = "ExpirePrefix"
+        newEnv['VMILS_IMAGE_UUID'] = str(uuid)
+        rc,stdout,stderr = self.launch(newEnv)
+        if rc != 0:
+            self.log.error("Event command '%s' exit code '%s' failed for VMILS_EVENT='%s'." % (self.eventExecutionString,rc,newEnv['VMILS_EVENT']))
+            self.log.info("stdout=%s" % (stdout))
+            self.log.info("stderr=%s" % (stderr))
+            return
+        self.log.debug("stdout=%s" % (stdout))
+        return
     def eventExpirePosfix(self, uuid):
-        print "eventExpirePosfix uuid %s" % (self.eventExecutionString)
-    
+        newEnv = self.env
+        newEnv['VMILS_EVENT'] = "ExpirePosfix"
+        newEnv['VMILS_IMAGE_UUID'] = str(uuid)
+        rc,stdout,stderr = self.launch(newEnv)
+        if rc != 0:
+            self.log.error("Event command '%s' exit code '%s' failed for VMILS_EVENT='%s'." % (self.eventExecutionString,rc,newEnv['VMILS_EVENT']))
+            self.log.info("stdout=%s" % (stdout))
+            self.log.info("stderr=%s" % (stderr))
+            return
+        self.log.debug("stdout=%s" % (stdout))
+        return
 
 class CacheMan(object):
     def __init__(self,database, dir_cache, dir_partial, dir_expired):
@@ -523,7 +589,6 @@ def main():
             log.error("Failed to download new images")
             sys.exit(1)
     ThisCacheManager.save()
-
 
 if __name__ == "__main__":
     main()
