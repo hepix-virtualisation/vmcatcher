@@ -398,7 +398,7 @@ class db_controler():
         return True
     
     
-    def subscript_update_image(self,Session,imageObj):
+    def subscript_update_image(self,Session,subscriptionKey,imagelistref,imageObj):
         if not u'dc:identifier' in imageObj.metadata.keys():
             failedToAdd.append(imageObj)
             self.log.error('Image had no ID so ignored')
@@ -439,7 +439,7 @@ class db_controler():
             return 0
         imageInstancelatest = latestimageInstanceQuery.one()
         #print ("imageInstancelatest=%s" % (imageInstancelatest))
-        imageDefQuery = self.ImageDefinition_get(subscriptionKey,imageObj.metadata)
+        imageDefQuery = db.ImageDefinition_get(subscriptionKey,imageObj.metadata)
         if imageDefQuery.count() != 1:
             self.log.error("ImageId '%s' not accepted for subscription '%s'" %
                 (imageObj.metadata[u'dc:identifier'],ProcessingSubscriptionUuid))
@@ -556,7 +556,7 @@ class db_controler():
         globalRc = 0
         for imageObj in vmilist.images:
             # Now update each Image
-            thisRc = self.subscript_update_image(Session,imageObj)
+            thisRc = self.subscript_update_image(Session,subscription.id,imagelistref,imageObj)
             if thisRc != 0:
                 globalRc = thisRc
 
