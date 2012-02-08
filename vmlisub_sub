@@ -54,6 +54,9 @@ except:
 #  31 imagelist dc:identifier invalid.
 #  32 image dc:identifier invalid.
 #  33 imagelist dc:date:created invalid.
+#  34 image has missing parameters in the message.
+#  35 image has missing parameters in the message.
+#  36 image is not registeresd with subscription.
 
 
 
@@ -402,7 +405,6 @@ class db_controler:
         subscriptionKey = subscription.id
         ProcessingSubscriptionUuid = subscription.identifier
         if not u'dc:identifier' in imageObj.metadata.keys():
-            failedToAdd.append(imageObj)
             self.log.error('Image had no ID so ignored')
             # Error code - imagelist dc:identifier invalid.
             return 31
@@ -411,7 +413,6 @@ class db_controler:
         if imageDefQuery.count() != 1:
             self.log.error("ImageId '%s' not accepted for subscription '%s'" %
                 (imageObj.metadata[u'dc:identifier'],ProcessingSubscriptionUuid))
-            failedToAdd.append(imageObj)
             # Error code - image dc:identifier invalid.
             return 32
         ThisImageDef = imageDefQuery.one()
@@ -421,10 +422,9 @@ class db_controler:
         try:
             imageinstance = model.ImageInstance(imagelistref,ThisImageDefId,imageObj.metadata)
         except KeyError, E:
-            failedToAdd.append(imageObj)
             self.log.error("missing parameters '%s'" % E.message)
             Session.rollback()
-            return 0
+            return 34
         Session.add(imageinstance)
         try:
             Session.commit()
@@ -445,8 +445,7 @@ class db_controler:
         if imageDefQuery.count() != 1:
             self.log.error("ImageId '%s' not accepted for subscription '%s'" %
                 (imageObj.metadata[u'dc:identifier'],ProcessingSubscriptionUuid))
-            failedToAdd.append(imageObj)
-            return 0
+            return 36
         ThisImageDef = imageDefQuery.one()
         ThisImageDef.latest = imageInstancelatest.id
         Session.add(ThisImageDef)
@@ -553,7 +552,6 @@ class db_controler:
             # Error code - Database integrity error.
             return 15
         imagelistref = int(imagelist.id)
-        failedToAdd = []
         # Now make a global return number
         globalRc = 0
         for imageObj in vmilist.images:
