@@ -234,7 +234,7 @@ class output_driver_lines(output_driver_base):
         for item in subauthq:
             self.file_pointer.write ("%s\t%s\t%s\n" % (item.identifier,item.authorised,item.uri))
 
-class db_controler():
+class db_controler:
     def __init__(self,dboptions):
         self.log = logging.getLogger("db_controler")
         self.engine = create_engine(dboptions, echo=False)
