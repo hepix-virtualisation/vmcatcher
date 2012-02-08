@@ -286,56 +286,49 @@ class EventObj(object):
                 break
             time.sleep(1)
         return (processRc,stdout,stderr)
+    
+    def eventProcess(self,EventStr,metadata):
+        # Note keys 'sha512', 'uuid','size' are depricated.
+        mappingdict = {'sha512' : 'VMILS_EVENT_SL_CHECKSUM_SHA512',
+            'uuid' : 'VMILS_EVENT_DC_IDENTIFIER',
+            'size' : 'VMILS_EVENT_HV_SIZE',
+            'sha512' : 'VMILS_EVENT_SL_CHECKSUM_SHA512',
+            # End of depricated options
+            'filename' : 'VMILS_IMAGEEVENT_FILENAME',
+            'dc:identifier' : 'VMILS_EVENT_DC_IDENTIFIER',
+            'hv:uri' : 'VMILS_EVENT_HV_URI',
+            'hv:size' : 'VMILS_EVENT_HV_SIZE',
+            'dc:description' : 'VMILS_EVENT_DC_DESCRIPTION',
+            'dc:title' : 'VMILS_EVENT_DC_TITLE',
+            'hv:hypervisor' : 'VMILS_EVENT_HV_HYPERVISOR',
+            'hv:version' : 'VMILS_EVENT_HV_VERSION',
+            'sl:arch' : 'VMILS_EVENT_SL_ARCH',
+            'sl:comments' : 'VMILS_EVENT_SL_COMMENTS',
+            'sl:os' : 'VMILS_EVENT_SL_OS',
+            'sl:osversion' : 'VMILS_EVENT_SL_OSVERSION',
+            'sl:checksum:sha512' : 'VMILS_EVENT_SL_CHECKSUM_SHA512'}
+        newEnv = self.env
+        newEnv['VMILS_EVENT_TYPE'] = EventStr
+        for key in mappingdict.keys():
+            if key in metadata.keys():
+                newEnv[str(mappingdict[key])] = str(metadata[key])
+        rc,stdout,stderr = self.launch(newEnv)
+        if rc != 0:
+            self.log.error("Event command '%s' exit code '%s' failed for VMILS_EVENT_TYPE='%s'." % (self.eventExecutionString,rc,newEnv['VMILS_EVENT_TYPE']))
+            self.log.info("stdout=%s" % (stdout))
+            self.log.info("stderr=%s" % (stderr))
+            return
+        self.log.debug("stdout=%s" % (stdout))
+        return
 
-    def eventAvailablePrefix(self,uuid):
-        newEnv = self.env
-        newEnv['VMILS_EVENT'] = "AvailablePrefix"
-        newEnv['VMILS_IMAGE_UUID'] = str(uuid)
-        rc,stdout,stderr = self.launch(newEnv)
-        if rc != 0:
-            self.log.error("Event command '%s' exit code '%s' failed for VMILS_EVENT='%s'." % (self.eventExecutionString,rc,newEnv['VMILS_EVENT']))
-            self.log.info("stdout=%s" % (stdout))
-            self.log.info("stderr=%s" % (stderr))
-            return
-        self.log.debug("stdout=%s" % (stdout))
-        return
-        
-    def eventAvailablePostfix(self,uuid):
-        newEnv = self.env
-        newEnv['VMILS_EVENT'] = "AvailablePostfix"
-        newEnv['VMILS_IMAGE_UUID'] = str(uuid)
-        rc,stdout,stderr = self.launch(newEnv)
-        if rc != 0:
-            self.log.error("Event command '%s' exit code '%s' failed for VMILS_EVENT='%s'." % (self.eventExecutionString,rc,newEnv['VMILS_EVENT']))
-            self.log.info("stdout=%s" % (stdout))
-            self.log.info("stderr=%s" % (stderr))
-            return
-        self.log.debug("stdout=%s" % (stdout))
-        return
-    def eventExpirePrefix(self, uuid):
-        newEnv = self.env
-        newEnv['VMILS_EVENT'] = "ExpirePrefix"
-        newEnv['VMILS_IMAGE_UUID'] = str(uuid)
-        rc,stdout,stderr = self.launch(newEnv)
-        if rc != 0:
-            self.log.error("Event command '%s' exit code '%s' failed for VMILS_EVENT='%s'." % (self.eventExecutionString,rc,newEnv['VMILS_EVENT']))
-            self.log.info("stdout=%s" % (stdout))
-            self.log.info("stderr=%s" % (stderr))
-            return
-        self.log.debug("stdout=%s" % (stdout))
-        return
-    def eventExpirePosfix(self, uuid):
-        newEnv = self.env
-        newEnv['VMILS_EVENT'] = "ExpirePosfix"
-        newEnv['VMILS_IMAGE_UUID'] = str(uuid)
-        rc,stdout,stderr = self.launch(newEnv)
-        if rc != 0:
-            self.log.error("Event command '%s' exit code '%s' failed for VMILS_EVENT='%s'." % (self.eventExecutionString,rc,newEnv['VMILS_EVENT']))
-            self.log.info("stdout=%s" % (stdout))
-            self.log.info("stderr=%s" % (stderr))
-            return
-        self.log.debug("stdout=%s" % (stdout))
-        return
+    def eventAvailablePrefix(self,metadata):
+        self.eventProcess("AvailablePrefix",metadata)
+    def eventAvailablePostfix(self,metadata):
+        self.eventProcess("AvailablePostfix",metadata)
+    def eventExpirePrefix(self, metadata):
+        self.eventProcess("ExpirePrefix",metadata)
+    def eventExpirePosfix(self, metadata):
+        self.eventProcess("ExpirePosfix",metadata)
 
 class CacheMan(object):
     def __init__(self,database, dir_cache, dir_partial, dir_expired):
@@ -383,7 +376,7 @@ class CacheMan(object):
     def expire(self):
         rc = True
         self.cacheDir.indexUnknownClear()
-        uuids2expire = []
+        uuids2expire = {}
         for key in self.cacheDir.index.keys():
             uuid = self.cacheDir.index[key]['uuid']
             CachedSha512 = self.cacheDir.index[key]['sha512']
@@ -399,21 +392,25 @@ class CacheMan(object):
                 filter(model.ImageListInstance.expired == None).\
                 filter(model.ImageListInstance.id == model.ImageInstance.fkimagelistinstance)
             if QueryResults.count() != 1:
-                uuids2expire.append(uuid)
+                uuids2expire[uuid] = self.cacheDir.index[key]
                 continue
             dbSub, sbImageDef, DbImageListInst, DbImageInst = QueryResults.one()
+            # If the image hash has changed expire old image
             if self.cacheDir.index[key][u'sha512'] != DbImageInst.sha512:
-                uuids2expire.append(uuid)
+                uuids2expire[uuid] = self.cacheDir.index[key]
                 continue
+            # Is the size has changed expire old image
             if self.cacheDir.index[key][u'size'] != DbImageInst.size:
-                uuids2expire.append(uuid)
+                uuids2expire[uuid] = self.cacheDir.index[key]
                 continue
+            # If the Image list instance has changed then update 
+            # Image list instance metadata from DB.
             if DbImageListInst.data_hash != self.cacheDir.index[uuid]['msgHash']:
                 self.cacheDir.index[key]['message'] = DbImageListInst.data
                 self.cacheDir.index[key]['msgHash'] = DbImageListInst.data_hash
-        for uuid in uuids2expire:
+        for uuid in uuids2expire.keys():
             if self.callbackEventExpirePrefix != None:
-                self.callbackEventExpirePrefix(uuid)
+                self.callbackEventExpirePrefix(uuids2expire[uuid])
             if self.ExpireDir.moveFrom(self.cacheDir,uuid):
                 self.log.info("Expired image '%s'" % (uuid))
             else:
@@ -422,7 +419,7 @@ class CacheMan(object):
             self.cacheDir.indexSave()
             self.ExpireDir.indexSave()
             if self.callbackEventExpirePostfix != None:
-                self.callbackEventExpirePostfix(uuid)
+                self.callbackEventExpirePostfix(uuids2expire[uuid])
         return rc
     def download(self):
         downloadsneeded = {}
@@ -441,19 +438,32 @@ class CacheMan(object):
             imageListInst = line[2]
             ImageInst = line[3]
             uuid = imageDef.identifier
-            details = { 'uri' : str(ImageInst.uri),
+            details = {'hv:uri' : str(ImageInst.uri),
+                    'sl:checksum:sha512' : str(ImageInst.sha512),
+                    'hv:size': int(ImageInst.size),
+                    'dc:identifier' : uuid,
+                    'message' : str(imageListInst.data),
+                    'msgHash' : str(imageListInst.data_hash),
+                    'dc:title' : str(ImageInst.title),
+                    'dc:description' : str(ImageInst.description),
+                    'hv:hypervisor' : str(ImageInst.hypervisor),
+                    'sl:arch' : str(ImageInst.arch),
+                    'sl:comments' : str(ImageInst.comments),
+                    'sl:os' : str(ImageInst.os),
+                    'sl:osversion' : str(ImageInst.osversion),
+                    # And now the legacy values
+                    'uri' : str(ImageInst.uri),
                     'sha512' : str(ImageInst.sha512),
                     'size': int(ImageInst.size),
                     'uuid' : uuid,
-                    'message' : str(imageListInst.data),
-                    'msgHash' : str(imageListInst.data_hash)}
+                    }
             if not uuid in self.cacheDir.index.keys():
                 downloadsneeded[uuid] = details
                 continue
             if self.cacheDir.index[uuid]['sha512'] != str(ImageInst.sha512):
                 downloadsneeded[uuid] = details
                 continue
-        for key in downloadsneeded:
+        for key in downloadsneeded.keys():
             if not self.DownloadDir.indexAdd(downloadsneeded[key]):
                 self.log.error("Failed to add metadata request to download file '%s'." % (key))
                 continue
@@ -462,7 +472,7 @@ class CacheMan(object):
                 self.DownloadDir.indexSave()
                 continue
             if self.callbackEventAvailablePrefix != None:
-                self.callbackEventAvailablePrefix(uuid)
+                self.callbackEventAvailablePrefix(downloadsneeded[key])
             if not self.cacheDir.moveFrom(self.DownloadDir,key):
                 self.log.error("Failed to Move file '%s' into the enbdorsed directory." % (key))
                 continue
@@ -470,7 +480,7 @@ class CacheMan(object):
             self.cacheDir.indexSave()
             self.log.info("moved file %s" % (key))
             if self.callbackEventAvailablePostfix != None:
-                self.callbackEventAvailablePostfix(uuid)
+                self.callbackEventAvailablePostfix(downloadsneeded[key])
         return True
 
 
