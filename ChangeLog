@@ -1,5 +1,16 @@
 Changelog 
 
+hepixvmilsubscriber-0.1.8
+
+* Added Event interface and documentation to README.
+* Cleaned up the internal JSON cache.info files.
+* Changed the code structuire of vmlisub_sub a little for clarity.
+
+hepixvmilsubscriber-0.1.7
+
+* Added some extra docuemntation on fetch-crl.
+* Imporved docuemtnation in setup.
+
 hepixvmilsubscriber-0.1.6
 
 * Stability improvements.
