@@ -469,7 +469,7 @@ The following environment variables may be set by events:
     VMILS_EVENT_SL_OS
     VMILS_EVENT_SL_OSVERSION
     VMILS_EVENT_TYPE
-    VMILS_IMAGEEVENT_FILENAME
+    VMILS_EVENT_FILENAME
 
 These correspond to the variables within the image list.
 
