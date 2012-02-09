@@ -294,7 +294,7 @@ class EventObj(object):
             'size' : 'VMILS_EVENT_HV_SIZE',
             'sha512' : 'VMILS_EVENT_SL_CHECKSUM_SHA512',
             # End of depricated options
-            'filename' : 'VMILS_IMAGEEVENT_FILENAME',
+            'filename' : 'VMILS_EVENT_FILENAME',
             'dc:identifier' : 'VMILS_EVENT_DC_IDENTIFIER',
             'hv:uri' : 'VMILS_EVENT_HV_URI',
             'hv:size' : 'VMILS_EVENT_HV_SIZE',

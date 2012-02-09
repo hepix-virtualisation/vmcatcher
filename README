@@ -435,6 +435,44 @@ Logging can be independently set up for each object to multiple locations, and
 with different log levels.
 
 
+Event interface
+---------------------------------------
+
+Since this application suite is intended to be embedded in a larger application 
+and concerned with downloading and managing updates of VM images into a cloud
+infrastructure, it is some times beneficial to have an event interface.
+
+The events interface launches a shell with a series of environment variables. The
+even must process its command within 10 seconds or else it will be sent a 
+termination signal. See the following example:
+
+    vmlisub_cache -x 'env  ; exit 1'
+
+The following events exists:
+
+"AvailablePrefix", "AvailablePostfix", "ExpirePrefix" and "ExpirePosfix"
+
+"Available" events happen when a new image is validated, while "Expire" events 
+occur when an image i no longer the validated image. The "Prefix" events occur 
+before the file changes state, and the "Posfix" events occur after the state 
+change.
+
+The following environment variables may be set by events:
+
+    VMILS_EVENT_TYPE
+    VMILS_EVENT_HV_HYPERVISOR
+    VMILS_EVENT_HV_SIZE
+    VMILS_EVENT_HV_URI
+    VMILS_EVENT_SL_ARCH
+    VMILS_EVENT_SL_CHECKSUM_SHA512
+    VMILS_EVENT_SL_COMMENTS
+    VMILS_EVENT_SL_OS
+    VMILS_EVENT_SL_OSVERSION
+    VMILS_EVENT_TYPE
+    VMILS_IMAGEEVENT_FILENAME
+
+These correspond to the variables within the image list.
+
 Example image lists
 ---------------------------------------
 
