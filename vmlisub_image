@@ -410,8 +410,18 @@ def main():
     inputformats = set(['uuid','sha512'])
     input_format_selected = set([])
     databaseConnectionString = None
+    
+    logFile = None
+    
+    if 'VMILS_RDBMS' in os.environ:
+        databaseConnectionString = os.environ['VMILS_RDBMS']
+    if 'VMILS_LOG_CONF' in os.environ:
+        logFile = os.environ['VMILS_LOG_CONF']
+
     # Set up log file
     if options.logfile:
+        logFile = options.logfile
+    if logFile != None:
         if os.path.isfile(str(options.logfile)):
             logging.config.fileConfig(options.logfile)
         else:
@@ -422,6 +432,8 @@ def main():
     else:
         logging.basicConfig(level=logging.INFO)
     log = logging.getLogger("main")
+    
+    
     # Now logging is set up process other options
     if options.list:
         actions.add('list')
