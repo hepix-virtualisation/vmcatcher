@@ -443,7 +443,7 @@ and concerned with downloading and managing updates of VM images into a cloud
 infrastructure, it is some times beneficial to have an event interface.
 
 The events interface launches a shell with a series of environment variables. The
-even must process its command within 10 seconds or else it will be sent a 
+event must process its command within 10 seconds or else it will be sent a 
 termination signal. See the following example:
 
     vmlisub_cache -x 'env  ; exit 1'
