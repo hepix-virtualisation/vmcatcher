@@ -620,8 +620,7 @@ def main():
     p.add_option('-d', '--database', action ='store', help='Database Initiation string')
     p.add_option('-s', '--subscribe', action ='append',help='Subscribe to imagelist available at URI', metavar='INPUTURL')
     p.add_option('-e', '--auto-endorse', action ='store_true',help='Add endorser in your subscribe to imagelist action.')
-    p.add_option('-c', '--cert-dir', action ='store',help='Certificate directory.', metavar='INPUTDIR',
-        default='/etc/grid-security/certificates/')
+    p.add_option('-c', '--cert-dir', action ='store',help='Certificate directory.', metavar='INPUTDIR')
     p.add_option('-U', '--update', action ='store_true',help='update image metadata')
     p.add_option('-u', '--uuid', action ='append',help='Select subscription', metavar='UUID')
     p.add_option('-r', '--uri', action ='append',help='Select subscription', metavar='URL')
@@ -647,12 +646,15 @@ def main():
     databaseConnectionString = None
     eventCmd = None
     logFile = None
+    certDir = None
     
     if 'VMILS_RDBMS' in os.environ:
         databaseConnectionString = os.environ['VMILS_RDBMS']
     if 'VMILS_LOG_CONF' in os.environ:
         logFile = os.environ['VMILS_LOG_CONF']
-
+    if 'VMILS_DIR_CERT' in os.environ:
+        certDir = os.environ['VMILS_DIR_CERT']
+    
     # Set up log file
     if options.logfile:
         logFile = options.logfile
@@ -668,6 +670,8 @@ def main():
         logging.basicConfig(level=logging.INFO)
     log = logging.getLogger("main")
     # Now logging is set up process other options
+    if options.cert_dir:
+        certDir = options.cert_dir
     if options.list:
         actions.add('list')
         output_format_selected.add('lines')
@@ -727,7 +731,10 @@ def main():
 
     # 2 Initate CA's to manage files
     if anchor_needed:
-        database.setup_trust_anchor(options.cert_dir)
+        if certDir == None:
+            certDir = "/etc/grid-security/certificates/"
+            log.info("Defaulting Certificate directory to '%s'" % (certDir))
+        database.setup_trust_anchor(certDir)
 
     # Handle conflicting actions
     actions_req_sel = actionsrequiring_selections.intersection(actions)

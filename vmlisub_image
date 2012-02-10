@@ -410,14 +410,15 @@ def main():
     inputformats = set(['uuid','sha512'])
     input_format_selected = set([])
     databaseConnectionString = None
-    
+    certDir = None
     logFile = None
     
     if 'VMILS_RDBMS' in os.environ:
         databaseConnectionString = os.environ['VMILS_RDBMS']
     if 'VMILS_LOG_CONF' in os.environ:
         logFile = os.environ['VMILS_LOG_CONF']
-
+    if 'VMILS_DIR_CERT' in os.environ:
+        certDir = os.environ['VMILS_DIR_CERT']
     # Set up log file
     if options.logfile:
         logFile = options.logfile
@@ -435,6 +436,8 @@ def main():
     
     
     # Now logging is set up process other options
+    if options.cert_dir:
+        certDir = options.cert_dir
     if options.list:
         actions.add('list')
     if options.sha512:
@@ -489,8 +492,10 @@ def main():
     database = db_controler(databaseConnectionString)
     # 2 Initate CA's to manage files
     if anchor_needed:
-        if anchor_needed:
-            database.setup_trust_anchor(options.cert_dir)
+        if certDir == None:
+            certDir = "/etc/grid-security/certificates/"
+            log.info("Defaulting Certificate directory to '%s'" % (certDir))
+        database.setup_trust_anchor(certDir)
     # Handle conflicting identifiers
 
     selectors_types = inputformats.intersection(input_format_selected)
