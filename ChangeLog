@@ -1,5 +1,10 @@
 Changelog 
 
+hepixvmilsubscriber-0.1.9
+
+* Added support for a set of Environment Variables.
+* Fixed spelling errors/typos in the README Changelog.
+
 hepixvmilsubscriber-0.1.8
 
 * Added Event interface and documentation to README.
@@ -20,7 +25,7 @@ hepixvmilsubscriber-0.1.6
 
 hepixvmilsubscriber-0.1.5
 
-* vmlisub_sub Fixed missleading error message.
+* vmlisub_sub Fixed misleading error message.
 * Corrected misleading text in Changelog.
 * vmlisub_endorser Changed format of list command to make parsing easier.
 * vmlisub_endorser fixed sqlalchamy import error on RHEL/SL 5
@@ -64,7 +69,7 @@ hepixvmilsubscriber-0.1.2
 * Added and Apache License, Version 2.0
 * Added instructions about using fetch-crl
 * Added commad line option to use python log file.
-    Allows setting log levels for componenets of the code.
+    Allows setting log levels for components of the code.
     Allows setting log file formatting.
     Allows sending messages direct to syslog.
 * Added and example logfile coniguration file.
