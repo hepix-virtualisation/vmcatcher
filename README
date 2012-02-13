@@ -78,7 +78,7 @@ Install the hepix image list subscriber.
 Installation on Redhat Enterprise Linux 5
 ---------------------------------------
 
-Install EPEL for dependacies.
+Install EPEL for dependencies.
 
     # rpm -i http://download.fedora.redhat.com/pub/epel/5/x86_64/epel-release-5-4.noarch.rpm
 
@@ -183,7 +183,7 @@ da42ca85-179b-4873-b12e-32d549bf02b6    0       63175437-7d59-4851-b333-c96cb654
 
 The results show the UUID of the image, the availability state and the
 subscription UUID. The state value is a bitmap, 1 is subscribed, 2 means its
-available in the current image lists. Now we will seelct an image for local caching.
+available in the current image lists. Now we will select an image for local caching.
 
 Next update the subscription.
 
@@ -350,13 +350,13 @@ List the available images
 ecfbc671-eaee-439c-b1a3-db85dbef5e7b    3       63175437-7d59-4851-b333-c96cb6545a86
 da42ca85-179b-4873-b12e-32d549bf02b6    2       63175437-7d59-4851-b333-c96cb6545a86
 
-The results show the UUID of the image, the availablity state and the
+The results show the UUID of the image, the availability state and the
 subscription UUID. The state value is a bitmap, 1 is subscribed, 2 means its
-available in the current image lists. Now we will seelct an image for local caching.
+available in the current image lists. Now we will select an image for local caching.
 
  *Selecting Images*
 
-Images can be selected by either UUID or Sha512 hash. This allows explisit
+Images can be selected by either UUID or Sha512 hash. This allows explicit
 selection of images or by the sha512 from an old image.
 
 Delete the subscription by image.
@@ -425,7 +425,7 @@ Removing an individuals right to update a subscription.
 Logging configuration
 ---------------------------------------
 
-All scripts have a loggging option. This is used to configure pythons logging 
+All scripts have a logging option. This is used to configure pythons logging 
 library. An example is shown below.
 
 vmlisub_image -L /usr/share/doc/hepixvmilsubscriber/logger.conf \
@@ -434,10 +434,10 @@ vmlisub_image -L /usr/share/doc/hepixvmilsubscriber/logger.conf \
 Logging can be independently set up for each object to multiple locations, and 
 with different log levels.
 
-Enviroment Variables
+Environment Variables
 ---------------------------------------
 
-Enviroment variables can be used to set default values but the command line 
+Environment variables can be used to set default values but the command line 
 options will override any set environment options.
 
 VMILS_RDBMS 
