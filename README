@@ -434,6 +434,43 @@ vmlisub_image -L /usr/share/doc/hepixvmilsubscriber/logger.conf \
 Logging can be independently set up for each object to multiple locations, and 
 with different log levels.
 
+Enviroment Variables
+---------------------------------------
+
+Enviroment variables can be used to set default values but the command line 
+options will override any set environment options.
+
+VMILS_RDBMS 
+Sets the path to the database. For example "sqlite:///vmilsubscriber.db"
+
+VMILS_LOG_CONF
+Sets the path to the logging configuration file.
+
+VMILS_DIR_CERT
+Sets the Path to the certificate authorities public keys, certificate revocation
+lists and certificate name spaces.
+
+VMILS_CACHE_DIR_CACHE
+Path used by 'vmlisub_endorser' to store verified VM images.
+
+VMILS_CACHE_DIR_DOWNLOAD
+Path used by 'vmlisub_endorser' to download VM images before VM image integrity
+is checked.
+
+VMILS_CACHE_DIR_EXPIRE
+Path used by 'vmlisub_endorser' to store VM images when they are no longer 
+endorsed.
+
+VMILS_CACHE_ACTION_DOWNLOAD
+Instructs 'vmlisub_endorser' to download the latest VM images and check 
+integrity.
+
+VMILS_CACHE_ACTION_CHECK
+Instructs 'vmlisub_endorser' check integrity for all currently stored VM images.
+
+VMILS_CACHE_ACTION_EXPIRE
+Instructs 'vmlisub_endorser' to expire stored VM images that are no longer 
+endorsed. 
 
 Event interface
 ---------------------------------------
