@@ -1,5 +1,10 @@
 Changelog 
 
+hepixvmilsubscriber-0.1.10
+
+* Corrected Typos in the README.
+* Documented more event variables in the README.
+
 hepixvmilsubscriber-0.1.9
 
 * Added support for a set of Environment Variables.
