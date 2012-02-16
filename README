@@ -497,6 +497,9 @@ change.
 The following environment variables may be set by events:
 
     VMILS_EVENT_TYPE
+    VMILS_EVENT_DC_DESCRIPTION
+    VMILS_EVENT_DC_IDENTIFIER
+    VMILS_EVENT_DC_TITLE
     VMILS_EVENT_HV_HYPERVISOR
     VMILS_EVENT_HV_SIZE
     VMILS_EVENT_HV_URI
