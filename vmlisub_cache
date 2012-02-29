@@ -496,15 +496,16 @@ class CacheMan(object):
 def main():
     """Runs program and handles command line options"""
     p = optparse.OptionParser(version = "%prog " + version)
-    p.add_option('-d', '--database', action ='store', help='Database Initiation string')
-    p.add_option('-C', '--cache-dir', action ='store',help='Set the cache directory.',metavar='INPUTDIR')
-    p.add_option('-p', '--partial-dir', action ='store',help='Set the cache download directory.')
-    p.add_option('-e', '--expired-dir', action ='store',help='Set the cache expired directory.')
-    p.add_option('-D', '--download', action ='store_true',help='Download subscribed images to cache.')
-    p.add_option('-s', '--sha512', action ='store_true',help='check Sha512 for images in cache.')
-    p.add_option('-E', '--expire', action ='store_true',help='expire images from cache.')
-    p.add_option('-L', '--logfile', action ='store',help='Logfile configuration file.', metavar='LOGFILE')
-    p.add_option('-x', '--execute', action ='store',help='Event application to launch.', metavar='EVENT CMD')
+    p.add_option('-d', '--database', action ='store', help='Database conection string')
+    p.add_option('-x', '--execute', action ='store',help='Event application to launch.', metavar='EVENT')
+    p.add_option('-C', '--cache-dir', action ='store',help='Set the cache directory.',metavar='DIR_CACHE')
+    p.add_option('-p', '--partial-dir', action ='store',help='Set the cache download directory.',metavar='DIR_PARTIAL')
+    p.add_option('-e', '--expired-dir', action ='store',help='Set the cache expired directory.',metavar='DIR_EXPIRE')
+    p.add_option('-D', '--download', action ='store_true',help='Download subscribed images to cache directory.')
+    p.add_option('-s', '--sha512', action ='store_true',help='Check cache directory images Sha512.')
+    p.add_option('-E', '--expire', action ='store_true',help='Remove expired images from cache directory.')
+    p.add_option('-L', '--logfile', action ='store',help='Logfile configuration file.', metavar='CFG_LOGFILE')
+    
     
     options, arguments = p.parse_args()
 
@@ -526,8 +527,9 @@ def main():
         dir_partial = os.environ['VMILS_CACHE_DIR_DOWNLOAD']
     if 'VMILS_CACHE_DIR_EXPIRE' in os.environ:
         dir_expired = os.environ['VMILS_CACHE_DIR_EXPIRE']
-    if 'VMILS_CACHE_DIR_EXPIRE' in os.environ:
-        dir_expired = os.environ['VMILS_CACHE_DIR_EXPIRE']
+    if 'VMILS_CACHE_EVENT' in os.environ:
+        eventExecutionString = os.environ['VMILS_CACHE_EVENT']
+    
     if 'VMILS_CACHE_ACTION_DOWNLOAD' in os.environ:
         if os.environ['VMILS_CACHE_ACTION_DOWNLOAD'] == "1":
             actions.add("download")
