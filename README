@@ -4,14 +4,13 @@
 Introduction
 ---------------------------------------
 
-This application attempts to be the equivalent of a modern Linux package update
-manager but for lists of virtual machine images signed with x509. It uses a 
-database back end, and caches available image lists. This application does not 
-modify the content of a virtual maschine image and could be used to repace some 
-of the functions of a Linux package manager but better solutions exist.
-
-This set of applications are designed to provide a similar command line from each
-perspective to the imagelist archive.
+This application allows users to subscribe to virtual machine image lists, cache
+the images referenced to in the image list, validate the images list with x509 
+based public key cryptography, and validate the images against sha512 hashes in 
+the images lists and provide events for further applications to process updates 
+or expiries of virtual machine images without having to further validate the 
+images. This set of applications are designed to provide a similar work flow
+from each area of control to the imagelist archive.
 
 vmlisub_endorser - Endorsers of imagelist subscriptions.
 vmlisub_sub      - Subscription list details.
@@ -228,12 +227,12 @@ The following environment variables may be set by events:
 These correspond to the variables within the image list.
 
 
- *vmlisub_cache Event Enviroment variables*
+ *vmlisub_cache Event Environment variables*
 
 *VMILS_EVENT_TYPE*
 
     AvailablePrefix
-An image will be available soon as it is being attempted to be retrived.
+An image will be available soon as it is being attempted to be retrieved.
 
     AvailablePostfix
 An image was successfully validated as being available and placed in the cache 
@@ -504,7 +503,7 @@ Installation
 Installation on Redhat Enterprise Linux 6
 ---------------------------------------
 
-Install EPEL for dependacies.
+Install EPEL for dependencies.
 
     # rpm -i http://download.fedora.redhat.com/pub/epel/6/x86_64/epel-release-6-5.noarch.rpm
 
