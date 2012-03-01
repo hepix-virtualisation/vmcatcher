@@ -4,7 +4,7 @@ hepixvmilsubscriber-0.1.11
 
 * Corrected Typos in the README.
 * Added Environment variable VMILS_CACHE_EVENT
-* Significant change organisation of the the README.
+* Significant change to the organisation of the the README.
 * Added details about the event interface to the README.
 
 hepixvmilsubscriber-0.1.10
