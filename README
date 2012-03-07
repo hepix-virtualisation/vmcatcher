@@ -526,9 +526,9 @@ gpgkey=http://repository.egi.eu/sw/production/cas/1/GPG-KEY-EUGridPMA-RPM-3
 gpgcheck=1
 enabled=1
 
-install the lcg-CA
+install the ca-policy-egi-core
 
-    # yum install lcg-CA
+    # yum install ca-policy-egi-core
 
 install fetch-crl
 
