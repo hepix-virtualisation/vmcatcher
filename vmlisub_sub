@@ -349,7 +349,13 @@ class db_controler:
             self.log.error("Validate text '%s' produced error '%s'" % (filename,E))
             return False
         jsontext = json.loads(validated_data['data'])
+        if jsontext == None:
+            self.log.error("Message downlaoded from '%s' was not valid JSON." % (filename))
+            return False
         vmilist = VMimageListDecoder(jsontext)
+        if vmilist == None:
+            self.log.error("Failed to decode the json as an image list for '%s'." % (filename))
+            return False
         metadata = {}
         metadata.update(vmilist.metadata)
         metadata.update(vmilist.endorser.metadata)
