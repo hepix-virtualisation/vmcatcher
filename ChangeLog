@@ -2,7 +2,7 @@ Changelog
 
 hepixvmilsubscriber-0.1.12
 
-* Changed the recomeneded CA metapackage in the README to ca-policy-egi-core.
+* Changed the recommended CA metapackage in the README to ca-policy-egi-core.
 * Handle non JSON messages with a clear error.
 * Handle JSON messages that do not match an image list with a clear error.
 * Added Error return code 37 Message was not valid JSON.
