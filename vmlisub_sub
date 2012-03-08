@@ -57,6 +57,8 @@ except:
 #  34 image has missing parameters in the message.
 #  35 image has missing parameters in the message.
 #  36 image is not registeresd with subscription.
+#  37 Message was not valid JSON.
+#  38 Message JSON was not valid to build image list.
 
 
 
@@ -354,7 +356,7 @@ class db_controler:
             return False
         vmilist = VMimageListDecoder(jsontext)
         if vmilist == None:
-            self.log.error("Failed to decode the json as an image list for '%s'." % (filename))
+            self.log.error("Failed to decode the json as an image list Object for '%s'." % (filename))
             return False
         metadata = {}
         metadata.update(vmilist.metadata)
@@ -501,7 +503,13 @@ class db_controler:
         dn = validated_data['signer_dn']
         ca = validated_data['issuer_dn']
         jsontext = json.loads(data)
+        if jsontext == None:
+            self.log.error("Downlaoded metadata from '%s' was not valid JSON." % (subscriptionKey))
+            return 37
         vmilist = VMimageListDecoder(jsontext)
+        if vmilist == None:
+            self.log.error("Downlaoded metadata from '%s' was not valid image list Object." % (subscriptionKey))
+            return 38
 
         metadata = vmilist.metadata
         metadata[u'data'] = update_unprocessed
