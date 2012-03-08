@@ -332,14 +332,7 @@ class db_controler:
             if output_file_name != None:
                 output_fileptr.close()
         return NoErrorHappened
-    def image_subscription_delete(self,images_selected):
-        Session = self.SessionFactory()
-        db = db_actions(Session)
-        for selection in images_selected:
-            self.log.error("Function not implemented.")
-            #db.subscriptions_delete_by_image(selection)
-        Session.commit()
-        sys.exit(0)
+
     def image_list(self):
         Session = self.SessionFactory()
         db = db_actions(Session)
@@ -388,7 +381,6 @@ def main():
     p.add_option('-r', '--remove', action ='store_true',help='Remove image from Cache.')
     p.add_option('-s', '--sha512', action ='append',help='Select images by sha512.', metavar='SHA512')
     p.add_option('-u', '--uuid', action ='append',help='Select images by uuid.', metavar='UUID')
-    p.add_option('-D', '--delete', action ='store_true',help='Delete subscription', metavar='OUTPUTFILE')
     p.add_option('-i', '--info', action ='store_true',help='Info on selected images')
     p.add_option('-f', '--format', action ='store',help='Sets the output format')
     p.add_option('-o', '--output', action ='append',help='Export File.', metavar='OUTPUTFILE')
@@ -449,8 +441,6 @@ def main():
     if options.info:
         actions.add('info')
         anchor_needed = True
-    if options.delete:
-        actions.add('delete')
     if options.output:
         format_needed = True
         outputfiles = options.output
@@ -503,9 +493,7 @@ def main():
     if selectors_types_len > 1:
         log.error('Conflicting selectors.')
         sys.exit(1)
-
     selector_str = 'uuid'
-
     if selectors_types_len == 1:
         selector_str = selectors_types.pop()
 
@@ -540,9 +528,6 @@ def main():
         Session = SessionFactory()
         db = db_actions(Session)
         db.subscriptions_update(anchor)
-
-    if 'delete' in actions:
-        database.image_subscription_delete(images_selected)
     if 'dump' in actions:
         if not 'select' in actions:
             log.error('No subscriptions selected.')
