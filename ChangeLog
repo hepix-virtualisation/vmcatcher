@@ -1,6 +1,6 @@
 Changelog
 
-hepixvmilsubscriber-0.1.11
+hepixvmilsubscriber-0.1.12
 
 * Changed the recomeneded CA metapackage in the README to ca-policy-egi-core.
 * Handle non JSON messages with a clear error.
