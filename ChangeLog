@@ -1,4 +1,12 @@
-Changelog 
+Changelog
+
+hepixvmilsubscriber-0.1.11
+
+* Changed the recomeneded CA metapackage in the README to ca-policy-egi-core.
+* Handle non JSON messages with a clear error.
+* Handle JSON messages that do not match an image list with a clear error.
+* Added Error return code 37 Message was not valid JSON.
+* Added Error return code 38 Message JSON was not valid to build image list.
 
 hepixvmilsubscriber-0.1.11
 
