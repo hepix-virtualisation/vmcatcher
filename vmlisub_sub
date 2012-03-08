@@ -517,26 +517,34 @@ class db_controler:
 
         if vmilist.endorser.metadata[u'hv:dn'] != dn:
             self.log.error("Endorser DN does not match signature for '%s'" (ProcessingSubscriptionUuid))
+            self.log.info("Expected DN '%s'" % (vmilist.endorser.metadata[u'hv:dn']))
+            self.log.info("Downloaded DN '%s'" % (dn))
             # Error code - metadata and certificate dont match.
             return 12
         if vmilist.endorser.metadata[u'hv:ca'] != ca:
             self.log.error("list hv:ca does not match signature for '%s'" % (ProcessingSubscriptionUuid))
+            self.log.info("Expected CA '%s'" % (vmilist.endorser.metadata[u'hv:ca']))
+            self.log.info("Downloaded CA '%s'" % (dn))
             # Error code - metadata and certificate dont match.
             return 12
         if vmilist.metadata[u'hv:uri'] != subscription.uri:
             self.log.error("list hv:uri does not match subscription uri for '%s'" % (ProcessingSubscriptionUuid))
+            self.log.info("Expected URI '%s'" % (subscription.uri))
+            self.log.info("Downloaded URI '%s'" % (vmilist.metadata[u'hv:uri']))
             # Error code - metadata and certificate dont match.
             return 12
         if vmilist.metadata[u'dc:identifier'] != subscription.identifier:
             self.log.error("list dc:identifier does not match subscription uuid for '%s'" % ProcessingSubscriptionUuid)
+            self.log.info("Expected identifier '%s'" % (subscription.identifier))
+            self.log.info("Downloaded identifier '%s'" % (vmilist.metadata[u'dc:identifier']))
             # Error code - imagelist dc:identifier invalid.
             return 31
         now = datetime.datetime.utcnow()
         if now < vmilist.metadata[u'dc:date:created']:
-            self.log.error("Image list '%s' has an invalid creation date as in the3 future." % (ProcessingSubscriptionUuid))
+            self.log.error("Image list '%s' has an invalid creation date as in the future." % (ProcessingSubscriptionUuid))
             return 33
         if now > vmilist.metadata[u'dc:date:expires']:
-            self.log.warning("Image list '%s' has expired." % (ProcessingSubscriptionUuid))
+            self.log.warning("Downloaded image list '%s' has expired." % (ProcessingSubscriptionUuid))
             removeauthorsiation = True
             metadata[u'expired'] = now
 
