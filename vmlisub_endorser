@@ -84,6 +84,11 @@ class queryby_base:
         subauth_list = self.session.query(model.SubscriptionAuth).\
                 filter(model.SubscriptionAuth.endorser == identifier)
         return subauth_list
+    def links_all(self):
+        return self.session.query(model.Subscription,model.Endorser,model.SubscriptionAuth).\
+            filter(model.Endorser.id==model.SubscriptionAuth.endorser).\
+            filter(model.Subscription.id==model.SubscriptionAuth.subscription)
+            
 class queryby_uri(queryby_base):
     def subscription_get(self,url):
         return self.subscription_by_uri(url)
@@ -138,8 +143,11 @@ class output_driver_lines(output_driver_base):
             for item in subauthq:
                 endorser = item[0]
                 princible = item[1]
-                self.file_pointer.write ("%s\t'%s'\t'%s'\n" % (endorser.identifier,princible.hv_dn,princible.hv_ca))
+                self.file_pointer.write ("'%s'\t'%s'\t'%s'\n" % (endorser.identifier,princible.hv_dn,princible.hv_ca))
 
+    def links_lister(self,allLinks):
+        for sub,endorser,aubauth in allLinks:
+            self.file_pointer.write ("'%s'\t'%s'\t'%s'\n" % (endorser.identifier,sub.identifier,aubauth.authorised))
 
     def display_endorser(self,endorser):
         self.file_pointer.write ("endorser.dc:identifier=%s\n" % (endorser.identifier))
@@ -186,7 +194,12 @@ class db_controler:
 
         view.endorser_lister(selector.endorser_all())
         return True
-
+    def links_list(self):
+        Session = self.SessionFactory()
+        selector = self.factory_selector(Session)
+        view = output_driver_lines(sys.stdout,Session,self.anchor)
+        view.links_lister(selector.links_all())
+        return True
     def link(self,endorsers_selected,subscriptions_selected):
         if not self.check_factories():
             return False
@@ -381,6 +394,7 @@ def main():
     p.add_option('-S', '--subject',action ='append',help='Endorsers certificate subject.', metavar='SUBJECT')
     p.add_option('-I', '--issuer',action ='append',help='Endorsers certificate issuer.', metavar='SUBJECT') 
     p.add_option('-D', '--delete', action ='store_true',help='Delete an endorser.')
+    p.add_option('-K', '--links', action ='store_true',help='List endorser subscription links.')
     p.add_option('-k', '--link', action ='store_true',help='Add endorser to subscription.')
     p.add_option('-u', '--unlink', action ='store_true',help='Remove endorser from Subscription.')
     p.add_option('-i', '--info', action ='store_true',help='Information on endoser.')
@@ -424,6 +438,8 @@ def main():
     # Now logging is set up process other options
     if options.list:
         actions.add('list')
+    if options.links:
+        actions.add('links')
 
 
     if options.endorser_uuid:
@@ -508,6 +524,9 @@ def main():
             sys.exit(12)
     if 'list' in actions:
         database.endosers_list()
+    if 'links' in actions:
+        database.links_list()
+    
     if 'link' in actions:
         database.link(endorsers_selected,subscriptions_selected)
     if 'unlink' in actions:
