@@ -1,5 +1,13 @@
 Changelog
 
+hepixvmilsubscriber-0.1.13
+
+* vmlisub_image: Removed '-D', '--delete' unimplemented feature from 
+    vmlisub_image as is provided in vmlisub_sub.
+* vmlisub_sub: Changed logging to display expected and downloaded values when 
+    they differ.
+* vmlisub_endorser: Added ability to list endorser links to subscriptions.
+
 hepixvmilsubscriber-0.1.12
 
 * Changed the recommended CA metapackage in the README to ca-policy-egi-core.
