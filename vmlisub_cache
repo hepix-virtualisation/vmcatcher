@@ -581,6 +581,9 @@ def main():
         actions.add("download")
         actions.add("expire")
         log.info("Defaulting actions as 'expire', and 'download'.")
+    if ("download" in actions) and (not "expire" in actions):
+        log.info("Defaulting action 'expire', as 'download' is requested.")
+        actions.add("expire")
 
     if dir_cache == None:
         dir_cache = "cache"
