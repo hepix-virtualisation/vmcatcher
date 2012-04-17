@@ -62,16 +62,75 @@ except:
 
 
 
-class EventInterface:
-    def __init__(self,commandString):
-        self.commandString = commandString
-    def EventExpireSubscription(self,uuid):
-        print "Exirpring %s" % (uuid)
+class EventObj(object):
+    def __init__(self,eventExecutionString):
+        self.eventExecutionString = eventExecutionString
+        self.env = os.environ
+        self.log = logging.getLogger("Events")
+    def launch(self,env):
+        process = subprocess.Popen([self.eventExecutionString], shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,env=env)
+        processRc = None
+        handleprocess = True
+        counter = 0
+        stdout = ''
+        stderr = ''
+        timeout = 10
+        while handleprocess:
+            counter += 1
+            cout,cerr = process.communicate()
+            stdout += cout
+            stderr += cerr
+            process.poll()
+            processRc = process.returncode
+            if processRc != None:
+                break
+            if counter == timeout:
+                os.kill(process.pid, signal.SIGQUIT)
+            if counter > timeout:
+                os.kill(process.pid, signal.SIGKILL)
+                processRc = -9
+                break
+            time.sleep(1)
+        return (processRc,stdout,stderr)
 
+    def eventProcess(self,EventStr,metadata):
+        # Note keys 'sha512', 'uuid','size' are depricated.
+        mappingdict = {'sha512' : 'VMILS_EVENT_SL_CHECKSUM_SHA512',
+            'uuid' : 'VMILS_EVENT_DC_IDENTIFIER',
+            'size' : 'VMILS_EVENT_HV_SIZE',
+            'sha512' : 'VMILS_EVENT_SL_CHECKSUM_SHA512',
+            # End of depricated options
+            'filename' : 'VMILS_EVENT_FILENAME',
+            'dc:identifier' : 'VMILS_EVENT_DC_IDENTIFIER',
+            'hv:uri' : 'VMILS_EVENT_HV_URI',
+            'hv:size' : 'VMILS_EVENT_HV_SIZE',
+            'dc:description' : 'VMILS_EVENT_DC_DESCRIPTION',
+            'dc:title' : 'VMILS_EVENT_DC_TITLE',
+            'hv:hypervisor' : 'VMILS_EVENT_HV_HYPERVISOR',
+            'hv:version' : 'VMILS_EVENT_HV_VERSION',
+            'sl:arch' : 'VMILS_EVENT_SL_ARCH',
+            'sl:comments' : 'VMILS_EVENT_SL_COMMENTS',
+            'sl:os' : 'VMILS_EVENT_SL_OS',
+            'sl:osversion' : 'VMILS_EVENT_SL_OSVERSION',
+            'sl:checksum:sha512' : 'VMILS_EVENT_SL_CHECKSUM_SHA512'}
+        newEnv = self.env
+        newEnv['VMILS_EVENT_TYPE'] = EventStr
+        for key in mappingdict.keys():
+            if key in metadata.keys():
+                newEnv[str(mappingdict[key])] = str(metadata[key])
+        rc,stdout,stderr = self.launch(newEnv)
+        if rc != 0:
+            self.log.error("Event command '%s' exit code '%s' failed for VMILS_EVENT_TYPE='%s'." % (self.eventExecutionString,rc,newEnv['VMILS_EVENT_TYPE']))
+            self.log.info("stdout=%s" % (stdout))
+            self.log.info("stderr=%s" % (stderr))
+            return
+        self.log.debug("stdout=%s" % (stdout))
+        return
+    def eventImageNew(self,metadata):
+        self.eventProcess("ImageNew",metadata)
 
 
 class db_actions:
-
     def __init__(self,session):
         self.session = session
         self.log = logging.getLogger("db_actions")
@@ -248,6 +307,8 @@ class db_controler:
         self.anchor = None
         self.factory_selector = None
         self.factory_view = None
+        # Set all callbacks to empty
+        self.callbackEventImageNew = None
 
     def setup_trust_anchor(self,directory):
         self.anchor = loadcanamespace.TrustAnchor()
@@ -419,6 +480,9 @@ class db_controler:
         db = db_actions(Session)
         imageDefQuery = db.ImageDefinition_get(subscriptionKey,imageObj.metadata)
         if imageDefQuery.count() != 1:
+            if self.callbackEventImageNew != None:
+                self.callbackEventImageNew(imageObj.metadata)
+            # Triggor an event for new image.
             self.log.error("ImageId '%s' not accepted for subscription '%s'" %
                 (imageObj.metadata[u'dc:identifier'],ProcessingSubscriptionUuid))
             # Error code - image dc:identifier invalid.
@@ -441,14 +505,16 @@ class db_controler:
             self.log.debug(E.params)
             Session.rollback()
             return 0
-
+        # So now we have done the updating of the database and just need to update 
+        # the latest image instance record in the database.
+        
         latestimageInstanceQuery = Session.query(model.ImageInstance).\
             filter(model.ImageInstance.fkimagelistinstance == imagelistref).\
             filter(model.ImageInstance.fkIdentifier == ThisImageDefId)
         if latestimageInstanceQuery.count() != 1:
+            print 'ddddddddddddddddddddddddddddddd'
             return 0
         imageInstancelatest = latestimageInstanceQuery.one()
-        #print ("imageInstancelatest=%s" % (imageInstancelatest))
         imageDefQuery = db.ImageDefinition_get(subscriptionKey,imageObj.metadata)
         if imageDefQuery.count() != 1:
             self.log.error("ImageId '%s' not accepted for subscription '%s'" %
@@ -651,7 +717,7 @@ def main():
     p.add_option('-i', '--info', action ='store_true',help='Information on subscription')
     p.add_option('-o', '--output', action ='append',help='Export File.', metavar='OUTPUTFILE')
     p.add_option('-L', '--logfile', action ='store',help='Logfile configuration file.', metavar='LOGFILE')
-    p.add_option('-E', '--even-action', action ='store',help='Event Command line.', metavar='LOGFILE')
+    p.add_option('-x', '--execute', action ='store',help='Event application to launch.', metavar='EVENT')
     options, arguments = p.parse_args()
     autoEndorse = False
     anchor_needed = False
@@ -676,6 +742,8 @@ def main():
         logFile = os.environ['VMILS_LOG_CONF']
     if 'VMILS_DIR_CERT' in os.environ:
         certDir = os.environ['VMILS_DIR_CERT']
+    if 'VMILS_SUB_EVENT' in os.environ:
+        eventExecutionString = os.environ['VMILS_SUB_EVENT']
     
     # Set up log file
     if options.logfile:
@@ -732,6 +800,8 @@ def main():
         autoEndorse = True
     if options.even_action:
         eventCmd = EventInterface(options.even_action)
+    if options.execute:
+        eventExecutionString = options.execute
 
     # 1 So we have some command line validation
 
@@ -750,7 +820,11 @@ def main():
 
     # 1.1 Initate DB
     database = db_controler(databaseConnectionString)
-
+    # 1.2 Set up callbacks
+    if eventExecutionString != None:
+        EventInstance = EventObj(eventExecutionString)
+        database.callbackEventImageNew = EventInstance.eventImageNew
+    
     # 2 Initate CA's to manage files
     if anchor_needed:
         if certDir == None:
@@ -802,10 +876,7 @@ def main():
         'message' : output_driver_message,
     }
     database.setup_view_factory(mapper[selector_str])
-    # Add Event action if needed.
     
-    if eventCmd != None:
-        database.setEventObj(EventInterface)
     
     # set default return code
     rc = 0
