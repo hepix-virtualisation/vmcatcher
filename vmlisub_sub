@@ -735,7 +735,7 @@ def main():
     eventCmd = None
     logFile = None
     certDir = None
-    
+    eventExecutionString = None
     if 'VMILS_RDBMS' in os.environ:
         databaseConnectionString = os.environ['VMILS_RDBMS']
     if 'VMILS_LOG_CONF' in os.environ:
@@ -798,8 +798,6 @@ def main():
         databaseConnectionString = options.database
     if options.auto_endorse:
         autoEndorse = True
-    if options.even_action:
-        eventCmd = EventInterface(options.even_action)
     if options.execute:
         eventExecutionString = options.execute
 
