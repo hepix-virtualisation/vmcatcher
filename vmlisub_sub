@@ -512,7 +512,6 @@ class db_controler:
             filter(model.ImageInstance.fkimagelistinstance == imagelistref).\
             filter(model.ImageInstance.fkIdentifier == ThisImageDefId)
         if latestimageInstanceQuery.count() != 1:
-            print 'ddddddddddddddddddddddddddddddd'
             return 0
         imageInstancelatest = latestimageInstanceQuery.one()
         imageDefQuery = db.ImageDefinition_get(subscriptionKey,imageObj.metadata)
