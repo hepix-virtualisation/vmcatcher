@@ -1,5 +1,15 @@
 Changelog
 
+hepixvmilsubscriber-0.1.14
+
+ * vmlisub_cache: Now automatically expires images when downloading images.
+ * vmlisub_cache: Now testing the Event interface.
+ * vmlisub_sub: Added event interface.
+ * vmlisub_sub: Added event ImageNew when a new image is added to image list.
+ * vmlisub_sub: Added enviroment variable VMILS_SUB_EVENT to set event action.
+ * vmlisub_sub: Changed event commadn line to '-x', '--execute' from 
+     '-E', '--even-action'.
+
 hepixvmilsubscriber-0.1.13
 
 * vmlisub_image: Removed '-D', '--delete' unimplemented feature from 
