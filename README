@@ -128,6 +128,11 @@ Change the output format:
 
     $ vmlisub_sub  -i --uuid=63175437-7d59-4851-b333-c96cb6545a86 -f message
 
+Three formats exist SMIME, message, lines. 
+SMIME for applications that wish to process the signature as if from the endorser directly. 
+"message" for applications that have no interest in processing the SMIME signature. 
+"lines" for human users of this application.
+
 
 To delete a subscription
 
@@ -408,13 +413,6 @@ Now at any time users with file permisions can get a list of valid images.
 
 
 
-Formats
----------------------------------------
-
-Three formats exist SMIME, message, lines. SMIME for applications that wish to
-process the signature as if from the endorser directly. "message" for
-applications that have no interest in processing the SMIME signature. "lines"
-for human users of this application.
 
 
 Logging configuration
