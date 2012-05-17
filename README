@@ -394,7 +394,6 @@ Then the by hand configuration for your master DB
     $ sudo -u vmlisub /usr/bin/vmlisub_sub \
       -s https://particle.phys.uvic.ca/~igable/hepix/hepix_signed_image_list \
       -d sqlite:////var/lib/vmlisub/vmlisub.db
-    $ sudo /var/log/vmlisub.log
 
 make a cron job
 
