@@ -34,6 +34,29 @@ software application similar to Debian's 'aptitude' or Redhats 'yum', but rather
 for virtual machines, authenticated by the x509 signatures.
 
 
+ *Image list publishers.*
+
+At the time of writing (16-05-2012) the following image list publishers exist.</para>
+
+https://cernvm.cern.ch/releases/image.list
+
+The CERN Virtual Machine's production images by Predrag Buncic. The CERN Virtual 
+Machine uses CernVMfs to help scientiets run the virtual maschine with LCG software 
+using a HTTP based file system. Many different hypervisors are supported. QEMU/KVM, 
+Xen, VirtualBox, Hyper-V, VMware, VirtualPC.
+
+https://dish.desy.de:2880/testing.smime
+
+The DISH Virtual Machine's list by Owen Synge. DISH is short for DESY Image SHaring. 
+We have images designed for use at DESY and images designed for use in gerneric 
+sites based on Scientific Linux (Generic).
+
+https://particle.phys.uvic.ca/~igable/hepix/hepix_signed_image_list
+
+Ian Gable's Univertisty of Victoria Cloud images.
+
+
+        
 
  *vmlisub_endorser*
 
@@ -472,26 +495,7 @@ Instructs 'vmlisub_endorser' check integrity for all currently stored VM images.
 
 VMILS_CACHE_ACTION_EXPIRE
 Instructs 'vmlisub_endorser' to expire stored VM images that are no longer 
-endorsed. 
-
-Example image lists
----------------------------------------
-
-The following are image list providers known to the authors of the software.
-
-Ian Gables images from University of Victoria Canada.
-
-https://particle.phys.uvic.ca/~igable/hepix/hepix_signed_image_list
-
-Andrea Chierici images from CNAF the Italian National Center for Research and
-Development about Information and Data transmission Technologies.
-
-http://www.cnaf.infn.it/~chierici/repo/andrea-list
-
-Predrag Buncic images from the CernVM project and is based at CERN, the European
-Organization for Nuclear Research
-
-https://cernvm.cern.ch/releases/image.list
+endorsed.
 
 
 Installation
