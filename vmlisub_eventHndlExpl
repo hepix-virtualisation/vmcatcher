@@ -1,0 +1,106 @@
+#!/usr/bin/env python
+import sys
+if sys.version_info < (2, 4):
+    print "Your python interpreter is too old. Please consider upgrading."
+    sys.exit(1)
+
+import os
+import logging
+import optparse
+import hashlib
+import datetime
+try:
+    import simplejson as json
+except:
+    import json
+import time
+import datetime
+
+
+time_format_definition = "%Y-%m-%dT%H:%M:%SZ"
+
+
+EnvEvent = set(['VMILS_EVENT_TYPE',
+    'VMILS_EVENT_DC_DESCRIPTION',
+    'VMILS_EVENT_DC_IDENTIFIER',
+    'VMILS_EVENT_DC_TITLE',
+    'VMILS_EVENT_HV_HYPERVISOR',
+    'VMILS_EVENT_HV_SIZE',
+    'VMILS_EVENT_HV_URI',
+    'VMILS_EVENT_SL_ARCH',
+    'VMILS_EVENT_SL_CHECKSUM_SHA512',
+    'VMILS_EVENT_SL_COMMENTS',
+    'VMILS_EVENT_SL_OS',
+    'VMILS_EVENT_SL_OSVERSION',
+    'VMILS_EVENT_TYPE',
+    'VMILS_EVENT_FILENAME'])
+    
+EnvConf = set(['VMILS_RDBMS',
+    'VMILS_CACHE_EVENT',
+    'VMILS_LOG_CONF',
+    'VMILS_DIR_CERT',
+    'VMILS_CACHE_DIR_CACHE',
+    'VMILS_CACHE_DIR_DOWNLOAD',
+    'VMILS_CACHE_DIR_EXPIRE',
+    'VMILS_CACHE_ACTION_DOWNLOAD',
+    'VMILS_CACHE_ACTION_CHECK',
+    'VMILS_CACHE_ACTION_EXPIRE'])
+
+
+def generateEnvDict(enviromentDict = os.environ):
+    FoundEnviroment = {}
+    EnvConfInteresting = EnvEvent.union(EnvConf)
+    for key in EnvConfInteresting:
+        if key in enviromentDict.keys():
+            FoundEnviroment[key] = enviromentDict[key]
+    return FoundEnviroment
+
+def nullEnvDict(enviromentDict = generateEnvDict(),NullValue = ""):
+    FoundEnviroment = enviromentDict.copy()
+    enviromentKeysSet = set(FoundEnviroment.keys())
+    EnvConfInteresting = EnvEvent.union(EnvConf)
+    missing = EnvConfInteresting.difference(enviromentKeysSet)
+    for item in missing:
+        FoundEnviroment[item] = NullValue
+    return FoundEnviroment
+  
+
+def main():
+    reload(sys)
+    sys.setdefaultencoding('utf-8')
+    log = logging.getLogger("main")
+    p = optparse.OptionParser(version = "%prog " + "0.0.1")    
+    p.add_option('--output_file', action ='store',help='Output file to log event.', metavar='OUTPUT_LOGFILE')
+    p.add_option('--generator',  action ='store',help='Set the dictionary Generator.', metavar='minium')
+    p.add_option('--datetime',  action ='store_true',help='Add a datetime stamp.')
+    
+    p.add_option('--logcfg', action ='store',help='Logfile configuration file.', metavar='LOGCFGFILE')
+    
+    options, arguments = p.parse_args()
+    if options.logcfg:
+        if os.path.isfile(str(options.logfile)):
+            logging.config.fileConfig(options.logfile)
+        else:
+            logging.basicConfig(level=logging.INFO)
+            log = logging.getLogger("main")
+            log.error("Logfile configuration file '%s' was not found." % (options.logfile))
+            sys.exit(1)
+    else:
+        logging.basicConfig(level=logging.INFO)    
+    outputDict = None
+    generator = nullEnvDict()
+    if options.generator:
+        if options.generator == "minium":
+            generator = generateEnvDict()
+    if options.datetime:
+        generator['DATETIME'] = datetime.datetime.now().strftime(time_format_definition)
+    if options.output_file:
+        with open(options.output_file, "a") as myfile:
+            json.dump(generator, myfile, sort_keys=True)
+            myfile.write('\n')
+    else:
+        log.info("'--help' for options.")
+if __name__ == "__main__":
+    
+    main()
+
