@@ -2,3 +2,4 @@ include LICENSE
 include README
 include logger.conf
 include ChangeLog
+include vmlisub_eventHndlExpl
