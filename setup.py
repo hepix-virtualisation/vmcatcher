@@ -37,5 +37,5 @@ back end, and caches available image lists.""",
         ],
 
     scripts=['vmlisub_image','vmlisub_sub','vmlisub_cache','vmlisub_endorser'],
-    data_files=[('/usr/share/doc/hepixvmilsubscriber-%s' % (version),['README','LICENSE','logger.conf','ChangeLog'])]
+    data_files=[('/usr/share/doc/hepixvmilsubscriber-%s' % (version),['README','LICENSE','logger.conf','ChangeLog','vmlisub_eventHndlExpl'])]
     )
