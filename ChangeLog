@@ -1,5 +1,11 @@
 Changelog
 
+hepixvmilsubscriber-0.1.15
+
+ * Reordered README.
+ * Added some clarifications to README.
+ * Added an example event handler.
+
 hepixvmilsubscriber-0.1.14
 
  * vmlisub_cache: Now automatically expires images when downloading images.
