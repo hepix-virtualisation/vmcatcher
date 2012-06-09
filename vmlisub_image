@@ -28,7 +28,7 @@ import hepixvmlis.databaseDefinition as model
 import os
 import logging
 import optparse
-import smimeX509validation.loadcanamespace as loadcanamespace
+from smimeX509validation import TrustStore, LoadDirChainOfTrust,smimeX509validation, smimeX509ValidationError
 from hepixvmlis.__version__ import version
 import hepixvmlis
 import urllib2
@@ -227,13 +227,18 @@ class output_driver_message(output_driver_base):
     def display_subscription(self,subscription):
         pass
     def display_imagelist(self,imagelist):
+        smimeProcessor =  smimeX509validation(self.anchor)
         try:
-            validated_data = self.anchor.validate_text(str(imagelist.data))
-        except loadcanamespace.SmimeX509ValidationError,E:
+            smimeProcessor.Process(str(imagelist.data))
+        except smimeX509ValidationError,E:
             self.log.error("Failed to validate text for '%s' produced error '%s'" % (imagelist,E))
             return False
-        self.file_pointer.write (validated_data['data'])
+        if not smimeProcessor.verified:
+            self.log.error("Failed to validate text for '%s' produced error '%s'" % (subscriptionKey,E))
+            return False
+        self.file_pointer.write (smimeProcessor.InputDaraStringIO.getvalue())
         return True
+
     def display_imagelistImage(self,imagedef,imagelist,image):
         if not self.display_imagelist(imagelist):
             return False
@@ -246,12 +251,13 @@ class output_driver_lines(output_driver_base):
         self.file_pointer.write ('image.hv:uri=%s\n' % (image.uri))
         return True
     def display_imagelist(self,imagelist):
+        smimeProcessor =  smimeX509validation(self.anchor)
         try:
-            validated_data = self.anchor.validate_text(str(imagelist.data))
-        except loadcanamespace.SmimeX509ValidationError,E:
+            smimeProcessor.Process(str(imagelist.data))
+        except smimeX509ValidationError,E:
             self.log.error("Failed to validate text for '%s' produced error '%s'" % (imagelist,E))
             return False
-        self.file_pointer.write (validated_data['data'])
+        self.file_pointer.write (smimeProcessor.InputDaraStringIO.getvalue())
         return True
     def display_imagelistImage(self,imagedef,imagelist,image):
         self.file_pointer.write ('imagelist.dc:identifier=%s\n' % (imagedef.identifier))
@@ -289,8 +295,7 @@ class db_controler:
         self.SessionFactory = sessionmaker(bind=self.engine)
         self.anchor = None
     def setup_trust_anchor(self,directory):
-        self.anchor = loadcanamespace.TrustAnchor()
-        self.anchor.update_ca_list(directory)
+        self.anchor = LoadDirChainOfTrust(directory)
     def setup_selector_factory(self,factory):
         self.factory_selector = factory
     def setup_view_factory(self,factory):
@@ -391,7 +396,7 @@ def main():
     options, arguments = p.parse_args()
     anchor_needed = False
     format_needed = False
-    anchor =  loadcanamespace.TrustAnchor()
+    anchor =  None
     actions = set([])
     images_selected = []
     messages_path = []
@@ -485,7 +490,7 @@ def main():
         if certDir == None:
             certDir = "/etc/grid-security/certificates/"
             log.info("Defaulting Certificate directory to '%s'" % (certDir))
-        database.setup_trust_anchor(certDir)
+        anchor = LoadDirChainOfTrust(directory)
     # Handle conflicting identifiers
 
     selectors_types = inputformats.intersection(input_format_selected)
