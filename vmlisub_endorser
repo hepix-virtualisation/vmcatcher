@@ -26,7 +26,7 @@ import hepixvmlis.databaseDefinition as model
 import os
 import logging
 import optparse
-import smimeX509validation.loadcanamespace as loadcanamespace
+from smimeX509validation import TrustStore, LoadDirChainOfTrust,smimeX509validation, smimeX509ValidationError
 import sys
 from hepixvmlis.__version__ import version
 
@@ -176,8 +176,7 @@ class db_controler:
         
 
     def setup_trust_anchor(self,directory):
-        self.anchor = loadcanamespace.ViewTrustAnchor()
-        self.anchor.update_ca_list(directory)
+        self.anchor = LoadDirChainOfTrust(directory)
     def setup_selector_factory(self,factory):
         self.factory_selector = factory
     

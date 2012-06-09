@@ -29,7 +29,7 @@ import hepixvmlis.databaseDefinition as model
 import os
 import logging
 import optparse
-import smimeX509validation.loadcanamespace as loadcanamespace
+from smimeX509validation import TrustStore, LoadDirChainOfTrust,smimeX509validation, smimeX509ValidationError
 from hepixvmlis.__version__ import version
 import hepixvmlis
 import urllib2
@@ -265,12 +265,16 @@ class output_driver_message(output_driver_base):
     def display_subscription(self,subscription):
         pass
     def display_imagelist(self,imagelist):
+        smimeProcessor =  smimeX509validation(self.anchor)
         try:
-            validated_data = self.anchor.validate_text(str(imagelist.data))
-        except loadcanamespace.SmimeX509ValidationError,E:
+            smimeProcessor.Process(str(imagelist.data))
+        except smimeX509ValidationError,E:
             self.log.error("Failed to validate text for '%s' produced error '%s'" % (imagelist,E))
             return False
-        self.file_pointer.write (validated_data['data'])
+        if not smimeProcessor.verified:
+            self.log.error("Failed to validate text for '%s' produced error '%s'" % (subscriptionKey,E))
+            return False
+        self.file_pointer.write (smimeProcessor.InputDaraStringIO.getvalue())
         return True
 
 class output_driver_lines(output_driver_base):
@@ -311,8 +315,7 @@ class db_controler:
         self.callbackEventImageNew = None
 
     def setup_trust_anchor(self,directory):
-        self.anchor = loadcanamespace.TrustAnchor()
-        self.anchor.update_ca_list(directory)
+        self.anchor = LoadDirChainOfTrust(directory)
     def setup_selector_factory(self,factory):
         self.factory_selector = factory
     def setup_view_factory(self,factory):
@@ -406,12 +409,16 @@ class db_controler:
     def subscribe_file(self,Session,anchor,filename,autoEndorse):
         req = urllib2.Request(url=filename)
         f = urllib2.urlopen(req)
+        smimeProcessor = smimeX509validation(anchor)
         try:
-            validated_data = anchor.validate_text(f.read())
-        except loadcanamespace.SmimeX509ValidationError,E:
+            smimeProcessor.Process(f.read())
+        except smimeX509ValidationError,E:
             self.log.error("Validate text '%s' produced error '%s'" % (filename,E))
             return False
-        jsontext = json.loads(validated_data['data'])
+        if not smimeProcessor.verified:
+            self.log.error("Failed to  verify text '%s'" % (filename))
+            return False
+        jsontext = json.loads(smimeProcessor.InputDaraStringIO.getvalue())
         if jsontext == None:
             self.log.error("Message downlaoded from '%s' was not valid JSON." % (filename))
             return False
@@ -425,10 +432,10 @@ class db_controler:
         if u'dc:identifier' not in metadata.keys():
             self.log.error('list dc:identifier does not found')
             return False
-        if metadata[u'hv:dn'] != validated_data['signer_dn']:
+        if metadata[u'hv:dn'] != smimeProcessor.InputCertMetaDataList[0]['subject']:
             self.log.error('Endorser DN does not match signature')
             return False
-        if metadata[u'hv:ca'] != validated_data['issuer_dn']:
+        if metadata[u'hv:ca'] != smimeProcessor.InputCertMetaDataList[0]['issuer']:
             self.log.error('list hv:ca does not match signature')
             return False
         if metadata[u'hv:uri'] != filename:
@@ -558,15 +565,19 @@ class db_controler:
                     Session.commit()
             return 0
         #Now we check its authenticity
+        smimeProcessor =  smimeX509validation(self.anchor)
         try:
-            validated_data = self.anchor.validate_text(update_unprocessed)
-        except loadcanamespace.SmimeX509ValidationError,E:
+            smimeProcessor.Process(update_unprocessed)
+        except smimeX509ValidationError,E:
             self.log.error("Failed to process validate text for '%s' produced error '%s'" % (subscriptionKey,E))
             # Error code - failed to validate image list.
             return 11
-        data = validated_data['data']
-        dn = validated_data['signer_dn']
-        ca = validated_data['issuer_dn']
+        if not smimeProcessor.verified:
+            self.log.error("Failed to validate text for '%s' produced error '%s'" % (subscriptionKey,E))
+            return 11
+        data = smimeProcessor.InputDaraStringIO.getvalue()
+        dn = smimeProcessor.InputCertMetaDataList[0]['subject']
+        ca = smimeProcessor.InputCertMetaDataList[0]['issuer']
         jsontext = json.loads(data)
         if jsontext == None:
             self.log.error("Downlaoded metadata from '%s' was not valid JSON." % (subscriptionKey))
