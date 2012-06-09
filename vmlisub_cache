@@ -29,7 +29,6 @@ import hepixvmlis.databaseDefinition as model
 import os.path
 import logging
 import optparse
-import smimeX509validation.loadcanamespace as loadcanamespace
 from hepixvmlis.__version__ import version
 import hepixvmlis
 import urllib2
