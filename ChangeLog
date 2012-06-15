@@ -1,5 +1,9 @@
 Changelog
 
+hepixvmilsubscriber-0.1.16
+
+ * Moved to new SmimeX509Validation API
+
 hepixvmilsubscriber-0.1.15
 
  * Reordered README.
