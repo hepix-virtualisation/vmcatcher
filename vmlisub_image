@@ -490,7 +490,7 @@ def main():
         if certDir == None:
             certDir = "/etc/grid-security/certificates/"
             log.info("Defaulting Certificate directory to '%s'" % (certDir))
-        anchor = LoadDirChainOfTrust(directory)
+        anchor = LoadDirChainOfTrust(certDir)
     # Handle conflicting identifiers
 
     selectors_types = inputformats.intersection(input_format_selected)
