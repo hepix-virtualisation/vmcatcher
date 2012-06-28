@@ -292,6 +292,7 @@ class db_controler:
     def __init__(self,dboptions):
         self.log = logging.getLogger("vmlisub_image.controler")
         self.engine = create_engine(dboptions, echo=False)
+        model.init(self.engine)
         self.SessionFactory = sessionmaker(bind=self.engine)
         self.anchor = None
     def setup_trust_anchor(self,directory):
@@ -490,7 +491,7 @@ def main():
         if certDir == None:
             certDir = "/etc/grid-security/certificates/"
             log.info("Defaulting Certificate directory to '%s'" % (certDir))
-        anchor = LoadDirChainOfTrust(directory)
+        anchor = LoadDirChainOfTrust(certDir)
     # Handle conflicting identifiers
 
     selectors_types = inputformats.intersection(input_format_selected)
