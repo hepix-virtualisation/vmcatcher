@@ -1,26 +1,11 @@
 vmlisub
-
-[Prev](imagetransfer-software-subscriber.shtml) 
-
-Chapter 10. `Virtual Machine Image List`{.literal} Subscribing Software
-
- [Next](imagetransfer-software-site.shtml)
-
-* * * * *
-
-[HEPIX Virtualisation Working Group](../index.shtml) \>
-[`Virtual Machine Image`{.literal} Transfer](imagetransfer.shtml) \>
-[`Virtual Machine Image List`{.literal} Subscribing
-Software](imagetransfer-software-subscriber.shtml) \> vmlisub
-
-vmlisub
 -------
 
 This virtual maschine `Virtual Machine Image List`{.literal} subscriber
 implementation is intended to be a production grade referance
 implementation.
 
-[[return to top](imagetransfer-software-vmlisub.shtml)]
+
 
 ### Introduction
 
@@ -45,7 +30,7 @@ Subscribed images can be downloaded verified and cached. Cached images
 can be verified, and if invalid or expired they are moved to an expiry
 directory.
 
-[[return to top](imagetransfer-software-vmlisub.shtml)]
+
 
 #### Features
 
@@ -88,7 +73,7 @@ Anyone curious about this application should consider this application a
 software application similar to Debian’s ’aptitude’ or Redhats ’yum’,
 but rather for virtual machines, authenticated by the x509 signatures.
 
-[[return to top](imagetransfer-software-vmlisub.shtml)]
+
 
 ### Quick start use of hepixvmilsubscriber
 
@@ -239,7 +224,7 @@ cache/858a817e-0ca2-473f-89d3-d5bdfc51968e
 cache/cache.index
 ~~~~
 
-[[return to top](imagetransfer-software-vmlisub.shtml)]
+
 
 #### Set up for Production using Cron
 
@@ -286,11 +271,11 @@ images.
 [user] $  vmlisub_image -l -d sqlite:////var/lib/vmlisub/vmlisub.db
 ~~~~
 
-[[return to top](imagetransfer-software-vmlisub.shtml)]
+
 
 ### Installation
 
-[[return to top](imagetransfer-software-vmlisub.shtml)]
+
 
 #### Package Repositories.
 
@@ -305,7 +290,7 @@ sporting.
 Deployment instructions are provided in the README included in the
 source code and the RPM.
 
-[[return to top](imagetransfer-software-vmlisub.shtml)]
+
 
 #### Installation on Redhat Enterprise Linux 6
 
@@ -355,7 +340,7 @@ install fetch-crl
 [root] # yum install hepixvmilsubscriber
 ~~~~
 
-[[return to top](imagetransfer-software-vmlisub.shtml)]
+
 
 #### Installation on Redhat Enterprise Linux 5
 
@@ -417,7 +402,7 @@ http://ftp.informatik.uni-frankfurt.de/fedora-archive/fedora/linux/releases/8/Ev
 
 And build a native RPM.
 
-[[return to top](imagetransfer-software-vmlisub.shtml)]
+
 
 #### Installation on Debian Linux Codename Wheezy or later,
 
@@ -537,7 +522,7 @@ Saving to: `hepixvmilsubscriber-0.1.14.tar.gz'
 [root] # cd ..
 ~~~~
 
-[[return to top](imagetransfer-software-vmlisub.shtml)]
+
 
 #### vmlisub\_endorser
 
@@ -594,7 +579,7 @@ same item. The endorser\_uuid could be a more human name:
        --issuer='/DC=ch/DC=cern/CN=CERN Trusted Certification Authority'
 ~~~~
 
-[[return to top](imagetransfer-software-vmlisub.shtml)]
+
 
 #### vmlisub\_sub
 
@@ -675,7 +660,7 @@ To delete a subscription
 [user] $  vmlisub_sub  -D  --uuid=63175437-7d59-4851-b333-c96cb6545a86
 ~~~~
 
-[[return to top](imagetransfer-software-vmlisub.shtml)]
+
 
 #### vmlisub\_image
 
@@ -695,7 +680,7 @@ subscription UUID. The state value is a bitmap, 1 is subscribed, 2 means
 its available in the current `Virtual Machine Image List`{.literal}s.
 Now we will select an image for local caching.
 
-[[return to top](imagetransfer-software-vmlisub.shtml)]
+
 
 ##### Selecting Images
 
@@ -720,7 +705,7 @@ Unsubscribe an image
 [user] $  vmlisub_image -r -u 327016b0-6508-41d2-bce0-c1724cb3d3e2
 ~~~~
 
-[[return to top](imagetransfer-software-vmlisub.shtml)]
+
 
 #### vmlisub\_cache
 
@@ -739,7 +724,7 @@ INFO:DownloadDir:Downloading '858a817e-0ca2-473f-89d3-d5bdfc51968e'.
 INFO:CacheMan:moved file 858a817e-0ca2-473f-89d3-d5bdfc51968e
 ~~~~
 
-[[return to top](imagetransfer-software-vmlisub.shtml)]
+
 
 ##### vmlisub\_cache Event interface
 
@@ -791,11 +776,11 @@ The following environment variables may be set by events:
 These correspond to the variables within the
 `Virtual Machine Image List`{.literal}.
 
-[[return to top](imagetransfer-software-vmlisub.shtml)]
+
 
 ###### vmlisub\_cache Event Environment variables
 
-[[return to top](imagetransfer-software-vmlisub.shtml)]
+
 
 ###### VMILS\_EVENT\_TYPE
 
@@ -817,13 +802,13 @@ These correspond to the variables within the
 
     This image is no longer in the cache directory.
 
-[[return to top](imagetransfer-software-vmlisub.shtml)]
+
 
 ###### VMILS\_EVENT\_DC\_DESCRIPTION
 
 The description text in the image.
 
-[[return to top](imagetransfer-software-vmlisub.shtml)]
+
 
 ###### VMILS\_EVENT\_DC\_IDENTIFIER
 
@@ -831,68 +816,68 @@ Unique identifier of the image. Its suggested that image producers use
 RFC 4122 UUID for `Virtual Machine Image List`{.literal} this allows
 updating the list, and uniqueness.
 
-[[return to top](imagetransfer-software-vmlisub.shtml)]
+
 
 ###### VMILS\_EVENT\_DC\_TITLE
 
 Image Title.
 
-[[return to top](imagetransfer-software-vmlisub.shtml)]
+
 
 ###### VMILS\_EVENT\_HV\_HYPERVISOR
 
 Typically set to reflect the Virtualization technology values such as
 "xen", "kvm".
 
-[[return to top](imagetransfer-software-vmlisub.shtml)]
+
 
 ###### VMILS\_EVENT\_HV\_SIZE
 
 The Image Size
 
-[[return to top](imagetransfer-software-vmlisub.shtml)]
+
 
 ###### VMILS\_EVENT\_HV\_URI
 
 The Original URI for the image
 
-[[return to top](imagetransfer-software-vmlisub.shtml)]
+
 
 ###### VMILS\_EVENT\_SL\_ARCH
 
 The images architecture.
 
-[[return to top](imagetransfer-software-vmlisub.shtml)]
+
 
 ###### VMILS\_EVENT\_SL\_CHECKSUM\_SHA512
 
 The Images sha512 checksum.
 
-[[return to top](imagetransfer-software-vmlisub.shtml)]
+
 
 ###### VMILS\_EVENT\_SL\_COMMENTS
 
 Comments added by the image author
 
-[[return to top](imagetransfer-software-vmlisub.shtml)]
+
 
 ###### VMILS\_EVENT\_SL\_OS
 
 The Operating System the VM image contains
 
-[[return to top](imagetransfer-software-vmlisub.shtml)]
+
 
 ###### VMILS\_EVENT\_SL\_OSVERSION
 
 The Operating System version
 
-[[return to top](imagetransfer-software-vmlisub.shtml)]
+
 
 ###### VMILS\_EVENT\_FILENAME
 
 The Image file name.
 
-[[return to top](imagetransfer-software-vmlisub.shtml)]
+
 
 #### Logging configuration
 
@@ -906,20 +891,20 @@ logging library. An example is shown below.
 Logging can be independently set up for each object to multiple
 locations, and with different log levels.
 
-[[return to top](imagetransfer-software-vmlisub.shtml)]
+
 
 #### Environment Variables
 
 Environment variables can be used to set default values but the command
 line options will override any set environment options.
 
-[[return to top](imagetransfer-software-vmlisub.shtml)]
+
 
 ##### VMILS\_RDBMS
 
 Sets the path to the database. For example "sqlite:///vmilsubscriber.db"
 
-[[return to top](imagetransfer-software-vmlisub.shtml)]
+
 
 ##### VMILS\_CACHE\_EVENT
 
@@ -934,61 +919,61 @@ by thier shell.
 
 An example of how to execute a command with an action command line.
 
-[[return to top](imagetransfer-software-vmlisub.shtml)]
+
 
 ##### VMILS\_LOG\_CONF
 
 Sets the path to the logging configuration file.
 
-[[return to top](imagetransfer-software-vmlisub.shtml)]
+
 
 ##### VMILS\_DIR\_CERT
 
 Sets the Path to the certificate authorities public keys, certificate
 revocation lists and certificate name spaces.
 
-[[return to top](imagetransfer-software-vmlisub.shtml)]
+
 
 ##### VMILS\_CACHE\_DIR\_CACHE
 
 Path used by ’vmlisub\_endorser’ to store verified VM images.
 
-[[return to top](imagetransfer-software-vmlisub.shtml)]
+
 
 ##### VMILS\_CACHE\_DIR\_DOWNLOAD
 
 Path used by ’vmlisub\_endorser’ to download VM images before VM image
 integrity is checked.
 
-[[return to top](imagetransfer-software-vmlisub.shtml)]
+
 
 ##### VMILS\_CACHE\_DIR\_EXPIRE
 
 Path used by ’vmlisub\_endorser’ to store VM images when they are no
 longer endorsed.
 
-[[return to top](imagetransfer-software-vmlisub.shtml)]
+
 
 ##### VMILS\_CACHE\_ACTION\_DOWNLOAD
 
 Instructs ’vmlisub\_endorser’ to download the latest VM images and check
 integrity.
 
-[[return to top](imagetransfer-software-vmlisub.shtml)]
+
 
 ##### VMILS\_CACHE\_ACTION\_CHECK
 
 Instructs ’vmlisub\_endorser’ check integrity for all currently stored
 VM images.
 
-[[return to top](imagetransfer-software-vmlisub.shtml)]
+
 
 ##### VMILS\_CACHE\_ACTION\_EXPIRE
 
 Instructs ’vmlisub\_endorser’ to expire stored VM images that are no
 longer endorsed.
 
-[[return to top](imagetransfer-software-vmlisub.shtml)]
+
 
 ### To Do (16-05-2012)
 
@@ -1000,12 +985,3 @@ moment the authenticity of the host is unchecked. For the
 programmability it would be far simpler to use x509 certificates to
 check the host server. In terms of deployment it would be far easier
 just to check any host key mechanism, as this is sufficient.
-
-* * * * *
-
-  -------------------------------------------------------------------------- ----------------------------------------------- ---------------------------------------------
-  [Prev](imagetransfer-software-subscriber.shtml)                            [Up](imagetransfer-software-subscriber.shtml)    [Next](imagetransfer-software-site.shtml)
-  Chapter 10. `Virtual Machine Image List`{.literal} Subscribing Software    [Home](../index.shtml)                           Chapter 11. Site Image Management Software
-  -------------------------------------------------------------------------- ----------------------------------------------- ---------------------------------------------
-
-
