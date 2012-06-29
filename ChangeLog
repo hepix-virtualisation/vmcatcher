@@ -1,5 +1,10 @@
 Changelog
 
+hepixvmilsubscriber-0.1.18
+ 
+ * Bugfix crash when no database exists with the command vmlisub_image
+ * converted README to README.md and format of README.md to Markdown.
+ * Generate README.md from docbook.
 
 hepixvmilsubscriber-0.1.17
 
