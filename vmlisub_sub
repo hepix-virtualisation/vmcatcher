@@ -302,8 +302,86 @@ class output_driver_lines(output_driver_base):
         for item in subauthq:
             self.file_pointer.write ("%s\t%s\t%s\n" % (item.identifier,item.authorised,item.uri))
 
-
-
+class fileView():
+    def __init__(self,anchor,fileRaw,MatchMetadata):
+        self.log = logging.getLogger("fileView")
+        self.anchor = anchor
+        self.data = fileRaw
+        self.errorNo = 0
+        self.vmilist = None
+        self.MatchMetadata = MatchMetadata
+        self.checkmessage()
+        
+    def checkmessage(self):
+        # hello
+        #print str(self.MatchMetadata)
+        now = datetime.datetime.utcnow()
+        smimeProcessor =  smimeX509validation(self.anchor)
+        try:
+            smimeProcessor.Process(self.data)
+        except smimeX509ValidationError,E:
+            self.log.error("Failed to process validate text for produced error" )
+            # Error code - failed to validate image list.
+            self.errorNo =  11
+            return
+        if not smimeProcessor.verified:
+            self.log.error("Failed to validate text for '%s' produced error '%s'" % (subscriptionKey,E))
+            self.errorNo =  11
+            return
+        data = smimeProcessor.InputDaraStringIO.getvalue()
+        self.subject = smimeProcessor.InputCertMetaDataList[0]['subject']
+        self.issuer = smimeProcessor.InputCertMetaDataList[0]['issuer']
+        zzzzjsontext = json.loads(data)
+        if zzzzjsontext == None:
+            self.log.error("Downlaoded metadata from '%s' was not valid JSON." % (subscriptionKey))
+            self.errorNo =  37
+            return
+        vmilist = VMimageListDecoder(zzzzjsontext)
+        if vmilist == None:
+            self.log.error("Downlaoded metadata from '%s' was not valid image list Object." % (subscriptionKey))
+            self.errorNo =  38
+            return
+        self.vmilist = vmilist
+        if vmilist.endorser.metadata[u'hv:dn'] != self.subject:
+            self.log.error("Endorser DN does not match signature for '%s'" (self.MatchMetadata[u'dc:identifier']))
+            self.log.info("Expected DN '%s'" % (vmilist.endorser.metadata[u'hv:dn']))
+            self.log.info("Downloaded DN '%s'" % (self.subject))
+            # Error code - metadata and certificate dont match.
+            self.errorNo =  12
+            return
+        if vmilist.endorser.metadata[u'hv:ca'] != self.issuer:
+            self.log.error("list hv:ca does not match signature for '%s'" % (self.MatchMetadata[u'dc:identifier']))
+            self.log.info("Expected CA '%s'" % (vmilist.endorser.metadata[u'hv:ca']))
+            self.log.info("Downloaded CA '%s'" % (self.issuer))
+            # Error code - metadata and certificate dont match.
+            self.errorNo =  12
+            return
+            
+        if vmilist.metadata[u'hv:uri'] != self.MatchMetadata[u'hv:uri']:
+            self.log.error("list hv:uri does not match subscription uri for '%s'" % (self.MatchMetadata[u'dc:identifier']))
+            self.log.info("Expected URI '%s'" % (subscription.uri))
+            self.log.info("Downloaded URI '%s'" % (vmilist.metadata[u'hv:uri']))
+            # Error code - metadata and certificate dont match.
+            self.errorNo =  12
+            return
+        
+        if vmilist.metadata[u'dc:identifier'] != self.MatchMetadata[u'dc:identifier']:
+            self.log.info("Expected identifier '%s'" % (self.MatchMetadata[u'dc:identifier']))
+            self.log.info("Downloaded identifier '%s'" % (vmilist.metadata[u'dc:identifier']))
+            # Error code - imagelist dc:identifier invalid.
+            self.errorNo =  31
+            return
+        now = datetime.datetime.utcnow()
+        if now < vmilist.metadata[u'dc:date:created']:
+            self.log.error("Image list '%s' has an invalid creation date as in the future." % (self.MatchMetadata[u'dc:identifier']))
+            self.errorNo =  33
+            return
+        if now > vmilist.metadata[u'dc:date:expires']:
+            self.log.warning("Downloaded image list '%s' has expired." % (self.MatchMetadata[u'dc:identifier']))
+            self.errorNo =  34
+            return
+        self.vmilist = vmilist
+        return 
 class db_controler:
     def __init__(self,dboptions):
         self.log = logging.getLogger("db_controler")
@@ -533,74 +611,7 @@ class db_controler:
         Session.add(ThisImageDef)
         Session.commit()
         return 0
-    def checkmessage(self,data):
-        # hello
-        print str(data)
-        now = datetime.datetime.utcnow()
-        smimeProcessor =  smimeX509validation(self.anchor)
-        try:
-            smimeProcessor.Process(data)
-        except smimeX509ValidationError,E:
-            self.log.error("Failed to process validate text for produced error" )
-            # Error code - failed to validate image list.
-            return 11
-        if not smimeProcessor.verified:
-            self.log.error("Failed to validate text for '%s' produced error '%s'" % (subscriptionKey,E))
-            return 11
-        data = smimeProcessor.InputDaraStringIO.getvalue()
-        dn = smimeProcessor.InputCertMetaDataList[0]['subject']
-        ca = smimeProcessor.InputCertMetaDataList[0]['issuer']
-        jsontext = json.loads(data)
-        if jsontext == None:
-            self.log.error("Downlaoded metadata from '%s' was not valid JSON." % (subscriptionKey))
-            return 37
-        vmilist = VMimageListDecoder(jsontext)
-        if vmilist == None:
-            self.log.error("Downlaoded metadata from '%s' was not valid image list Object." % (subscriptionKey))
-            return 38
-
-        
-        
-        jsontext = json.loads(jsontext)
-        if jsontext == None:
-            self.log.error("Downlaoded metadata from '%s' was not valid JSON." % (subscriptionKey))
-            return 37
-        vmilist = VMimageListDecoder(jsontext)
-        if vmilist == None:
-            self.log.error("Downlaoded metadata from '%s' was not valid image list Object." % (subscriptionKey))
-            return 38
-        if vmilist.endorser.metadata[u'hv:dn'] != dn:
-            self.log.error("Endorser DN does not match signature for '%s'" (ProcessingSubscriptionUuid))
-            self.log.info("Expected DN '%s'" % (vmilist.endorser.metadata[u'hv:dn']))
-            self.log.info("Downloaded DN '%s'" % (dn))
-            # Error code - metadata and certificate dont match.
-            return 12
-        if vmilist.endorser.metadata[u'hv:ca'] != ca:
-            self.log.error("list hv:ca does not match signature for '%s'" % (ProcessingSubscriptionUuid))
-            self.log.info("Expected CA '%s'" % (vmilist.endorser.metadata[u'hv:ca']))
-            self.log.info("Downloaded CA '%s'" % (dn))
-            # Error code - metadata and certificate dont match.
-            return 12
-        if vmilist.metadata[u'hv:uri'] != subscription.uri:
-            self.log.error("list hv:uri does not match subscription uri for '%s'" % (ProcessingSubscriptionUuid))
-            self.log.info("Expected URI '%s'" % (subscription.uri))
-            self.log.info("Downloaded URI '%s'" % (vmilist.metadata[u'hv:uri']))
-            # Error code - metadata and certificate dont match.
-            return 12
-        if vmilist.metadata[u'dc:identifier'] != subscription.identifier:
-            self.log.error("list dc:identifier does not match subscription uuid for '%s'" % ProcessingSubscriptionUuid)
-            self.log.info("Expected identifier '%s'" % (subscription.identifier))
-            self.log.info("Downloaded identifier '%s'" % (vmilist.metadata[u'dc:identifier']))
-            # Error code - imagelist dc:identifier invalid.
-            return 31
-        now = datetime.datetime.utcnow()
-        if now < vmilist.metadata[u'dc:date:created']:
-            self.log.error("Image list '%s' has an invalid creation date as in the future." % (ProcessingSubscriptionUuid))
-            return 33
-        if now > vmilist.metadata[u'dc:date:expires']:
-            self.log.warning("Downloaded image list '%s' has expired." % (ProcessingSubscriptionUuid))
-            return 34
-        return 0,vmilist
+    
 
     def subscription_update(self,Session,subscription):
         subscriptionKey = int(subscription.id)
@@ -626,6 +637,12 @@ class db_controler:
             filter(model.ImageListInstance.data_hash==messagehash)
         count = messagehash_q.count()
         now = datetime.datetime.utcnow()
+        
+        metadataFV = {
+            u'hv:uri' : str(subscription.uri),
+            u'dc:identifier' : str(subscription.identifier),
+        }
+        
         if count != 0:
             self.log.debug('Hash already found')
             for message in messagehash_q:
@@ -637,26 +654,27 @@ class db_controler:
                     message.expired = now
                     Session.commit()
                     continue
+                checker = fileView(self.anchor,update_unprocessed,metadataFV)
                 messageCheckCode = self.checkmessage(message.data)
-                if messageCheckCode != 0:
+                if checker.errorNo != 0:
                     message.expired = now
                     Session.commit()
             return 0
         
-
-        metadata = vmilist.metadata
+        checker = fileView(self.anchor,update_unprocessed,metadataFV)
+        
+        
+        metadata = checker.vmilist.metadata
         metadata[u'data'] = update_unprocessed
         metadata[u'data-hash'] = messagehash
-
-        messageCheckCode = self.checkmessage(message.data)
-        if messageCheckCode != 0:
+        if checker.errorNo != 0:
             metadata[u'expired'] = now
-
+            Session.commit()
         # Now we know the data better check the SubscriptionAuth
         subauthq = Session.query(model.SubscriptionAuth).\
             filter(model.Endorser.id==model.EndorserPrincible.id).\
-            filter(model.EndorserPrincible.hv_dn==dn).\
-            filter(model.EndorserPrincible.hv_ca==ca).\
+            filter(model.EndorserPrincible.hv_dn==checker.subject).\
+            filter(model.EndorserPrincible.hv_ca==checker.issuer).\
             filter(model.SubscriptionAuth.endorser == model.Endorser.id).\
             filter(model.SubscriptionAuth.subscription == model.Subscription.id).\
             filter(model.Subscription.id == subscription.id)
@@ -680,7 +698,7 @@ class db_controler:
         imagelistref = int(imagelist.id)
         # Now make a global return number
         globalRc = 0
-        for imageObj in vmilist.images:
+        for imageObj in checker.vmilist.images:
             # Now update each Image
             thisRc = self.subscript_update_image(Session,subscription,imagelistref,imageObj)
             if thisRc != 0:
