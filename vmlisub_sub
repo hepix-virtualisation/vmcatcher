@@ -302,6 +302,8 @@ class output_driver_lines(output_driver_base):
         for item in subauthq:
             self.file_pointer.write ("%s\t%s\t%s\n" % (item.identifier,item.authorised,item.uri))
 
+
+
 class db_controler:
     def __init__(self,dboptions):
         self.log = logging.getLogger("db_controler")
@@ -531,45 +533,15 @@ class db_controler:
         Session.add(ThisImageDef)
         Session.commit()
         return 0
-
-    def subscription_update(self,Session,subscription):
-        subscriptionKey = int(subscription.id)
-        ProcessingSubscriptionUuid = str(subscription.identifier)
-        self.log.info("Updating:%s" % (ProcessingSubscriptionUuid))
-        req = urllib2.Request(url=subscription.uri)
-        try:
-            f = urllib2.urlopen(req)
-        except urllib2.URLError,E:
-            # Python 2.6 Exception
-            self.log.error("Download of url '%s' failed." % (subscription.uri))
-            # Error code - failed to download image list.
-            return 10
-        except OSError:
-            # Python 2.4 Exception
-    	    self.log.error("Download of url '%s' failed." % (subscription.uri))
-            # Error code - failed to download image list.
-            return 10
-        update_unprocessed = f.read()
-        # Now we have the update lets first check its hash
-        messagehash = hashlib.sha512(update_unprocessed).hexdigest()
-        messagehash_q = Session.query(model.ImageListInstance).\
-            filter(model.ImageListInstance.data_hash==messagehash)
-        count = messagehash_q.count()
+    def checkmessage(self,data):
+        # hello
+        print str(data)
         now = datetime.datetime.utcnow()
-        if count != 0:
-            self.log.debug('Hash already found')
-            for message in messagehash_q:
-                if now > message.expires:
-                    self.log.warning("Image list '%s' has expired on: '%s'" % (ProcessingSubscriptionUuid,message.expires))
-                    message.expired = now
-                    Session.commit()
-            return 0
-        #Now we check its authenticity
         smimeProcessor =  smimeX509validation(self.anchor)
         try:
-            smimeProcessor.Process(update_unprocessed)
+            smimeProcessor.Process(data)
         except smimeX509ValidationError,E:
-            self.log.error("Failed to process validate text for '%s' produced error '%s'" % (subscriptionKey,E))
+            self.log.error("Failed to process validate text for produced error" )
             # Error code - failed to validate image list.
             return 11
         if not smimeProcessor.verified:
@@ -587,10 +559,16 @@ class db_controler:
             self.log.error("Downlaoded metadata from '%s' was not valid image list Object." % (subscriptionKey))
             return 38
 
-        metadata = vmilist.metadata
-        metadata[u'data'] = update_unprocessed
-        metadata[u'data-hash'] = messagehash
-
+        
+        
+        jsontext = json.loads(jsontext)
+        if jsontext == None:
+            self.log.error("Downlaoded metadata from '%s' was not valid JSON." % (subscriptionKey))
+            return 37
+        vmilist = VMimageListDecoder(jsontext)
+        if vmilist == None:
+            self.log.error("Downlaoded metadata from '%s' was not valid image list Object." % (subscriptionKey))
+            return 38
         if vmilist.endorser.metadata[u'hv:dn'] != dn:
             self.log.error("Endorser DN does not match signature for '%s'" (ProcessingSubscriptionUuid))
             self.log.info("Expected DN '%s'" % (vmilist.endorser.metadata[u'hv:dn']))
@@ -621,7 +599,57 @@ class db_controler:
             return 33
         if now > vmilist.metadata[u'dc:date:expires']:
             self.log.warning("Downloaded image list '%s' has expired." % (ProcessingSubscriptionUuid))
-            removeauthorsiation = True
+            return 34
+        return 0,vmilist
+
+    def subscription_update(self,Session,subscription):
+        subscriptionKey = int(subscription.id)
+        ProcessingSubscriptionUuid = str(subscription.identifier)
+        self.log.info("Updating:%s" % (ProcessingSubscriptionUuid))
+        req = urllib2.Request(url=subscription.uri)
+        try:
+            f = urllib2.urlopen(req)
+        except urllib2.URLError,E:
+            # Python 2.6 Exception
+            self.log.error("Download of url '%s' failed." % (subscription.uri))
+            # Error code - failed to download image list.
+            return 10
+        except OSError:
+            # Python 2.4 Exception
+    	    self.log.error("Download of url '%s' failed." % (subscription.uri))
+            # Error code - failed to download image list.
+            return 10
+        update_unprocessed = f.read()
+        # Now we have the update lets first check its hash
+        messagehash = hashlib.sha512(update_unprocessed).hexdigest()
+        messagehash_q = Session.query(model.ImageListInstance).\
+            filter(model.ImageListInstance.data_hash==messagehash)
+        count = messagehash_q.count()
+        now = datetime.datetime.utcnow()
+        if count != 0:
+            self.log.debug('Hash already found')
+            for message in messagehash_q:
+                if message.expired:
+                    self.log.info('Message Expired:%s' % (ProcessingSubscriptionUuid))
+                    continue
+                if now > message.expires:
+                    self.log.info("Image list '%s' has expired on: '%s'" % (ProcessingSubscriptionUuid,message.expires))
+                    message.expired = now
+                    Session.commit()
+                    continue
+                messageCheckCode = self.checkmessage(message.data)
+                if messageCheckCode != 0:
+                    message.expired = now
+                    Session.commit()
+            return 0
+        
+
+        metadata = vmilist.metadata
+        metadata[u'data'] = update_unprocessed
+        metadata[u'data-hash'] = messagehash
+
+        messageCheckCode = self.checkmessage(message.data)
+        if messageCheckCode != 0:
             metadata[u'expired'] = now
 
         # Now we know the data better check the SubscriptionAuth
