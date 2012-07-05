@@ -130,7 +130,7 @@ class EventObj(object):
         self.eventProcess("ImageNew",metadata)
 
 
-class db_actions:
+class db_actions(object):
     def __init__(self,session):
         self.session = session
         self.log = logging.getLogger("db_actions")
@@ -197,7 +197,7 @@ class db_actions:
         return ImageDefinitionQuery
 
 
-class queryby_base:
+class queryby_base(object):
     """"Base class for querying subscriptions"""
     def __init__(self,session):
         self.session = session
@@ -232,7 +232,7 @@ class queryby_uuid(queryby_base):
         return self.subscription_by_uuid(uuid)
 
 
-class output_driver_base:
+class output_driver_base(object):
     def __init__(self,file_pointer,session,anchor):
         self.session = session
         self.log = logging.getLogger("db_actions")
@@ -302,7 +302,7 @@ class output_driver_lines(output_driver_base):
         for item in subauthq:
             self.file_pointer.write ("%s\t%s\t%s\n" % (item.identifier,item.authorised,item.uri))
 
-class fileView():
+class fileView(object):
     def __init__(self,anchor,fileRaw,MatchMetadata):
         self.log = logging.getLogger("fileView")
         self.anchor = anchor
@@ -382,7 +382,7 @@ class fileView():
             return
         self.vmilist = vmilist
         return 
-class db_controler:
+class db_controler(object):
     def __init__(self,dboptions):
         self.log = logging.getLogger("db_controler")
         self.engine = create_engine(dboptions, echo=False)
