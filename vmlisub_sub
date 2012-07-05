@@ -654,8 +654,7 @@ class db_controler:
                     message.expired = now
                     Session.commit()
                     continue
-                checker = fileView(self.anchor,update_unprocessed,metadataFV)
-                messageCheckCode = self.checkmessage(message.data)
+                checker = fileView(self.anchor,message.data,metadataFV)
                 if checker.errorNo != 0:
                     message.expired = now
                     Session.commit()
