@@ -27,6 +27,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import IntegrityError, DatabaseError, ProgrammingError
 import hepixvmlis.databaseDefinition as model
 import os
+import re
 import logging
 import optparse
 from smimeX509validation import TrustStore, LoadDirChainOfTrust,smimeX509validation, smimeX509ValidationError
@@ -59,6 +60,88 @@ except:
 #  36 image is not registeresd with subscription.
 #  37 Message was not valid JSON.
 #  38 Message JSON was not valid to build image list.
+
+regdelexp = re.compile('[-,.\/]')
+regnumeric = re.compile('[0-9]+')
+
+def split_line_by_delimiter(line,regex):
+    splitline = []
+    splititr = regex.finditer(line)
+    lstart = 0
+    for i in splititr:
+        (mstart,mend) = i.span()
+        if lstart != mstart:
+            splitline.append(line[lstart:mstart])
+        splitline.append(line[mstart:mend])
+        lstart = mend
+    linelen = len(line)
+    if lstart != linelen:
+        splitline.append(line[lstart:linelen])
+    return splitline
+
+
+def string_sort(x,y):
+    xsplit = split_line_by_delimiter(x,regnumeric)
+    ysplit = split_line_by_delimiter(y,regnumeric)
+    ysplitlen = len(ysplit)
+    xsplitlen = len(xsplit)
+    minsplitlen = ysplitlen
+    if xsplitlen < ysplitlen:
+        minsplitlen = xsplitlen
+    for i in range(minsplitlen):
+        if xsplit[i] == ysplit[i]:
+            continue
+        if (xsplit[i].isdigit() and ysplit[i].isdigit()):
+            rc = int(0)
+            if int(xsplit[i]) > int(ysplit[i]):
+                rc = -1
+            if int(xsplit[i]) < int(ysplit[i]):
+                rc = 1
+            return rc
+        if xsplit[i].isdigit():
+            return -1
+        if ysplit[i].isdigit():
+            return 1
+        if xsplit[i] > ysplit[i]:
+            return -1
+        if xsplit[i] < ysplit[i]:
+            return 1
+    if xsplitlen < ysplitlen:
+        return 1
+    if xsplitlen > ysplitlen:
+        return -1
+    return 0
+
+def split_numeric_sort(x, y):
+    xsplit = split_line_by_delimiter(x,regdelexp)
+    ysplit = split_line_by_delimiter(y,regdelexp)
+    ysplitlen = len(ysplit)
+    xsplitlen = len(xsplit)
+    minsplitlen = ysplitlen
+    if xsplitlen < ysplitlen:
+        minsplitlen = xsplitlen
+    for i in range(minsplitlen):
+        if xsplit[i] == ysplit[i]:
+            continue
+        if (xsplit[i].isdigit() and ysplit[i].isdigit()):
+            rc = int(0)
+            if int(xsplit[i]) > int(ysplit[i]):
+                rc = -1
+            if int(xsplit[i]) < int(ysplit[i]):
+                rc = 1
+            return rc
+        if xsplit[i].isdigit():
+            return -1
+        if ysplit[i].isdigit():
+            return 1
+        rc = string_sort(xsplit[i],ysplit[i])
+        if rc != 0:
+            return rc
+    if xsplitlen < ysplitlen:
+        return 1
+    if xsplitlen > ysplitlen:
+        return -1
+    return 0
 
 
 
@@ -128,6 +211,12 @@ class EventObj(object):
         return
     def eventImageNew(self,metadata):
         self.eventProcess("ImageNew",metadata)
+
+
+
+
+
+
 
 
 class db_actions(object):
@@ -310,7 +399,9 @@ class fileView(object):
         self.errorNo = 0
         self.vmilist = None
         self.MatchMetadata = MatchMetadata
+        self.Json = None
         self.checkmessage()
+        
         
     def checkmessage(self):
         # hello
@@ -331,12 +422,12 @@ class fileView(object):
         data = smimeProcessor.InputDaraStringIO.getvalue()
         self.subject = smimeProcessor.InputCertMetaDataList[0]['subject']
         self.issuer = smimeProcessor.InputCertMetaDataList[0]['issuer']
-        zzzzjsontext = json.loads(data)
-        if zzzzjsontext == None:
+        jsonData = json.loads(data)
+        if jsonData == None:
             self.log.error("Downlaoded metadata from '%s' was not valid JSON." % (subscriptionKey))
             self.errorNo =  37
             return
-        vmilist = VMimageListDecoder(zzzzjsontext)
+        vmilist = VMimageListDecoder(jsonData)
         if vmilist == None:
             self.log.error("Downlaoded metadata from '%s' was not valid image list Object." % (subscriptionKey))
             self.errorNo =  38
@@ -382,6 +473,7 @@ class fileView(object):
             return
         self.vmilist = vmilist
         self.errorNo = 0
+        self.Json = jsonData
         return 
 class db_controler(object):
     def __init__(self,dboptions):
@@ -631,44 +723,18 @@ class db_controler(object):
     	    self.log.error("Download of url '%s' failed." % (subscription.uri))
             # Error code - failed to download image list.
             return 10
-        update_unprocessed = f.read()
+        update_unprocessed = str(f.read())
         # Now we have the update lets first check its hash
         messagehash = hashlib.sha512(update_unprocessed).hexdigest()
-        messagehash_q = Session.query(model.ImageListInstance).\
-            filter(model.ImageListInstance.data_hash==messagehash)
-        count = messagehash_q.count()
         now = datetime.datetime.utcnow()
-        
         metadataFV = {
             u'hv:uri' : str(subscription.uri),
             u'dc:identifier' : str(subscription.identifier),
         }
-        
-        if count != 0:
-            self.log.debug('Hash already found')
-            for message in messagehash_q:
-                checker = fileView(self.anchor,str(message.data),metadataFV)
-                if now > message.expires:
-                    self.log.info("Image list '%s' has expired on: '%s'" % (ProcessingSubscriptionUuid,message.expires))
-                    if message.expired == None:
-                        message.expired = now
-                        Session.commit()
-                    continue
-                # We now know message is not too old.
-                if ((message.expired != None) and (checker.errorNo == 0)):
-                    # we have expired previously but now it looks good.
-                    self.log.info('Message Validated:%s' % (ProcessingSubscriptionUuid))
-                    message.expired = None
-                    Session.commit()
-                if ((message.expired == None) and (checker.errorNo != 0)):
-                    # should expire.
-                    self.log.info('Message Expired:%s' % (ProcessingSubscriptionUuid))
-                    message.expired = now
-                    Session.commit()
-            return 0
+        #self.log.error("errr:%s" % (ProcessingSubscriptionUuid))
         checker = fileView(self.anchor,update_unprocessed,metadataFV)
-        
-        
+        messageVersion = checker.Json[u'hv:imagelist'][u'hv:version']
+        self.log.debug('messageVersion:%s' % (messageVersion))
         metadata = checker.vmilist.metadata
         metadata[u'data'] = update_unprocessed
         metadata[u'data-hash'] = messagehash
@@ -677,21 +743,72 @@ class db_controler(object):
             metadata[u'expired'] = now
             Session.commit()
         # Now we know the data better check the SubscriptionAuth
-        subauthq = Session.query(model.SubscriptionAuth).\
-            filter(model.Endorser.id==model.EndorserPrincible.id).\
-            filter(model.EndorserPrincible.hv_dn==checker.subject).\
-            filter(model.EndorserPrincible.hv_ca==checker.issuer).\
+        subq = Session.query(model.Subscription, model.SubscriptionAuth).\
+            filter(model.Endorser.id == model.EndorserPrincible.id).\
+            filter(model.EndorserPrincible.hv_dn == checker.subject).\
+            filter(model.EndorserPrincible.hv_ca == checker.issuer).\
             filter(model.SubscriptionAuth.endorser == model.Endorser.id).\
             filter(model.SubscriptionAuth.subscription == model.Subscription.id).\
             filter(model.Subscription.id == subscription.id)
 
-        count = subauthq.count()
+        count = subq.count()
         if count == 0:
             self.log.error('Endorser not authorised on subscription %s' % (ProcessingSubscriptionUuid))
             # Error code - Endorser not authorised on subscription.
             return 13
-        authsub = subauthq.one()
-        imagelist = model.ImageListInstance(authsub.id,metadata)
+        if count != 1:
+            self.log.error('Database Error processing subq:%s' % (ProcessingSubscriptionUuid))
+            assert (False)
+        subscription, auth = subq.one()
+        
+        
+        # Sets 
+        VersionCompare = 0
+        qeryJunction = Session.query(model.ImageListInstance).\
+            filter(model.Subscription.imagelist_latest == model.ImageListInstance.id).\
+            filter(model.Subscription.id == subscription.id)
+        
+        
+        
+        if qeryJunction.count() == 0:
+            #"we have no older version"
+            self.log.info("First version of:%s" % (ProcessingSubscriptionUuid))
+            VersionCompare = 1
+        else:
+            if qeryJunction.count() != 1:
+                self.log.error('Database Error processing  qeryJunction:%s' % (ProcessingSubscriptionUuid))
+                assert (False)
+            imageList = qeryJunction.one()
+            if imageList.data_hash == messagehash:
+                self.log.debug('Same version:%s' % (ProcessingSubscriptionUuid))
+                if now > imageList.expires:
+                    self.log.info("Image list '%s' has expired on: '%s'" % (ProcessingSubscriptionUuid,imageList.expires))
+                    if imageList.expired == None:
+                        imageList.expired = now
+                        Session.commit()
+                # We now know imageList is not too old.
+                if ((imageList.expired != None) and (checker.errorNo == 0)):
+                    # we have expired previously but now it looks good.
+                    self.log.info('imageList Validated:%s' % (ProcessingSubscriptionUuid))
+                    imageList.expired = None
+                    Session.commit()
+                if ((imageList.expired == None) and (checker.errorNo != 0)):
+                    # should expire.
+                    self.log.info('imageList Expired:%s' % (ProcessingSubscriptionUuid))
+                    imageList.expired = now
+                    Session.commit()
+                return 0
+            VersionCompare = split_numeric_sort(imageList.version,messageVersion)
+
+        if VersionCompare == 0:
+            self.log.error('ProcessingSubscriptionUuid invalid version number:%s' % (messageVersion))
+            return 0
+        if VersionCompare < 0:
+            self.log.error('New version has older version number:%s' % (VersionCompare))
+            return 0
+        
+        
+        imagelist = model.ImageListInstance(auth.id,metadata)
         Session.add(imagelist)
         try:
             Session.commit()

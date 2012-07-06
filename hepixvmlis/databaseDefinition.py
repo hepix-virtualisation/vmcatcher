@@ -139,6 +139,7 @@ class ImageListInstance(Base):
     imported = Column(DateTime,nullable = False)
     created = Column(DateTime,nullable = False)
     expires = Column(DateTime,nullable = False)
+    version = Column(String(50),nullable = False)
     def __init__(self, SubscriptionAuthKey, metadata):
         #print metadata
         self.sub_auth = SubscriptionAuthKey
@@ -149,6 +150,7 @@ class ImageListInstance(Base):
         self.imported = datetime.datetime.utcnow()
         self.created = metadata[u'dc:date:created']
         self.expires = metadata[u'dc:date:expires']
+        self.version = metadata[u'hv:version']
         if u'expired' in metadata.keys():
             self.expired = metadata[u'expired']
     def __repr__(self):
