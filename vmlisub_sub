@@ -804,7 +804,7 @@ class db_controler(object):
             self.log.error('ProcessingSubscriptionUuid invalid version number:%s' % (messageVersion))
             return 0
         if VersionCompare < 0:
-            self.log.error('New version has older version number:%s' % (VersionCompare))
+            self.log.error('New version has lower version number:%s' % (VersionCompare))
             return 0
         
         
