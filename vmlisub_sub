@@ -318,7 +318,7 @@ class fileView():
         now = datetime.datetime.utcnow()
         smimeProcessor =  smimeX509validation(self.anchor)
         try:
-            smimeProcessor.Process(self.data)
+            smimeProcessor.Process(str(self.data))
         except smimeX509ValidationError,E:
             self.log.error("Failed to process validate text for produced error" )
             # Error code - failed to validate image list.
@@ -381,6 +381,7 @@ class fileView():
             self.errorNo =  34
             return
         self.vmilist = vmilist
+        self.errorNo = 0
         return 
 class db_controler:
     def __init__(self,dboptions):
@@ -646,20 +647,25 @@ class db_controler:
         if count != 0:
             self.log.debug('Hash already found')
             for message in messagehash_q:
-                if message.expired:
-                    self.log.info('Message Expired:%s' % (ProcessingSubscriptionUuid))
-                    continue
+                checker = fileView(self.anchor,str(message.data),metadataFV)
                 if now > message.expires:
                     self.log.info("Image list '%s' has expired on: '%s'" % (ProcessingSubscriptionUuid,message.expires))
-                    message.expired = now
-                    Session.commit()
+                    if message.expired == None:
+                        message.expired = now
+                        Session.commit()
                     continue
-                checker = fileView(self.anchor,message.data,metadataFV)
-                if checker.errorNo != 0:
+                # We now know message is not too old.
+                if ((message.expired != None) and (checker.errorNo == 0)):
+                    # we have expired previously but now it looks good.
+                    self.log.info('Message Validated:%s' % (ProcessingSubscriptionUuid))
+                    message.expired = None
+                    Session.commit()
+                if ((message.expired == None) and (checker.errorNo != 0)):
+                    # should expire.
+                    self.log.info('Message Expired:%s' % (ProcessingSubscriptionUuid))
                     message.expired = now
                     Session.commit()
             return 0
-        
         checker = fileView(self.anchor,update_unprocessed,metadataFV)
         
         
@@ -667,6 +673,7 @@ class db_controler:
         metadata[u'data'] = update_unprocessed
         metadata[u'data-hash'] = messagehash
         if checker.errorNo != 0:
+            self.log.info('Message Expired:%s' % (ProcessingSubscriptionUuid))
             metadata[u'expired'] = now
             Session.commit()
         # Now we know the data better check the SubscriptionAuth
