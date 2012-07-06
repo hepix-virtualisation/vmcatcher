@@ -1,5 +1,10 @@
 Changelog
 
+hepixvmilsubscriber-0.1.19
+
+ * Error message for expired imagelists improved.
+ * Check messages that have not been updated and not yet expired.
+
 hepixvmilsubscriber-0.1.18
  
  * Bugfix crash when no database exists with the command vmlisub_image
