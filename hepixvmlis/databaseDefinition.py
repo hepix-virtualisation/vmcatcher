@@ -19,6 +19,7 @@ Base = declarative_base()
 
 
 class Endorser(Base):
+    """This table defines the Human Name for the Endorser."""
     __tablename__ = 'endorser'
     id = Column(Integer, primary_key=True)
     identifier = Column(String(50))
@@ -34,6 +35,7 @@ class Endorser(Base):
         return "<Endorser(%s,%s,%s)>" % (self.identifier,self.princibles,self.subscriptionauth)
 
 class EndorserPrincible(Base):
+    """This table stores the set of identies that an endorser has"""
     __tablename__ = 'endorserPrincible'
     id = Column(Integer, primary_key=True)
     hv_dn = Column(String(50),unique=True,nullable = False)
@@ -59,6 +61,7 @@ class EndorserPrincible(Base):
 
 
 class Subscription(Base):
+    """This table stores the set of Subscriptions the system has"""
     __tablename__ = 'subscription'
     id = Column(Integer, primary_key=True)
     identifier = Column(String(50),nullable = False,unique=True)
@@ -86,6 +89,8 @@ class Subscription(Base):
 
 
 class SubscriptionAuth(Base):
+    """This table stores the set of Subscriptions  Endorser Link and is
+    easier to think of as Authorisations to write to Image list"""
     __tablename__ = 'subscriptionAuth'
     id = Column(Integer, primary_key=True)
     subscription = Column(Integer, ForeignKey(Subscription.id, onupdate="CASCADE", ondelete="CASCADE"))
@@ -104,6 +109,9 @@ class SubscriptionAuth(Base):
 
 
 class ImageDefinition(Base):
+    """This table stores the set of Subscriptions  Images
+    Since all Images have to havea unique UUID this table ennforces
+    this."""
     __tablename__ = 'ImageDefinition'
     # The table stores the definitions of image UUID.
     # This table stores information on the image
@@ -126,6 +134,9 @@ class ImageDefinition(Base):
         return "<ImageDefinition('%s','%s', '%s')>" % (self.identifier, self.subscription,self.latest)
 
 class ImageListInstance(Base):
+    """This table stores the Instances of images lists subscribed to.
+    Including the message, its x509 checksum, 
+    """
     __tablename__ = 'imageListInstance'
     id = Column(Integer, primary_key=True)
     # Raw signed messsage
@@ -157,6 +168,9 @@ class ImageListInstance(Base):
         return "<ImageListInstance ('%s','%s')>" % (self.id, self.imported)
 
 class ImageInstance(Base):
+    """Subscribers work with images not imagelists, 
+    this table makes processing images easier, and enfocing 
+    image UUID uniqueness."""
     __tablename__ = 'ImageInstance'
     # Stores the parsed Images status
     # Only accepted Image instances Get commited.
