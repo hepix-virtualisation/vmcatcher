@@ -40,7 +40,6 @@ class EndorserPrincible(Base):
     id = Column(Integer, primary_key=True)
     hv_dn = Column(String(50),unique=True,nullable = False)
     hv_ca = Column(String(50),nullable = False)
-    ca_pubkey = Column(String(50))
     endorser = Column(Integer, ForeignKey(Endorser.id, ondelete="CASCADE", onupdate="CASCADE"))
 
     def __init__(self, endorser, metadata):
