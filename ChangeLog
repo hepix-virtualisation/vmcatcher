@@ -1,5 +1,11 @@
 Changelog
 
+ * Fixed Bug introduced in hepixvmilsubscriber-0.1.19 (intermittent security 
+   failures for example a CRL expires caused images to remain expired).
+ * Fixed bug in handling update of allready downloaded image list that casued
+   verify failure.
+ 
+
 hepixvmilsubscriber-0.1.19
 
  * Error message for expired imagelists improved.
