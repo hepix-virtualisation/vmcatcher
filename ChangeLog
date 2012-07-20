@@ -1,19 +1,21 @@
 Changelog
 
+hepixvmilsubscriber-0.1.21
+
  * Removed Exception being thrown when image list failed verification.
 
 hepixvmilsubscriber-0.1.20
 
- * Added a new collumn "version" to database table "ImageListInstance"
+ * Added a new column "version" to database table "ImageListInstance"
  * Removed column "ca_pubkey" to database table "ImageListInstance"
  * Added comments to the database tables "EndorserPrincible"
  * Added new function to order packages version number.
  * Wrap all calls to SMIME validation with str objects.
- * Change update model to always check privious version of image lists 
+ * Change update model to always check previous version of image lists 
    version string and make sure newest version is a higher version.
  * Fixed Bug introduced in hepixvmilsubscriber-0.1.19 (intermittent security 
    failures for example a CRL expires caused images to remain expired).
- * Fixed bug in handling update of allready downloaded image list that casued
+ * Fixed bug in handling update of already downloaded image list that caused
    verify failure.
  
 
