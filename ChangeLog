@@ -1,5 +1,7 @@
 Changelog
 
+ * Removed Exception being thrown when image list failed verification.
+
 hepixvmilsubscriber-0.1.20
 
  * Added a new collumn "version" to database table "ImageListInstance"
