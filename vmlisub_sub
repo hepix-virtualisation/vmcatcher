@@ -733,6 +733,10 @@ class db_controler(object):
         }
         #self.log.error("errr:%s" % (ProcessingSubscriptionUuid))
         checker = fileView(self.anchor,update_unprocessed,metadataFV)
+        if checker.errorNo != 0:
+            return checker.errorNo
+        if checker.Json == None:
+            return 14
         messageVersion = checker.Json[u'hv:imagelist'][u'hv:version']
         self.log.debug('messageVersion:%s' % (messageVersion))
         metadata = checker.vmilist.metadata
