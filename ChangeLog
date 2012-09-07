@@ -1,4 +1,7 @@
 Changelog
+hepixvmilsubscriber-0.1.22
+ 
+ * Improved command line processing of logging includine '--verbose','--quiet'
 
 hepixvmilsubscriber-0.1.21
 
