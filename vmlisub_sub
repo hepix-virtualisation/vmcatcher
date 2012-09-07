@@ -901,6 +901,10 @@ def main():
     p.add_option('-o', '--output', action ='append',help='Export File.', metavar='OUTPUTFILE')
     p.add_option('-L', '--logfile', action ='store',help='Logfile configuration file.', metavar='LOGFILE')
     p.add_option('-x', '--execute', action ='store',help='Event application to launch.', metavar='EVENT')
+    p.add_option('--verbose', action ='count',help='Change global log level, increasing log output.', metavar='LOGFILE')
+    p.add_option('--quiet', action ='count',help='Change global log level, decreasing log output.', metavar='LOGFILE')
+    p.add_option('--log-config', action ='store',help='Logfile configuration file, (overrides command line).', metavar='LOGFILE')
+    
     options, arguments = p.parse_args()
     autoEndorse = False
     anchor_needed = False
@@ -927,22 +931,45 @@ def main():
         certDir = os.environ['VMILS_DIR_CERT']
     if 'VMILS_SUB_EVENT' in os.environ:
         eventExecutionString = os.environ['VMILS_SUB_EVENT']
-    
     # Set up log file
-    if options.logfile:
-        logFile = options.logfile
+    LoggingLevel = logging.WARNING
+    LoggingLevelCounter = 2
+    if options.verbose:
+        LoggingLevelCounter = LoggingLevelCounter - options.verbose
+        if options.verbose == 1:
+            LoggingLevel = logging.INFO
+        if options.verbose == 2:
+            LoggingLevel = logging.DEBUG
+    if options.quiet:
+        LoggingLevelCounter = LoggingLevelCounter + options.quiet
+    if LoggingLevelCounter <= 0:
+        LoggingLevel = logging.DEBUG
+    if LoggingLevelCounter == 1:
+        LoggingLevel = logging.INFO
+    if LoggingLevelCounter == 2:
+        LoggingLevel = logging.WARNING
+    if LoggingLevelCounter == 3:
+        LoggingLevel = logging.ERROR
+    if LoggingLevelCounter == 4:
+        LoggingLevel = logging.FATAL
+    if LoggingLevelCounter >= 5:
+        LoggingLevel = logging.CRITICAL
+    
+    if options.log_config:
+        logFile = options.log_config
     if logFile != None:
-        if os.path.isfile(str(options.logfile)):
-            logging.config.fileConfig(options.logfile)
+        if os.path.isfile(str(options.log_config)):
+            logging.config.fileConfig(options.log_config)
         else:
-            logging.basicConfig(level=logging.INFO)
+            logging.basicConfig(level=LoggingLevel)
             log = logging.getLogger("main")
-            log.error("Logfile configuration file '%s' was not found." % (options.logfile))
+            log.error("Logfile configuration file '%s' was not found." % (options.log_config))
             sys.exit(1)
     else:
-        logging.basicConfig(level=logging.INFO)
+        
+        logging.basicConfig(level=LoggingLevel)
     log = logging.getLogger("main")
-    # Now logging is set up process other options
+    # Now logging is set up process other options    
     if options.cert_dir:
         certDir = options.cert_dir
     if options.list:
