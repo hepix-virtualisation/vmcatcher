@@ -1,13 +1,13 @@
 Changelog
-hepixvmilsubscriber-0.1.22
+vmcatcher-0.1.22
  
  * Improved command line processing of logging includine '--verbose','--quiet'
 
-hepixvmilsubscriber-0.1.21
+vmcatcher-0.1.21
 
  * Removed Exception being thrown when image list failed verification.
 
-hepixvmilsubscriber-0.1.20
+vmcatcher-0.1.20
 
  * Added a new column "version" to database table "ImageListInstance"
  * Removed column "ca_pubkey" to database table "ImageListInstance"
@@ -16,56 +16,56 @@ hepixvmilsubscriber-0.1.20
  * Wrap all calls to SMIME validation with str objects.
  * Change update model to always check previous version of image lists 
    version string and make sure newest version is a higher version.
- * Fixed Bug introduced in hepixvmilsubscriber-0.1.19 (intermittent security 
+ * Fixed Bug introduced in vmcatcher-0.1.19 (intermittent security 
    failures for example a CRL expires caused images to remain expired).
  * Fixed bug in handling update of already downloaded image list that caused
    verify failure.
  
 
-hepixvmilsubscriber-0.1.19
+vmcatcher-0.1.19
 
  * Error message for expired imagelists improved.
  * Check messages that have not been updated and not yet expired.
 
-hepixvmilsubscriber-0.1.18
+vmcatcher-0.1.18
  
  * Bugfix crash when no database exists with the command vmlisub_image
  * converted README to README.md and format of README.md to Markdown.
  * Generate README.md from docbook.
 
-hepixvmilsubscriber-0.1.17
+vmcatcher-0.1.17
 
  * Bug fixing for crash getting info on image using UUID.
 
-hepixvmilsubscriber-0.1.16
+vmcatcher-0.1.16
 
  * Moved to new SmimeX509Validation API
 
-hepixvmilsubscriber-0.1.15
+vmcatcher-0.1.15
 
  * Reordered README.
  * Added some clarifications to README.
  * Added an example event handler.
 
-hepixvmilsubscriber-0.1.14
+vmcatcher-0.1.14
 
  * vmlisub_cache: Now automatically expires images when downloading images.
  * vmlisub_cache: Now testing the Event interface.
- * vmlisub_sub: Added event interface.
- * vmlisub_sub: Added event ImageNew when a new image is added to image list.
- * vmlisub_sub: Added enviroment variable VMILS_SUB_EVENT to set event action.
- * vmlisub_sub: Changed event commadn line to '-x', '--execute' from 
+ * vmcatcher_subscribe: Added event interface.
+ * vmcatcher_subscribe: Added event ImageNew when a new image is added to image list.
+ * vmcatcher_subscribe: Added enviroment variable VMILS_SUB_EVENT to set event action.
+ * vmcatcher_subscribe: Changed event commadn line to '-x', '--execute' from 
      '-E', '--even-action'.
 
-hepixvmilsubscriber-0.1.13
+vmcatcher-0.1.13
 
 * vmlisub_image: Removed '-D', '--delete' unimplemented feature from 
-    vmlisub_image as is provided in vmlisub_sub.
-* vmlisub_sub: Changed logging to display expected and downloaded values when 
+    vmlisub_image as is provided in vmcatcher_subscribe.
+* vmcatcher_subscribe: Changed logging to display expected and downloaded values when 
     they differ.
 * vmlisub_endorser: Added ability to list endorser links to subscriptions.
 
-hepixvmilsubscriber-0.1.12
+vmcatcher-0.1.12
 
 * Changed the recommended CA metapackage in the README to ca-policy-egi-core.
 * Handle non JSON messages with a clear error.
@@ -73,50 +73,50 @@ hepixvmilsubscriber-0.1.12
 * Added Error return code 37 Message was not valid JSON.
 * Added Error return code 38 Message JSON was not valid to build image list.
 
-hepixvmilsubscriber-0.1.11
+vmcatcher-0.1.11
 
 * Corrected Typos in the README.
 * Added Environment variable VMILS_CACHE_EVENT
 * Significant change to the organisation of the the README.
 * Added details about the event interface to the README.
 
-hepixvmilsubscriber-0.1.10
+vmcatcher-0.1.10
 
 * Corrected Typos in the README.
 * Documented more event variables in the README.
 
-hepixvmilsubscriber-0.1.9
+vmcatcher-0.1.9
 
 * Added support for a set of Environment Variables.
 * Fixed spelling errors/typos in the README Changelog.
 
-hepixvmilsubscriber-0.1.8
+vmcatcher-0.1.8
 
 * Added Event interface and documentation to README.
 * Cleaned up the internal JSON cache.info files.
-* Changed the code structure of vmlisub_sub a little for clarity.
+* Changed the code structure of vmcatcher_subscribe a little for clarity.
 
-hepixvmilsubscriber-0.1.7
+vmcatcher-0.1.7
 
 * Added some extra documentation on fetch-crl.
 * Improved documentation in setup.
 
-hepixvmilsubscriber-0.1.6
+vmcatcher-0.1.6
 
 * Stability improvements.
 * Authentication / verification error logging improvements.
 * Invalid selection logging improvements.
 * Removed duplicate method display_imagelist
 
-hepixvmilsubscriber-0.1.5
+vmcatcher-0.1.5
 
-* vmlisub_sub Fixed misleading error message.
+* vmcatcher_subscribe Fixed misleading error message.
 * Corrected misleading text in Changelog.
 * vmlisub_endorser Changed format of list command to make parsing easier.
 * vmlisub_endorser fixed sqlalchamy import error on RHEL/SL 5
-* vmlisub_sub urllib2 with python 2.4 thows OSError rather than urllib2.URLError
+* vmcatcher_subscribe urllib2 with python 2.4 thows OSError rather than urllib2.URLError
 
-hepixvmilsubscriber-0.1.4
+vmcatcher-0.1.4
 
 * vmlisub_cache changed default behaviour to not check integrity of already downloaded 
     images. This is still possible using a command line option but no longer default.
@@ -124,7 +124,7 @@ hepixvmilsubscriber-0.1.4
     see README for full details.
 * vmlisub_endorser now works with current database schema, and changed command line to 
     be moreconistent with other applications in this suite.
-* vmlisub_sub now has more error return codes to allow test suite to check for errors.
+* vmcatcher_subscribe now has more error return codes to allow test suite to check for errors.
         10 failed to download image list.
         11 failed to validate image list.
         12 metadata and certificate dont match.
@@ -133,14 +133,14 @@ hepixvmilsubscriber-0.1.4
         15 Database integrity error.
         31 imagelist dc:identifier invalid.
         32 image dc:identifier invalid.
-* vmlisub_sub no longer by default adds endorser when subscribing to a imagelist. Old 
+* vmcatcher_subscribe no longer by default adds endorser when subscribing to a imagelist. Old 
     behaviour can be restored with the --auto-endorse option.
-* vmlisub_sub Now handles cleanly the exception of imagelists being unavailable.
-* vmlisub_sub Errors with registering or failing to register endorsers has better logging.
+* vmcatcher_subscribe Now handles cleanly the exception of imagelists being unavailable.
+* vmcatcher_subscribe Errors with registering or failing to register endorsers has better logging.
 * Spelling corrections on command line help.
 * Updated README and Changlog.
 
-hepixvmilsubscriber-0.1.3
+vmcatcher-0.1.3
 
 * README fixed for removing a subscription.
 * Failing to remove a subscription now returns a non zero error code.
@@ -149,7 +149,7 @@ hepixvmilsubscriber-0.1.3
 * Database integrity exceptions when subscribing to a database are now handled 
     better.
 
-hepixvmilsubscriber-0.1.2
+vmcatcher-0.1.2
 
 * Added and Apache License, Version 2.0
 * Added instructions about using fetch-crl
@@ -160,12 +160,12 @@ hepixvmilsubscriber-0.1.2
 * Added and example logfile coniguration file.
 * Added this Changelog file.
 
-hepixvmilsubscriber-0.1.1
+vmcatcher-0.1.1
 
 * Better documentation 
 * Fix an uncaught exception for failing to verify messages.
 
-hepixvmilsubscriber-0.1.0
+vmcatcher-0.1.0
 
 * Data base schema has changed adding a new table ImageDefinition and 
    renaming or tables and field for constancy reasons.
@@ -186,7 +186,7 @@ hepixvmilsubscriber-0.1.0
     check sum testing and expiring. 
     (You might want to check the check sums more frequently)
 * Renamed the default database from "tutorial.db" to
-    "vmilsubscriber.db" (To avoid people trying to use old DB with new
+    "vmcatcher.db" (To avoid people trying to use old DB with new
     code).
 * Renamed "image.dc:identifier" field on image queries to 
     "imagedef.dc:identifier" as this is in my opinion more clear.
@@ -212,20 +212,20 @@ hepixvmilsubscriber-0.1.0
     1 == should be cached. 2 == Available, hence images with status 3 
     will be cached.
 
-hepixvmilsubscriber-0.0.15
+vmcatcher-0.0.15
 
 * Changes to handle differences in python 2.4 (SL5) and python 2.6
     (SL6) url parsing libraries.
 * Cleaner error handling and spelling correction stating clearly if the
     file fails to verify, by size or sha512, rather than always stating size.
 
-hepixvmilsubscriber-0.0.14
+vmcatcher-0.0.14
 
 * Improved error message when images pass disk space limit.
 * Support https as a image download format (being used by CERN VM).
 * Catch exception correctly for corrupted signed images lists.
 
-hepixvmilsubscriber-0.0.13
+vmcatcher-0.0.13
 
 * More robust to image lists with data that does not pass
   validation. No new features have been added.

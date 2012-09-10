@@ -47,7 +47,7 @@ class db_actions:
 
     def __init__(self,session):
         self.session = session
-        self.log = logging.getLogger("vmlisub_sub.db_actions")
+        self.log = logging.getLogger("vmcatcher_subscribe.db_actions")
 
 
     def image_lister(self):
@@ -487,7 +487,7 @@ def main():
     # 1 So we have some command line validation
 
     if databaseConnectionString == None:
-        databaseConnectionString = 'sqlite:///vmilsubscriber.db'
+        databaseConnectionString = 'sqlite:///vmcatcher.db'
         log.info("Defaulting DB connection to '%s'" % (databaseConnectionString))
     if len(actions) == 0:
         log.error("No actions selected")

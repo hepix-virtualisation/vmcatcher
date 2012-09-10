@@ -124,7 +124,7 @@ while the third column is the subject of the issuing certificate
 authority.
 
 ~~~~ {.programlisting}
-[user] $  vmlisub_sub -s file:////`pwd`/hepix_signed_image_list
+[user] $  vmcatcher_subscribe -s file:////`pwd`/hepix_signed_image_list
 INFO:main:Defaulting DB connection to 'sqlite:///vmilsubscriber.db'
 WARNING:db_actions:list hv:uri does not match subscription uri
 ~~~~
@@ -134,7 +134,7 @@ Although less secure it is also possible to add the option
 certificates are auto added to the database when subscribing.
 
 ~~~~ {.programlisting}
-[user] $  vmlisub_sub  --auto-endorse -s file:////`pwd`/hepix_signed_image_list
+[user] $  vmcatcher_subscribe  --auto-endorse -s file:////`pwd`/hepix_signed_image_list
 INFO:main:Defaulting DB connection to 'sqlite:///vmilsubscriber.db'
 WARNING:db_actions:list hv:uri does not match subscription uri
 ~~~~
@@ -143,7 +143,7 @@ List the registered Images.
 
 ~~~~ {.programlisting}
 [user] $  vmlisub_image -l
-INFO:vmlisub_sub.main:Defaulting DB connection to 'sqlite:///vmilsubscriber.db'
+INFO:vmcatcher_subscribe.main:Defaulting DB connection to 'sqlite:///vmilsubscriber.db'
 327016b0-6508-41d2-bce0-c1724cb3d3e2    0       63175437-7d59-4851-b333-c96cb6545a86
 858a817e-0ca2-473f-89d3-d5bdfc51968e    0       63175437-7d59-4851-b333-c96cb6545a86
 da42ca85-179b-4873-b12e-32d549bf02b6    0       63175437-7d59-4851-b333-c96cb6545a86
@@ -157,7 +157,7 @@ Now we will select an image for local caching.
 Next update the subscriptions.
 
 ~~~~ {.programlisting}
-[user] $  vmlisub_sub -U
+[user] $  vmcatcher_subscribe -U
 INFO:main:Defaulting DB connection to 'sqlite:///vmilsubscriber.db'
 INFO:db_actions:Updating:63175437-7d59-4851-b333-c96cb6545a86
 ~~~~
@@ -168,7 +168,7 @@ they can be cached:
 
 ~~~~ {.programlisting}
 [user] $  vmlisub_image -l
-INFO:vmlisub_sub.main:Defaulting DB connection to 'sqlite:///vmilsubscriber.db'
+INFO:vmcatcher_subscribe.main:Defaulting DB connection to 'sqlite:///vmilsubscriber.db'
 327016b0-6508-41d2-bce0-c1724cb3d3e2    2       63175437-7d59-4851-b333-c96cb6545a86
 858a817e-0ca2-473f-89d3-d5bdfc51968e    2       63175437-7d59-4851-b333-c96cb6545a86
 da42ca85-179b-4873-b12e-32d549bf02b6    2       63175437-7d59-4851-b333-c96cb6545a86
@@ -179,14 +179,14 @@ Thsi now shows the images are available in the latest
 
 ~~~~ {.programlisting}
 [user] $  vmlisub_image -a -u 858a817e-0ca2-473f-89d3-d5bdfc51968e
-INFO:vmlisub_sub.main:Defaulting DB connection to 'sqlite:///vmilsubscriber.db'
+INFO:vmcatcher_subscribe.main:Defaulting DB connection to 'sqlite:///vmilsubscriber.db'
 ~~~~
 
 The `Virtual Machine Image List`{.literal} state is now changed to
 
 ~~~~ {.programlisting}
 [user] $  vmlisub_image -l
-INFO:vmlisub_sub.main:Defaulting DB connection to 'sqlite:///vmilsubscriber.db'
+INFO:vmcatcher_subscribe.main:Defaulting DB connection to 'sqlite:///vmilsubscriber.db'
 327016b0-6508-41d2-bce0-c1724cb3d3e2    2       63175437-7d59-4851-b333-c96cb6545a86
 858a817e-0ca2-473f-89d3-d5bdfc51968e    3       63175437-7d59-4851-b333-c96cb6545a86
 da42ca85-179b-4873-b12e-32d549bf02b6    2       63175437-7d59-4851-b333-c96cb6545a86
@@ -205,7 +205,7 @@ Now cache the images.
 
 ~~~~ {.programlisting}
 [user] $  vmlisub_cache
-INFO:vmlisub_sub.main:Defaulting DB connection to 'sqlite:///vmilsubscriber.db'
+INFO:vmcatcher_subscribe.main:Defaulting DB connection to 'sqlite:///vmilsubscriber.db'
 INFO:DownloadDir:Downloading '858a817e-0ca2-473f-89d3-d5bdfc51968e'.
 INFO:CacheMan:moved file 858a817e-0ca2-473f-89d3-d5bdfc51968e
 ~~~~
@@ -250,7 +250,7 @@ Then the by hand configuration for your master DB
 ~~~~
 
 ~~~~ {.programlisting}
-[root] #  sudo -u vmlisub /usr/bin/vmlisub_sub \
+[root] #  sudo -u vmlisub /usr/bin/vmcatcher_subscribe \
       -s https://cernvm.cern.ch/releases/image.list \
       -d sqlite:////var/lib/vmlisub/vmlisub.db
 ~~~~
@@ -259,7 +259,7 @@ make a cron job
 
 ~~~~ {.programlisting}
 [root] #  cat   /etc/cron.d/vmlisub
-50 */6 * * *    vmlisub (/usr/bin/vmlisub_sub -d sqlite:////var/lib/vmlisub/vmlisub.db -U; /usr/bin/vmlisub_cache -d sqlite:////var/lib/vmlisub/vmlisub.db -C /var/cache/vmimages/endorsed/ -p /var/cache/vmimages/partial/ -e /var/cache/vmimages/expired/ ) >> /var/log/vmlisub.log 2>&1
+50 */6 * * *    vmlisub (/usr/bin/vmcatcher_subscribe -d sqlite:////var/lib/vmlisub/vmlisub.db -U; /usr/bin/vmlisub_cache -d sqlite:////var/lib/vmlisub/vmlisub.db -C /var/cache/vmimages/endorsed/ -p /var/cache/vmimages/partial/ -e /var/cache/vmimages/expired/ ) >> /var/log/vmlisub.log 2>&1
 ~~~~
 
 So the script is executed every 6 hours shortly after fetch CRL.
@@ -588,33 +588,33 @@ This application manages your subscriptions and thier update:
 To add a subscription
 
 ~~~~ {.programlisting}
-[user] $  vmlisub_sub  -s https://cernvm.cern.ch/releases/image.list
+[user] $  vmcatcher_subscribe  -s https://cernvm.cern.ch/releases/image.list
 ~~~~
 
 Or alternatively you can download a file visually insepect it and
 subscribe to the local file.
 
 ~~~~ {.programlisting}
-[user] $  vmlisub_sub  -s file:////`pwd`/hepix_signed_image_list
+[user] $  vmcatcher_subscribe  -s file:////`pwd`/hepix_signed_image_list
 ~~~~
 
 To update your subscriptions
 
 ~~~~ {.programlisting}
-[user] $  vmlisub_sub  -U
+[user] $  vmcatcher_subscribe  -U
 ~~~~
 
 To list subscriptions
 
 ~~~~ {.programlisting}
-[user] $  vmlisub_sub  -l
+[user] $  vmcatcher_subscribe  -l
 63175437-7d59-4851-b333-c96cb6545a86    True    https://cernvm.cern.ch/releases/image.list
 ~~~~
 
 Getting Information on a subscription:
 
 ~~~~ {.programlisting}
-[user] $  vmlisub_sub  -i --uuid=63175437-7d59-4851-b333-c96cb6545a86
+[user] $  vmcatcher_subscribe  -i --uuid=63175437-7d59-4851-b333-c96cb6545a86
 dc:identifier=63175437-7d59-4851-b333-c96cb6545a86
 subscription.dc:description=CERN Virtual Machine
 subscription.sl:authorised=True
@@ -628,7 +628,7 @@ imagelist.dc:date:expires=2011-04-13T00:15:07Z
 you can also select on the basis of url:
 
 ~~~~ {.programlisting}
-[user] $  vmlisub_sub  -i -r https://cernvm.cern.ch/releases/image.list
+[user] $  vmcatcher_subscribe  -i -r https://cernvm.cern.ch/releases/image.list
 dc:identifier=63175437-7d59-4851-b333-c96cb6545a86
 subscription.dc:description=CERN Virtual Machine
 subscription.sl:authorised=True
@@ -643,7 +643,7 @@ Change the output format to get the original message without the
 security wraper, or in original form:
 
 ~~~~ {.programlisting}
-[user] $  vmlisub_sub  -i --uuid=63175437-7d59-4851-b333-c96cb6545a86 -f message
+[user] $  vmcatcher_subscribe  -i --uuid=63175437-7d59-4851-b333-c96cb6545a86 -f message
 ~~~~
 
 Three formats exist SMIME, message, lines.
@@ -657,7 +657,7 @@ Three formats exist SMIME, message, lines.
 To delete a subscription
 
 ~~~~ {.programlisting}
-[user] $  vmlisub_sub  -D  --uuid=63175437-7d59-4851-b333-c96cb6545a86
+[user] $  vmcatcher_subscribe  -D  --uuid=63175437-7d59-4851-b333-c96cb6545a86
 ~~~~
 
 
@@ -715,11 +715,11 @@ check the sha512 hash of cached images and expire images from old
 
 ~~~~ {.programlisting}
 [user] $  vmlisub_cache
-INFO:vmlisub_sub.main:Defaulting DB connection to 'sqlite:///vmilsubscriber.db'
-INFO:vmlisub_sub.main:Defaulting actions as 'expire', 'sha512' and 'download'.
-INFO:vmlisub_sub.main:Defaulting cache-dir to 'cache'.
-INFO:vmlisub_sub.main:Defaulting partial-dir to 'cache/partial'.
-INFO:vmlisub_sub.main:Defaulting expired-dir to 'cache/expired'.
+INFO:vmcatcher_subscribe.main:Defaulting DB connection to 'sqlite:///vmilsubscriber.db'
+INFO:vmcatcher_subscribe.main:Defaulting actions as 'expire', 'sha512' and 'download'.
+INFO:vmcatcher_subscribe.main:Defaulting cache-dir to 'cache'.
+INFO:vmcatcher_subscribe.main:Defaulting partial-dir to 'cache/partial'.
+INFO:vmcatcher_subscribe.main:Defaulting expired-dir to 'cache/expired'.
 INFO:DownloadDir:Downloading '858a817e-0ca2-473f-89d3-d5bdfc51968e'.
 INFO:CacheMan:moved file 858a817e-0ca2-473f-89d3-d5bdfc51968e
 ~~~~
