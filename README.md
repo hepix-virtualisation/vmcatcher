@@ -19,7 +19,7 @@ without having to further validate the images.
 
 This software is available at:
 
-`https://github.com/hepix-virtualisation/hepixvmilsubscriber`{.code}
+`https://github.com/hepix-virtualisation/hepixvmcatcher`{.code}
 
 The software is based upon a simple database that stores subscriptions
 to `Virtual Machine Image List`{.literal}s, who can sign the
@@ -75,7 +75,7 @@ but rather for virtual machines, authenticated by the x509 signatures.
 
 
 
-### Quick start use of hepixvmilsubscriber
+### Quick start use of hepixvmcatcher
 
 First make sure that all the Certificate Revocation Lists (CRL) are upto
 date.
@@ -125,7 +125,7 @@ authority.
 
 ~~~~ {.programlisting}
 [user] $  vmcatcher_subscribe -s file:////`pwd`/hepix_signed_image_list
-INFO:main:Defaulting DB connection to 'sqlite:///vmilsubscriber.db'
+INFO:main:Defaulting DB connection to 'sqlite:///vmcatcher.db'
 WARNING:db_actions:list hv:uri does not match subscription uri
 ~~~~
 
@@ -135,7 +135,7 @@ certificates are auto added to the database when subscribing.
 
 ~~~~ {.programlisting}
 [user] $  vmcatcher_subscribe  --auto-endorse -s file:////`pwd`/hepix_signed_image_list
-INFO:main:Defaulting DB connection to 'sqlite:///vmilsubscriber.db'
+INFO:main:Defaulting DB connection to 'sqlite:///vmcatcher.db'
 WARNING:db_actions:list hv:uri does not match subscription uri
 ~~~~
 
@@ -143,7 +143,7 @@ List the registered Images.
 
 ~~~~ {.programlisting}
 [user] $  vmcatcher_image -l
-INFO:vmcatcher_subscribe.main:Defaulting DB connection to 'sqlite:///vmilsubscriber.db'
+INFO:vmcatcher_subscribe.main:Defaulting DB connection to 'sqlite:///vmcatcher.db'
 327016b0-6508-41d2-bce0-c1724cb3d3e2    0       63175437-7d59-4851-b333-c96cb6545a86
 858a817e-0ca2-473f-89d3-d5bdfc51968e    0       63175437-7d59-4851-b333-c96cb6545a86
 da42ca85-179b-4873-b12e-32d549bf02b6    0       63175437-7d59-4851-b333-c96cb6545a86
@@ -158,7 +158,7 @@ Next update the subscriptions.
 
 ~~~~ {.programlisting}
 [user] $  vmcatcher_subscribe -U
-INFO:main:Defaulting DB connection to 'sqlite:///vmilsubscriber.db'
+INFO:main:Defaulting DB connection to 'sqlite:///vmcatcher.db'
 INFO:db_actions:Updating:63175437-7d59-4851-b333-c96cb6545a86
 ~~~~
 
@@ -168,7 +168,7 @@ they can be cached:
 
 ~~~~ {.programlisting}
 [user] $  vmcatcher_image -l
-INFO:vmcatcher_subscribe.main:Defaulting DB connection to 'sqlite:///vmilsubscriber.db'
+INFO:vmcatcher_subscribe.main:Defaulting DB connection to 'sqlite:///vmcatcher.db'
 327016b0-6508-41d2-bce0-c1724cb3d3e2    2       63175437-7d59-4851-b333-c96cb6545a86
 858a817e-0ca2-473f-89d3-d5bdfc51968e    2       63175437-7d59-4851-b333-c96cb6545a86
 da42ca85-179b-4873-b12e-32d549bf02b6    2       63175437-7d59-4851-b333-c96cb6545a86
@@ -179,14 +179,14 @@ Thsi now shows the images are available in the latest
 
 ~~~~ {.programlisting}
 [user] $  vmcatcher_image -a -u 858a817e-0ca2-473f-89d3-d5bdfc51968e
-INFO:vmcatcher_subscribe.main:Defaulting DB connection to 'sqlite:///vmilsubscriber.db'
+INFO:vmcatcher_subscribe.main:Defaulting DB connection to 'sqlite:///vmcatcher.db'
 ~~~~
 
 The `Virtual Machine Image List`{.literal} state is now changed to
 
 ~~~~ {.programlisting}
 [user] $  vmcatcher_image -l
-INFO:vmcatcher_subscribe.main:Defaulting DB connection to 'sqlite:///vmilsubscriber.db'
+INFO:vmcatcher_subscribe.main:Defaulting DB connection to 'sqlite:///vmcatcher.db'
 327016b0-6508-41d2-bce0-c1724cb3d3e2    2       63175437-7d59-4851-b333-c96cb6545a86
 858a817e-0ca2-473f-89d3-d5bdfc51968e    3       63175437-7d59-4851-b333-c96cb6545a86
 da42ca85-179b-4873-b12e-32d549bf02b6    2       63175437-7d59-4851-b333-c96cb6545a86
@@ -205,7 +205,7 @@ Now cache the images.
 
 ~~~~ {.programlisting}
 [user] $  vmcatcher_cache
-INFO:vmcatcher_subscribe.main:Defaulting DB connection to 'sqlite:///vmilsubscriber.db'
+INFO:vmcatcher_subscribe.main:Defaulting DB connection to 'sqlite:///vmcatcher.db'
 INFO:DownloadDir:Downloading '858a817e-0ca2-473f-89d3-d5bdfc51968e'.
 INFO:CacheMan:moved file 858a817e-0ca2-473f-89d3-d5bdfc51968e
 ~~~~
@@ -337,7 +337,7 @@ install fetch-crl
 ~~~~
 
 ~~~~ {.programlisting}
-[root] # yum install hepixvmilsubscriber
+[root] # yum install hepixvmcatcher
 ~~~~
 
 
@@ -389,7 +389,7 @@ install fetch-crl
 Install the hepix `Virtual Machine Image List`{.literal} subscriber.
 
 ~~~~ {.programlisting}
-[root] # yum install hepixvmilsubscriber
+[root] # yum install hepixvmcatcher
 ~~~~
 
 This may fail due to a dependency of m2crypto that cannot be satisfied.
@@ -500,23 +500,23 @@ Saving to: `smimeX509validation-0.0.7.tar.gz'
 [root] # cd ..
 ~~~~
 
-The leatest version of hepixvmilsubscriber-X.X.XX.tar.gz shoudl be
+The leatest version of hepixvmcatcher-X.X.XX.tar.gz shoudl be
 downloaded extracted and installed.
 
 ~~~~ {.programlisting}
 [root] # 
-[root] # wget http://grid.desy.de/vm/repo/yum/sl5/noarch/tgz/hepixvmilsubscriber-0.1.14.tar.gz
+[root] # wget http://grid.desy.de/vm/repo/yum/sl5/noarch/tgz/hepixvmcatcher-0.1.14.tar.gz
 Resolving grid.desy.de (grid.desy.de)... 131.169.180.46
 Connecting to grid.desy.de (grid.desy.de)|131.169.180.46|:80... connected.
 HTTP request sent, awaiting response... 200 OK
 Length: 19922 (19K) [application/x-tar]
-Saving to: `hepixvmilsubscriber-0.1.14.tar.gz'
+Saving to: `hepixvmcatcher-0.1.14.tar.gz'
 
 100%[======================================>] 19,922      --.-K/s   in 0.05s   
 
-2012-05-28 19:45:45 (413 KB/s) - `hepixvmilsubscriber-0.1.14.tar.gz' saved [19922/19922]
-[root] # tar -zxf hepixvmilsubscriber-0.1.14.tar.gz 
-[root] # cd hepixvmilsubscriber-0.1.14
+2012-05-28 19:45:45 (413 KB/s) - `hepixvmcatcher-0.1.14.tar.gz' saved [19922/19922]
+[root] # tar -zxf hepixvmcatcher-0.1.14.tar.gz 
+[root] # cd hepixvmcatcher-0.1.14
 [root] # python setup install
 [root] # echo $?
 [root] # cd ..
@@ -537,7 +537,7 @@ ndividuals on rare occasions will need more than one certificate, for
 this reason they are given a unique identifier under this system and
 allowed to have more than one set of credentials.
 
-Adding a individual to the vmli database.
+Adding a individual to the vmcatcher database.
 
 ~~~~ {.programlisting}
 [user] $  vmcatcher_endorser --create \
@@ -546,7 +546,7 @@ Adding a individual to the vmli database.
        --issuer='/DC=ch/DC=cern/CN=CERN Trusted Certification Authority'
 ~~~~
 
-Deleting and individual from a vmli database.
+Deleting and individual from a vmcatcher database.
 
 ~~~~ {.programlisting}
 [user] $  vmcatcher_endorser --delete \
@@ -715,7 +715,7 @@ check the sha512 hash of cached images and expire images from old
 
 ~~~~ {.programlisting}
 [user] $  vmcatcher_cache
-INFO:vmcatcher_subscribe.main:Defaulting DB connection to 'sqlite:///vmilsubscriber.db'
+INFO:vmcatcher_subscribe.main:Defaulting DB connection to 'sqlite:///vmcatcher.db'
 INFO:vmcatcher_subscribe.main:Defaulting actions as 'expire', 'sha512' and 'download'.
 INFO:vmcatcher_subscribe.main:Defaulting cache-dir to 'cache'.
 INFO:vmcatcher_subscribe.main:Defaulting partial-dir to 'cache/partial'.
@@ -885,7 +885,7 @@ All scripts have a logging option. This is used to configure pythons
 logging library. An example is shown below.
 
 ~~~~ {.programlisting}
-[user] $  vmcatcher_image -L /usr/share/doc/hepixvmilsubscriber/logger.conf -l
+[user] $  vmcatcher_image -L /usr/share/doc/hepixvmcatcher/logger.conf -l
 ~~~~
 
 Logging can be independently set up for each object to multiple
@@ -902,7 +902,7 @@ line options will override any set environment options.
 
 ##### VMILS\_RDBMS
 
-Sets the path to the database. For example "sqlite:///vmilsubscriber.db"
+Sets the path to the database. For example "sqlite:///vmcatcher.db"
 
 
 
