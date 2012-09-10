@@ -178,32 +178,32 @@ class EventObj(object):
 
     def eventProcess(self,EventStr,metadata):
         # Note keys 'sha512', 'uuid','size' are depricated.
-        mappingdict = {'sha512' : 'VMILS_EVENT_SL_CHECKSUM_SHA512',
-            'uuid' : 'VMILS_EVENT_DC_IDENTIFIER',
-            'size' : 'VMILS_EVENT_HV_SIZE',
-            'sha512' : 'VMILS_EVENT_SL_CHECKSUM_SHA512',
+        mappingdict = {'sha512' : 'VMCATCHER_EVENT_SL_CHECKSUM_SHA512',
+            'uuid' : 'VMCATCHER_EVENT_DC_IDENTIFIER',
+            'size' : 'VMCATCHER_EVENT_HV_SIZE',
+            'sha512' : 'VMCATCHER_EVENT_SL_CHECKSUM_SHA512',
             # End of depricated options
-            'filename' : 'VMILS_EVENT_FILENAME',
-            'dc:identifier' : 'VMILS_EVENT_DC_IDENTIFIER',
-            'hv:uri' : 'VMILS_EVENT_HV_URI',
-            'hv:size' : 'VMILS_EVENT_HV_SIZE',
-            'dc:description' : 'VMILS_EVENT_DC_DESCRIPTION',
-            'dc:title' : 'VMILS_EVENT_DC_TITLE',
-            'hv:hypervisor' : 'VMILS_EVENT_HV_HYPERVISOR',
-            'hv:version' : 'VMILS_EVENT_HV_VERSION',
-            'sl:arch' : 'VMILS_EVENT_SL_ARCH',
-            'sl:comments' : 'VMILS_EVENT_SL_COMMENTS',
-            'sl:os' : 'VMILS_EVENT_SL_OS',
-            'sl:osversion' : 'VMILS_EVENT_SL_OSVERSION',
-            'sl:checksum:sha512' : 'VMILS_EVENT_SL_CHECKSUM_SHA512'}
+            'filename' : 'VMCATCHER_EVENT_FILENAME',
+            'dc:identifier' : 'VMCATCHER_EVENT_DC_IDENTIFIER',
+            'hv:uri' : 'VMCATCHER_EVENT_HV_URI',
+            'hv:size' : 'VMCATCHER_EVENT_HV_SIZE',
+            'dc:description' : 'VMCATCHER_EVENT_DC_DESCRIPTION',
+            'dc:title' : 'VMCATCHER_EVENT_DC_TITLE',
+            'hv:hypervisor' : 'VMCATCHER_EVENT_HV_HYPERVISOR',
+            'hv:version' : 'VMCATCHER_EVENT_HV_VERSION',
+            'sl:arch' : 'VMCATCHER_EVENT_SL_ARCH',
+            'sl:comments' : 'VMCATCHER_EVENT_SL_COMMENTS',
+            'sl:os' : 'VMCATCHER_EVENT_SL_OS',
+            'sl:osversion' : 'VMCATCHER_EVENT_SL_OSVERSION',
+            'sl:checksum:sha512' : 'VMCATCHER_EVENT_SL_CHECKSUM_SHA512'}
         newEnv = self.env
-        newEnv['VMILS_EVENT_TYPE'] = EventStr
+        newEnv['VMCATCHER_EVENT_TYPE'] = EventStr
         for key in mappingdict.keys():
             if key in metadata.keys():
                 newEnv[str(mappingdict[key])] = str(metadata[key])
         rc,stdout,stderr = self.launch(newEnv)
         if rc != 0:
-            self.log.error("Event command '%s' exit code '%s' failed for VMILS_EVENT_TYPE='%s'." % (self.eventExecutionString,rc,newEnv['VMILS_EVENT_TYPE']))
+            self.log.error("Event command '%s' exit code '%s' failed for VMCATCHER_EVENT_TYPE='%s'." % (self.eventExecutionString,rc,newEnv['VMCATCHER_EVENT_TYPE']))
             self.log.info("stdout=%s" % (stdout))
             self.log.info("stderr=%s" % (stderr))
             return
@@ -923,14 +923,14 @@ def main():
     logFile = None
     certDir = None
     eventExecutionString = None
-    if 'VMILS_RDBMS' in os.environ:
-        databaseConnectionString = os.environ['VMILS_RDBMS']
-    if 'VMILS_LOG_CONF' in os.environ:
-        logFile = os.environ['VMILS_LOG_CONF']
-    if 'VMILS_DIR_CERT' in os.environ:
-        certDir = os.environ['VMILS_DIR_CERT']
-    if 'VMILS_SUB_EVENT' in os.environ:
-        eventExecutionString = os.environ['VMILS_SUB_EVENT']
+    if 'VMCATCHER_RDBMS' in os.environ:
+        databaseConnectionString = os.environ['VMCATCHER_RDBMS']
+    if 'VMCATCHER_LOG_CONF' in os.environ:
+        logFile = os.environ['VMCATCHER_LOG_CONF']
+    if 'VMCATCHER_DIR_CERT' in os.environ:
+        certDir = os.environ['VMCATCHER_DIR_CERT']
+    if 'VMCATCHER_SUB_EVENT' in os.environ:
+        eventExecutionString = os.environ['VMCATCHER_SUB_EVENT']
     # Set up log file
     LoggingLevel = logging.WARNING
     LoggingLevelCounter = 2

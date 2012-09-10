@@ -414,12 +414,12 @@ def main():
     certDir = None
     logFile = None
     
-    if 'VMILS_RDBMS' in os.environ:
-        databaseConnectionString = os.environ['VMILS_RDBMS']
-    if 'VMILS_LOG_CONF' in os.environ:
-        logFile = os.environ['VMILS_LOG_CONF']
-    if 'VMILS_DIR_CERT' in os.environ:
-        certDir = os.environ['VMILS_DIR_CERT']
+    if 'VMCATCHER_RDBMS' in os.environ:
+        databaseConnectionString = os.environ['VMCATCHER_RDBMS']
+    if 'VMCATCHER_LOG_CONF' in os.environ:
+        logFile = os.environ['VMCATCHER_LOG_CONF']
+    if 'VMCATCHER_DIR_CERT' in os.environ:
+        certDir = os.environ['VMCATCHER_DIR_CERT']
     
     
     # Set up log file

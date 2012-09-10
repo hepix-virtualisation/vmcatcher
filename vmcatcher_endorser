@@ -416,10 +416,10 @@ def main():
     databaseConnectionString = None
     logFile = None
     
-    if 'VMILS_RDBMS' in os.environ:
-        databaseConnectionString = os.environ['VMILS_RDBMS']
-    if 'VMILS_LOG_CONF' in os.environ:
-        logFile = os.environ['VMILS_LOG_CONF']
+    if 'VMCATCHER_RDBMS' in os.environ:
+        databaseConnectionString = os.environ['VMCATCHER_RDBMS']
+    if 'VMCATCHER_LOG_CONF' in os.environ:
+        logFile = os.environ['VMCATCHER_LOG_CONF']
     # Set up log file
     LoggingLevel = logging.WARNING
     LoggingLevelCounter = 2

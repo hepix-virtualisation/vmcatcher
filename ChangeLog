@@ -53,7 +53,7 @@ vmcatcher-0.1.14
  * vmcatcher_cache: Now testing the Event interface.
  * vmcatcher_subscribe: Added event interface.
  * vmcatcher_subscribe: Added event ImageNew when a new image is added to image list.
- * vmcatcher_subscribe: Added enviroment variable VMILS_SUB_EVENT to set event action.
+ * vmcatcher_subscribe: Added enviroment variable VMCATCHER_SUB_EVENT to set event action.
  * vmcatcher_subscribe: Changed event commadn line to '-x', '--execute' from 
      '-E', '--even-action'.
 
@@ -76,7 +76,7 @@ vmcatcher-0.1.12
 vmcatcher-0.1.11
 
 * Corrected Typos in the README.
-* Added Environment variable VMILS_CACHE_EVENT
+* Added Environment variable VMCATCHER_CACHE_EVENT
 * Significant change to the organisation of the the README.
 * Added details about the event interface to the README.
 

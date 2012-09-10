@@ -735,7 +735,7 @@ an event interface so that applicatyions may embed these applications in
 larger systems.
 
 ~~~~ {.programlisting}
-[user] $  vmcatcher_cache -x "/usr/bin/VmImageUpdateProcessor \$VMILS_EVENT_TYPE"
+[user] $  vmcatcher_cache -x "/usr/bin/VmImageUpdateProcessor \$VMCATCHER_EVENT_TYPE"
 ~~~~
 
 The events interface launches a shell with a series of environment
@@ -747,7 +747,7 @@ it will be sent a termination signal. See the following example:
 ~~~~
 
 All Events have a type. This is given to the event handler by setting
-the variable, VMILS\_EVENT\_TYPE with the following values
+the variable, VMCATCHER\_EVENT\_TYPE with the following values
 "AvailablePrefix", "AvailablePostfix", "ExpirePrefix" and
 "ExpirePosfix".
 
@@ -758,20 +758,20 @@ occur after the state change.
 
 The following environment variables may be set by events:
 
--   VMILS\_EVENT\_TYPE
--   VMILS\_EVENT\_DC\_DESCRIPTION
--   VMILS\_EVENT\_DC\_IDENTIFIER
--   VMILS\_EVENT\_DC\_TITLE
--   VMILS\_EVENT\_HV\_HYPERVISOR
--   VMILS\_EVENT\_HV\_SIZE
--   VMILS\_EVENT\_HV\_URI
--   VMILS\_EVENT\_SL\_ARCH
--   VMILS\_EVENT\_SL\_CHECKSUM\_SHA512
--   VMILS\_EVENT\_SL\_COMMENTS
--   VMILS\_EVENT\_SL\_OS
--   VMILS\_EVENT\_SL\_OSVERSION
--   VMILS\_EVENT\_TYPE
--   VMILS\_EVENT\_FILENAME
+-   VMCATCHER\_EVENT\_TYPE
+-   VMCATCHER\_EVENT\_DC\_DESCRIPTION
+-   VMCATCHER\_EVENT\_DC\_IDENTIFIER
+-   VMCATCHER\_EVENT\_DC\_TITLE
+-   VMCATCHER\_EVENT\_HV\_HYPERVISOR
+-   VMCATCHER\_EVENT\_HV\_SIZE
+-   VMCATCHER\_EVENT\_HV\_URI
+-   VMCATCHER\_EVENT\_SL\_ARCH
+-   VMCATCHER\_EVENT\_SL\_CHECKSUM\_SHA512
+-   VMCATCHER\_EVENT\_SL\_COMMENTS
+-   VMCATCHER\_EVENT\_SL\_OS
+-   VMCATCHER\_EVENT\_SL\_OSVERSION
+-   VMCATCHER\_EVENT\_TYPE
+-   VMCATCHER\_EVENT\_FILENAME
 
 These correspond to the variables within the
 `Virtual Machine Image List`{.literal}.
@@ -782,7 +782,7 @@ These correspond to the variables within the
 
 
 
-###### VMILS\_EVENT\_TYPE
+###### VMCATCHER\_EVENT\_TYPE
 
 -   AvailablePrefix
 
@@ -804,13 +804,13 @@ These correspond to the variables within the
 
 
 
-###### VMILS\_EVENT\_DC\_DESCRIPTION
+###### VMCATCHER\_EVENT\_DC\_DESCRIPTION
 
 The description text in the image.
 
 
 
-###### VMILS\_EVENT\_DC\_IDENTIFIER
+###### VMCATCHER\_EVENT\_DC\_IDENTIFIER
 
 Unique identifier of the image. Its suggested that image producers use
 RFC 4122 UUID for `Virtual Machine Image List`{.literal} this allows
@@ -818,62 +818,62 @@ updating the list, and uniqueness.
 
 
 
-###### VMILS\_EVENT\_DC\_TITLE
+###### VMCATCHER\_EVENT\_DC\_TITLE
 
 Image Title.
 
 
 
-###### VMILS\_EVENT\_HV\_HYPERVISOR
+###### VMCATCHER\_EVENT\_HV\_HYPERVISOR
 
 Typically set to reflect the Virtualization technology values such as
 "xen", "kvm".
 
 
 
-###### VMILS\_EVENT\_HV\_SIZE
+###### VMCATCHER\_EVENT\_HV\_SIZE
 
 The Image Size
 
 
 
-###### VMILS\_EVENT\_HV\_URI
+###### VMCATCHER\_EVENT\_HV\_URI
 
 The Original URI for the image
 
 
 
-###### VMILS\_EVENT\_SL\_ARCH
+###### VMCATCHER\_EVENT\_SL\_ARCH
 
 The images architecture.
 
 
 
-###### VMILS\_EVENT\_SL\_CHECKSUM\_SHA512
+###### VMCATCHER\_EVENT\_SL\_CHECKSUM\_SHA512
 
 The Images sha512 checksum.
 
 
 
-###### VMILS\_EVENT\_SL\_COMMENTS
+###### VMCATCHER\_EVENT\_SL\_COMMENTS
 
 Comments added by the image author
 
 
 
-###### VMILS\_EVENT\_SL\_OS
+###### VMCATCHER\_EVENT\_SL\_OS
 
 The Operating System the VM image contains
 
 
 
-###### VMILS\_EVENT\_SL\_OSVERSION
+###### VMCATCHER\_EVENT\_SL\_OSVERSION
 
 The Operating System version
 
 
 
-###### VMILS\_EVENT\_FILENAME
+###### VMCATCHER\_EVENT\_FILENAME
 
 The Image file name.
 
@@ -900,13 +900,13 @@ line options will override any set environment options.
 
 
 
-##### VMILS\_RDBMS
+##### VMCATCHER\_RDBMS
 
 Sets the path to the database. For example "sqlite:///vmcatcher.db"
 
 
 
-##### VMILS\_CACHE\_EVENT
+##### VMCATCHER\_CACHE\_EVENT
 
 Sets the executions string. Command line options can be set as
 enviroment variables just like the command line interface. Users of the
@@ -914,61 +914,61 @@ enviroment variables just like the command line interface. Users of the
 by thier shell.
 
 ~~~~ {.programlisting}
-[user] $  export VMILS_CACHE_EVENT="./myEventProcessor \$VMILS_EVENT_TYPE"
+[user] $  export VMCATCHER_CACHE_EVENT="./myEventProcessor \$VMCATCHER_EVENT_TYPE"
 ~~~~
 
 An example of how to execute a command with an action command line.
 
 
 
-##### VMILS\_LOG\_CONF
+##### VMCATCHER\_LOG\_CONF
 
 Sets the path to the logging configuration file.
 
 
 
-##### VMILS\_DIR\_CERT
+##### VMCATCHER\_DIR\_CERT
 
 Sets the Path to the certificate authorities public keys, certificate
 revocation lists and certificate name spaces.
 
 
 
-##### VMILS\_CACHE\_DIR\_CACHE
+##### VMCATCHER\_CACHE\_DIR\_CACHE
 
 Path used by ’vmcatcher\_endorser’ to store verified VM images.
 
 
 
-##### VMILS\_CACHE\_DIR\_DOWNLOAD
+##### VMCATCHER\_CACHE\_DIR\_DOWNLOAD
 
 Path used by ’vmcatcher\_endorser’ to download VM images before VM image
 integrity is checked.
 
 
 
-##### VMILS\_CACHE\_DIR\_EXPIRE
+##### VMCATCHER\_CACHE\_DIR\_EXPIRE
 
 Path used by ’vmcatcher\_endorser’ to store VM images when they are no
 longer endorsed.
 
 
 
-##### VMILS\_CACHE\_ACTION\_DOWNLOAD
+##### VMCATCHER\_CACHE\_ACTION\_DOWNLOAD
 
 Instructs ’vmcatcher\_endorser’ to download the latest VM images and check
 integrity.
 
 
 
-##### VMILS\_CACHE\_ACTION\_CHECK
+##### VMCATCHER\_CACHE\_ACTION\_CHECK
 
 Instructs ’vmcatcher\_endorser’ check integrity for all currently stored
 VM images.
 
 
 
-##### VMILS\_CACHE\_ACTION\_EXPIRE
+##### VMCATCHER\_CACHE\_ACTION\_EXPIRE
 
 Instructs ’vmcatcher\_endorser’ to expire stored VM images that are no
 longer endorsed.
