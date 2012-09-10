@@ -50,7 +50,7 @@ archive.
 
 -   vmcatcher\_endorser - Endorsers of
     `Virtual Machine Image List`{.literal} subscriptions.
--   vmcatcher\_sub - Subscription list details.
+-   vmcatcher\_subscribe - Subscription list details.
 -   vmcatcher\_image - Image details.
 -   vmcatcher\_cache - Cache images and update events.
 
@@ -581,7 +581,7 @@ same item. The endorser\_uuid could be a more human name:
 
 
 
-#### vmcatcher\_sub
+#### vmcatcher\_subscribe
 
 This application manages your subscriptions and thier update:
 
