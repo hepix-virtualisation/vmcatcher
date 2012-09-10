@@ -103,7 +103,7 @@ Now create this endorser. The endorser\_uuid can be any string but its
 recommended this is a short string possibly following the uuid standard:
 
 ~~~~ {.programlisting}
-[user] $  vmlisub_endorser --create \
+[user] $  vmcatcher_endorser --create \
        --endorser_uuid='Ian' \
        --subject='/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=buncic/CN=379010/CN=Predrag Buncic' \
        --issuer='/DC=ch/DC=cern/CN=CERN Trusted Certification Authority'
@@ -113,7 +113,7 @@ Now we can add the subscription, this will automatically link the
 endorser with this subscription.
 
 ~~~~ {.programlisting}
-[user] $  vmlisub_endorser -l
+[user] $  vmcatcher_endorser -l
 Ian    '/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=buncic/CN=379010/CN=Predrag Buncic'        '/DC=ch/DC=cern/CN=CERN Trusted Certification Authority'
 ~~~~
 
@@ -142,7 +142,7 @@ WARNING:db_actions:list hv:uri does not match subscription uri
 List the registered Images.
 
 ~~~~ {.programlisting}
-[user] $  vmlisub_image -l
+[user] $  vmcatcher_image -l
 INFO:vmcatcher_subscribe.main:Defaulting DB connection to 'sqlite:///vmilsubscriber.db'
 327016b0-6508-41d2-bce0-c1724cb3d3e2    0       63175437-7d59-4851-b333-c96cb6545a86
 858a817e-0ca2-473f-89d3-d5bdfc51968e    0       63175437-7d59-4851-b333-c96cb6545a86
@@ -167,7 +167,7 @@ Now the data base contains the latest version of the
 they can be cached:
 
 ~~~~ {.programlisting}
-[user] $  vmlisub_image -l
+[user] $  vmcatcher_image -l
 INFO:vmcatcher_subscribe.main:Defaulting DB connection to 'sqlite:///vmilsubscriber.db'
 327016b0-6508-41d2-bce0-c1724cb3d3e2    2       63175437-7d59-4851-b333-c96cb6545a86
 858a817e-0ca2-473f-89d3-d5bdfc51968e    2       63175437-7d59-4851-b333-c96cb6545a86
@@ -178,14 +178,14 @@ Thsi now shows the images are available in the latest
 `Virtual Machine Image List`{.literal}.
 
 ~~~~ {.programlisting}
-[user] $  vmlisub_image -a -u 858a817e-0ca2-473f-89d3-d5bdfc51968e
+[user] $  vmcatcher_image -a -u 858a817e-0ca2-473f-89d3-d5bdfc51968e
 INFO:vmcatcher_subscribe.main:Defaulting DB connection to 'sqlite:///vmilsubscriber.db'
 ~~~~
 
 The `Virtual Machine Image List`{.literal} state is now changed to
 
 ~~~~ {.programlisting}
-[user] $  vmlisub_image -l
+[user] $  vmcatcher_image -l
 INFO:vmcatcher_subscribe.main:Defaulting DB connection to 'sqlite:///vmilsubscriber.db'
 327016b0-6508-41d2-bce0-c1724cb3d3e2    2       63175437-7d59-4851-b333-c96cb6545a86
 858a817e-0ca2-473f-89d3-d5bdfc51968e    3       63175437-7d59-4851-b333-c96cb6545a86
@@ -204,7 +204,7 @@ Make the directories for caching the images.
 Now cache the images.
 
 ~~~~ {.programlisting}
-[user] $  vmlisub_cache
+[user] $  vmcatcher_cache
 INFO:vmcatcher_subscribe.main:Defaulting DB connection to 'sqlite:///vmilsubscriber.db'
 INFO:DownloadDir:Downloading '858a817e-0ca2-473f-89d3-d5bdfc51968e'.
 INFO:CacheMan:moved file 858a817e-0ca2-473f-89d3-d5bdfc51968e
@@ -259,7 +259,7 @@ make a cron job
 
 ~~~~ {.programlisting}
 [root] #  cat   /etc/cron.d/vmlisub
-50 */6 * * *    vmlisub (/usr/bin/vmcatcher_subscribe -d sqlite:////var/lib/vmlisub/vmlisub.db -U; /usr/bin/vmlisub_cache -d sqlite:////var/lib/vmlisub/vmlisub.db -C /var/cache/vmimages/endorsed/ -p /var/cache/vmimages/partial/ -e /var/cache/vmimages/expired/ ) >> /var/log/vmlisub.log 2>&1
+50 */6 * * *    vmlisub (/usr/bin/vmcatcher_subscribe -d sqlite:////var/lib/vmlisub/vmlisub.db -U; /usr/bin/vmcatcher_cache -d sqlite:////var/lib/vmlisub/vmlisub.db -C /var/cache/vmimages/endorsed/ -p /var/cache/vmimages/partial/ -e /var/cache/vmimages/expired/ ) >> /var/log/vmlisub.log 2>&1
 ~~~~
 
 So the script is executed every 6 hours shortly after fetch CRL.
@@ -268,7 +268,7 @@ Now at any time users with file permisions can get a list of valid
 images.
 
 ~~~~ {.programlisting}
-[user] $  vmlisub_image -l -d sqlite:////var/lib/vmlisub/vmlisub.db
+[user] $  vmcatcher_image -l -d sqlite:////var/lib/vmlisub/vmlisub.db
 ~~~~
 
 
@@ -540,7 +540,7 @@ allowed to have more than one set of credentials.
 Adding a individual to the vmli database.
 
 ~~~~ {.programlisting}
-[user] $  vmlisub_endorser --create \
+[user] $  vmcatcher_endorser --create \
        --endorser_uuid=e55c1afe-0a62-4d31-a8d7-fb8c825f92a2 \
        --subject='/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=buncic/CN=379010/CN=Predrag Buncic' \
        --issuer='/DC=ch/DC=cern/CN=CERN Trusted Certification Authority'
@@ -549,14 +549,14 @@ Adding a individual to the vmli database.
 Deleting and individual from a vmli database.
 
 ~~~~ {.programlisting}
-[user] $  vmlisub_endorser --delete \
+[user] $  vmcatcher_endorser --delete \
        --endorser_uuid=e55c1afe-0a62-4d31-a8d7-fb8c825f92a2
 ~~~~
 
 Allowing an individual to update a subscription.
 
 ~~~~ {.programlisting}
-[user] $  vmlisub_endorser --link \
+[user] $  vmcatcher_endorser --link \
        --endorser_uuid=e55c1afe-0a62-4d31-a8d7-fb8c825f92a2 \
        --subscription_uuid=63175437-7d59-4851-b333-c96cb6545a86
 ~~~~
@@ -564,7 +564,7 @@ Allowing an individual to update a subscription.
 Removing an individuals right to update a subscription.
 
 ~~~~ {.programlisting}
-[user] $  vmlisub_endorser --unlink \
+[user] $  vmcatcher_endorser --unlink \
        --endorser_uuid=e55c1afe-0a62-4d31-a8d7-fb8c825f92a2 \
        --subscription_uuid=63175437-7d59-4851-b333-c96cb6545a86
 ~~~~
@@ -573,7 +573,7 @@ Each endorser\_uuid must be unique or they will be assumed to be the
 same item. The endorser\_uuid could be a more human name:
 
 ~~~~ {.programlisting}
-[user] $  vmlisub_endorser --create \
+[user] $  vmcatcher_endorser --create \
        --endorser_uuid='Ian Gable' \
        --subject='/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=buncic/CN=379010/CN=Predrag Buncic' \
        --issuer='/DC=ch/DC=cern/CN=CERN Trusted Certification Authority'
@@ -669,7 +669,7 @@ This application manages images within your subscription.
 List the available images
 
 ~~~~ {.programlisting}
-[user] $  vmlisub_image -l
+[user] $  vmcatcher_image -l
 327016b0-6508-41d2-bce0-c1724cb3d3e2    2       63175437-7d59-4851-b333-c96cb6545a86
 858a817e-0ca2-473f-89d3-d5bdfc51968e    3       63175437-7d59-4851-b333-c96cb6545a86
 da42ca85-179b-4873-b12e-32d549bf02b6    2       63175437-7d59-4851-b333-c96cb6545a86
@@ -690,19 +690,19 @@ explicit selection of images or by the sha512 from an old image.
 Delete the subscription by image.
 
 ~~~~ {.programlisting}
-[user] $  vmlisub_image -D -u 327016b0-6508-41d2-bce0-c1724cb3d3e2
+[user] $  vmcatcher_image -D -u 327016b0-6508-41d2-bce0-c1724cb3d3e2
 ~~~~
 
 Subscribe to an image.
 
 ~~~~ {.programlisting}
-[user] $  vmlisub_image -a -u 327016b0-6508-41d2-bce0-c1724cb3d3e2
+[user] $  vmcatcher_image -a -u 327016b0-6508-41d2-bce0-c1724cb3d3e2
 ~~~~
 
 Unsubscribe an image
 
 ~~~~ {.programlisting}
-[user] $  vmlisub_image -r -u 327016b0-6508-41d2-bce0-c1724cb3d3e2
+[user] $  vmcatcher_image -r -u 327016b0-6508-41d2-bce0-c1724cb3d3e2
 ~~~~
 
 
@@ -714,7 +714,7 @@ check the sha512 hash of cached images and expire images from old
 `Virtual Machine Image List`{.literal}s.
 
 ~~~~ {.programlisting}
-[user] $  vmlisub_cache
+[user] $  vmcatcher_cache
 INFO:vmcatcher_subscribe.main:Defaulting DB connection to 'sqlite:///vmilsubscriber.db'
 INFO:vmcatcher_subscribe.main:Defaulting actions as 'expire', 'sha512' and 'download'.
 INFO:vmcatcher_subscribe.main:Defaulting cache-dir to 'cache'.
@@ -735,7 +735,7 @@ an event interface so that applicatyions may embed these applications in
 larger systems.
 
 ~~~~ {.programlisting}
-[user] $  vmlisub_cache -x "/usr/bin/VmImageUpdateProcessor \$VMILS_EVENT_TYPE"
+[user] $  vmcatcher_cache -x "/usr/bin/VmImageUpdateProcessor \$VMILS_EVENT_TYPE"
 ~~~~
 
 The events interface launches a shell with a series of environment
@@ -743,7 +743,7 @@ variables. The event must process its command within 10 seconds or else
 it will be sent a termination signal. See the following example:
 
 ~~~~ {.programlisting}
-[user] $  vmlisub_cache -x 'env  ; exit 1'
+[user] $  vmcatcher_cache -x 'env  ; exit 1'
 ~~~~
 
 All Events have a type. This is given to the event handler by setting
@@ -885,7 +885,7 @@ All scripts have a logging option. This is used to configure pythons
 logging library. An example is shown below.
 
 ~~~~ {.programlisting}
-[user] $  vmlisub_image -L /usr/share/doc/hepixvmilsubscriber/logger.conf -l
+[user] $  vmcatcher_image -L /usr/share/doc/hepixvmilsubscriber/logger.conf -l
 ~~~~
 
 Logging can be independently set up for each object to multiple

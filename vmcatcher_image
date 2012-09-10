@@ -290,7 +290,7 @@ class output_driver_lines(output_driver_base):
 
 class db_controler:
     def __init__(self,dboptions):
-        self.log = logging.getLogger("vmlisub_image.controler")
+        self.log = logging.getLogger("vmcatcher_image.controler")
         self.engine = create_engine(dboptions, echo=False)
         model.init(self.engine)
         self.SessionFactory = sessionmaker(bind=self.engine)

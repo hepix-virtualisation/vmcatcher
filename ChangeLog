@@ -29,7 +29,7 @@ vmcatcher-0.1.19
 
 vmcatcher-0.1.18
  
- * Bugfix crash when no database exists with the command vmlisub_image
+ * Bugfix crash when no database exists with the command vmcatcher_image
  * converted README to README.md and format of README.md to Markdown.
  * Generate README.md from docbook.
 
@@ -49,8 +49,8 @@ vmcatcher-0.1.15
 
 vmcatcher-0.1.14
 
- * vmlisub_cache: Now automatically expires images when downloading images.
- * vmlisub_cache: Now testing the Event interface.
+ * vmcatcher_cache: Now automatically expires images when downloading images.
+ * vmcatcher_cache: Now testing the Event interface.
  * vmcatcher_subscribe: Added event interface.
  * vmcatcher_subscribe: Added event ImageNew when a new image is added to image list.
  * vmcatcher_subscribe: Added enviroment variable VMILS_SUB_EVENT to set event action.
@@ -59,11 +59,11 @@ vmcatcher-0.1.14
 
 vmcatcher-0.1.13
 
-* vmlisub_image: Removed '-D', '--delete' unimplemented feature from 
-    vmlisub_image as is provided in vmcatcher_subscribe.
+* vmcatcher_image: Removed '-D', '--delete' unimplemented feature from 
+    vmcatcher_image as is provided in vmcatcher_subscribe.
 * vmcatcher_subscribe: Changed logging to display expected and downloaded values when 
     they differ.
-* vmlisub_endorser: Added ability to list endorser links to subscriptions.
+* vmcatcher_endorser: Added ability to list endorser links to subscriptions.
 
 vmcatcher-0.1.12
 
@@ -112,17 +112,17 @@ vmcatcher-0.1.5
 
 * vmcatcher_subscribe Fixed misleading error message.
 * Corrected misleading text in Changelog.
-* vmlisub_endorser Changed format of list command to make parsing easier.
-* vmlisub_endorser fixed sqlalchamy import error on RHEL/SL 5
+* vmcatcher_endorser Changed format of list command to make parsing easier.
+* vmcatcher_endorser fixed sqlalchamy import error on RHEL/SL 5
 * vmcatcher_subscribe urllib2 with python 2.4 thows OSError rather than urllib2.URLError
 
 vmcatcher-0.1.4
 
-* vmlisub_cache changed default behaviour to not check integrity of already downloaded 
+* vmcatcher_cache changed default behaviour to not check integrity of already downloaded 
     images. This is still possible using a command line option but no longer default.
-* Added vmlisub_endorser to main package, so endorsers can be managed directly. Please 
+* Added vmcatcher_endorser to main package, so endorsers can be managed directly. Please 
     see README for full details.
-* vmlisub_endorser now works with current database schema, and changed command line to 
+* vmcatcher_endorser now works with current database schema, and changed command line to 
     be moreconistent with other applications in this suite.
 * vmcatcher_subscribe now has more error return codes to allow test suite to check for errors.
         10 failed to download image list.
@@ -170,7 +170,7 @@ vmcatcher-0.1.0
 * Data base schema has changed adding a new table ImageDefinition and 
    renaming or tables and field for constancy reasons.
 * Images are now selected to be cached. (reason 1 for new table)
-    '-a', '--add' and '-r', '--remove' options added to vmlisub_image.
+    '-a', '--add' and '-r', '--remove' options added to vmcatcher_image.
 * When subscribing to an image list the imagelists images UUID's are 
     registered to the subscription, all UUID's that clash in a later 
     added subscriptions will be ignored. All image UUID's that are not 

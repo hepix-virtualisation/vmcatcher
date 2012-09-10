@@ -11,7 +11,7 @@ else:
         	from setuptools import setup, find_packages
 
 
-setup(name='hepixvmilsubscriber',
+setup(name='vmcatcher',
     version=version,
     description="VM Image list subscribing tool.",
     long_description="""This application attempts to be the equivalent of a modern Linux package update
@@ -23,7 +23,7 @@ back end, and caches available image lists.""",
     install_requires=[
        "M2Crypto>=0.16",
         ],
-    url = 'https://github.com/hepix-virtualisation/hepixvmilsubscriber',
+    url = 'https://github.com/hepix-virtualisation/vmcatcher',
     packages = ['vmcatcher'],
     classifiers=[
         'Development Status :: 5 - Production/Stable',
@@ -36,6 +36,6 @@ back end, and caches available image lists.""",
         'Programming Language :: Python',
         ],
 
-    scripts=['vmlisub_image','vmlisub_sub','vmlisub_cache','vmlisub_endorser'],
-    data_files=[('/usr/share/doc/hepixvmilsubscriber-%s' % (version),['README.md','LICENSE','logger.conf','ChangeLog','vmlisub_eventHndlExpl'])]
+    scripts=['vmcatcher_image','vmcatcher_subscribe','vmcatcher_cache','vmcatcher_endorser'],
+    data_files=[('/usr/share/doc/vmcatcher-%s' % (version),['README.md','LICENSE','logger.conf','ChangeLog','vmcatcher_eventHndlExpl'])]
     )
