@@ -1,4 +1,4 @@
-vmlisub
+vmcatcher
 -------
 
 This virtual maschine `Virtual Machine Image List`{.literal} subscriber
@@ -48,11 +48,11 @@ This set of applications are designed to provide a similar work flow
 from each area of control to the `Virtual Machine Image List`{.literal}
 archive.
 
--   vmlisub\_endorser - Endorsers of
+-   vmcatcher\_endorser - Endorsers of
     `Virtual Machine Image List`{.literal} subscriptions.
--   vmlisub\_sub - Subscription list details.
--   vmlisub\_image - Image details.
--   vmlisub\_cache - Cache images and update events.
+-   vmcatcher\_sub - Subscription list details.
+-   vmcatcher\_image - Image details.
+-   vmcatcher\_cache - Cache images and update events.
 
 They work in conjunction with a database to ease navigation, a local
 cache of `Virtual Machine Image List`{.literal} subscriptions. The
@@ -231,35 +231,35 @@ cache/cache.index
 Then the by hand configuration for your master DB
 
 ~~~~ {.programlisting}
-[root] #  useradd vmlisub
+[root] #  useradd vmcatcher
 ~~~~
 
 ~~~~ {.programlisting}
-[root] #  mkdir -p /var/lib/vmlisub /var/cache/vmimages/endorsed \
+[root] #  mkdir -p /var/lib/vmcatcher /var/cache/vmimages/endorsed \
       /var/cache/vmimages/partial /var/cache/vmimages/expired
 ~~~~
 
 ~~~~ {.programlisting}
-[root] #  touch /var/log/vmlisub.log
+[root] #  touch /var/log/vmcatcher.log
 ~~~~
 
 ~~~~ {.programlisting}
-[root] #  chown vmlisub:vmlisub /var/lib/vmlisub  /var/cache/vmimages/endorsed \
+[root] #  chown vmcatcher:vmcatcher /var/lib/vmcatcher  /var/cache/vmimages/endorsed \
       /var/cache/vmimages/partial /var/cache/vmimages/expired \
-      /var/log/vmlisub.log
+      /var/log/vmcatcher.log
 ~~~~
 
 ~~~~ {.programlisting}
-[root] #  sudo -u vmlisub /usr/bin/vmcatcher_subscribe \
+[root] #  sudo -u vmcatcher /usr/bin/vmcatcher_subscribe \
       -s https://cernvm.cern.ch/releases/image.list \
-      -d sqlite:////var/lib/vmlisub/vmlisub.db
+      -d sqlite:////var/lib/vmcatcher/vmcatcher.db
 ~~~~
 
 make a cron job
 
 ~~~~ {.programlisting}
-[root] #  cat   /etc/cron.d/vmlisub
-50 */6 * * *    vmlisub (/usr/bin/vmcatcher_subscribe -d sqlite:////var/lib/vmlisub/vmlisub.db -U; /usr/bin/vmcatcher_cache -d sqlite:////var/lib/vmlisub/vmlisub.db -C /var/cache/vmimages/endorsed/ -p /var/cache/vmimages/partial/ -e /var/cache/vmimages/expired/ ) >> /var/log/vmlisub.log 2>&1
+[root] #  cat   /etc/cron.d/vmcatcher
+50 */6 * * *    vmcatcher (/usr/bin/vmcatcher_subscribe -d sqlite:////var/lib/vmcatcher/vmcatcher.db -U; /usr/bin/vmcatcher_cache -d sqlite:////var/lib/vmcatcher/vmcatcher.db -C /var/cache/vmimages/endorsed/ -p /var/cache/vmimages/partial/ -e /var/cache/vmimages/expired/ ) >> /var/log/vmcatcher.log 2>&1
 ~~~~
 
 So the script is executed every 6 hours shortly after fetch CRL.
@@ -268,7 +268,7 @@ Now at any time users with file permisions can get a list of valid
 images.
 
 ~~~~ {.programlisting}
-[user] $  vmcatcher_image -l -d sqlite:////var/lib/vmlisub/vmlisub.db
+[user] $  vmcatcher_image -l -d sqlite:////var/lib/vmcatcher/vmcatcher.db
 ~~~~
 
 
@@ -524,7 +524,7 @@ Saving to: `hepixvmilsubscriber-0.1.14.tar.gz'
 
 
 
-#### vmlisub\_endorser
+#### vmcatcher\_endorser
 
 This application is for managing who the subscriber trusts to update
 image lists. Since individuals are identified with x509 certificates,
@@ -581,7 +581,7 @@ same item. The endorser\_uuid could be a more human name:
 
 
 
-#### vmlisub\_sub
+#### vmcatcher\_sub
 
 This application manages your subscriptions and thier update:
 
@@ -662,7 +662,7 @@ To delete a subscription
 
 
 
-#### vmlisub\_image
+#### vmcatcher\_image
 
 This application manages images within your subscription.
 
@@ -707,7 +707,7 @@ Unsubscribe an image
 
 
 
-#### vmlisub\_cache
+#### vmcatcher\_cache
 
 This application downloads images. By default it will download images,
 check the sha512 hash of cached images and expire images from old
@@ -726,7 +726,7 @@ INFO:CacheMan:moved file 858a817e-0ca2-473f-89d3-d5bdfc51968e
 
 
 
-##### vmlisub\_cache Event interface
+##### vmcatcher\_cache Event interface
 
 Since this application suite is intended to be embedded in a larger
 application and concerned with downloading and managing updates of VM
@@ -778,7 +778,7 @@ These correspond to the variables within the
 
 
 
-###### vmlisub\_cache Event Environment variables
+###### vmcatcher\_cache Event Environment variables
 
 
 
@@ -936,41 +936,41 @@ revocation lists and certificate name spaces.
 
 ##### VMILS\_CACHE\_DIR\_CACHE
 
-Path used by ’vmlisub\_endorser’ to store verified VM images.
+Path used by ’vmcatcher\_endorser’ to store verified VM images.
 
 
 
 ##### VMILS\_CACHE\_DIR\_DOWNLOAD
 
-Path used by ’vmlisub\_endorser’ to download VM images before VM image
+Path used by ’vmcatcher\_endorser’ to download VM images before VM image
 integrity is checked.
 
 
 
 ##### VMILS\_CACHE\_DIR\_EXPIRE
 
-Path used by ’vmlisub\_endorser’ to store VM images when they are no
+Path used by ’vmcatcher\_endorser’ to store VM images when they are no
 longer endorsed.
 
 
 
 ##### VMILS\_CACHE\_ACTION\_DOWNLOAD
 
-Instructs ’vmlisub\_endorser’ to download the latest VM images and check
+Instructs ’vmcatcher\_endorser’ to download the latest VM images and check
 integrity.
 
 
 
 ##### VMILS\_CACHE\_ACTION\_CHECK
 
-Instructs ’vmlisub\_endorser’ check integrity for all currently stored
+Instructs ’vmcatcher\_endorser’ check integrity for all currently stored
 VM images.
 
 
 
 ##### VMILS\_CACHE\_ACTION\_EXPIRE
 
-Instructs ’vmlisub\_endorser’ to expire stored VM images that are no
+Instructs ’vmcatcher\_endorser’ to expire stored VM images that are no
 longer endorsed.
 
 
