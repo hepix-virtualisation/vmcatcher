@@ -19,7 +19,7 @@ without having to further validate the images.
 
 This software is available at:
 
-`https://github.com/hepix-virtualisation/hepixvmcatcher`{.code}
+`https://github.com/hepix-virtualisation/vmcatcher`{.code}
 
 The software is based upon a simple database that stores subscriptions
 to `Virtual Machine Image List`{.literal}s, who can sign the
@@ -75,7 +75,7 @@ but rather for virtual machines, authenticated by the x509 signatures.
 
 
 
-### Quick start use of hepixvmcatcher
+### Quick start use of vmcatcher
 
 First make sure that all the Certificate Revocation Lists (CRL) are upto
 date.
@@ -337,7 +337,7 @@ install fetch-crl
 ~~~~
 
 ~~~~ {.programlisting}
-[root] # yum install hepixvmcatcher
+[root] # yum install vmcatcher
 ~~~~
 
 
@@ -389,7 +389,7 @@ install fetch-crl
 Install the hepix `Virtual Machine Image List`{.literal} subscriber.
 
 ~~~~ {.programlisting}
-[root] # yum install hepixvmcatcher
+[root] # yum install vmcatcher
 ~~~~
 
 This may fail due to a dependency of m2crypto that cannot be satisfied.
@@ -500,23 +500,23 @@ Saving to: `smimeX509validation-0.0.7.tar.gz'
 [root] # cd ..
 ~~~~
 
-The leatest version of hepixvmcatcher-X.X.XX.tar.gz shoudl be
+The leatest version of vmcatcher-X.X.XX.tar.gz shoudl be
 downloaded extracted and installed.
 
 ~~~~ {.programlisting}
 [root] # 
-[root] # wget http://grid.desy.de/vm/repo/yum/sl5/noarch/tgz/hepixvmcatcher-0.1.14.tar.gz
+[root] # wget http://grid.desy.de/vm/repo/yum/sl5/noarch/tgz/vmcatcher-0.1.14.tar.gz
 Resolving grid.desy.de (grid.desy.de)... 131.169.180.46
 Connecting to grid.desy.de (grid.desy.de)|131.169.180.46|:80... connected.
 HTTP request sent, awaiting response... 200 OK
 Length: 19922 (19K) [application/x-tar]
-Saving to: `hepixvmcatcher-0.1.14.tar.gz'
+Saving to: `vmcatcher-0.1.14.tar.gz'
 
 100%[======================================>] 19,922      --.-K/s   in 0.05s   
 
-2012-05-28 19:45:45 (413 KB/s) - `hepixvmcatcher-0.1.14.tar.gz' saved [19922/19922]
-[root] # tar -zxf hepixvmcatcher-0.1.14.tar.gz 
-[root] # cd hepixvmcatcher-0.1.14
+2012-05-28 19:45:45 (413 KB/s) - `vmcatcher-0.1.14.tar.gz' saved [19922/19922]
+[root] # tar -zxf vmcatcher-0.1.14.tar.gz 
+[root] # cd vmcatcher-0.1.14
 [root] # python setup install
 [root] # echo $?
 [root] # cd ..
@@ -885,7 +885,7 @@ All scripts have a logging option. This is used to configure pythons
 logging library. An example is shown below.
 
 ~~~~ {.programlisting}
-[user] $  vmcatcher_image -L /usr/share/doc/hepixvmcatcher/logger.conf -l
+[user] $  vmcatcher_image -L /usr/share/doc/vmcatcher/logger.conf -l
 ~~~~
 
 Logging can be independently set up for each object to multiple
