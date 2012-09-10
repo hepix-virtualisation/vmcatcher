@@ -1,4 +1,4 @@
-from hepixvmlis.__version__ import version
+from vmcatcher.__version__ import version
 from sys import version_info
 if version_info < (2, 6):
 	from distutils.core import setup
@@ -24,7 +24,7 @@ back end, and caches available image lists.""",
        "M2Crypto>=0.16",
         ],
     url = 'https://github.com/hepix-virtualisation/hepixvmilsubscriber',
-    packages = ['hepixvmlis'],
+    packages = ['vmcatcher'],
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Environment :: Console',

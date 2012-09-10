@@ -24,13 +24,13 @@ if sys.version_info < (2, 5):
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-import hepixvmlis.databaseDefinition as model
+import vmcatcher.databaseDefinition as model
 import os
 import logging
 import optparse
 from smimeX509validation import TrustStore, LoadDirChainOfTrust,smimeX509validation, smimeX509ValidationError
-from hepixvmlis.__version__ import version
-import hepixvmlis
+from vmcatcher.__version__ import version
+import vmcatcher
 import urllib2
 import urllib
 import hashlib
