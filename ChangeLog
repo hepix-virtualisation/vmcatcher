@@ -1,4 +1,21 @@
 Changelog
+
+vmcatcher-0.1.23
+
+ * A very big rename
+ * s/hepixvmcatcher/vmcatcher/g
+ * s/VMILS/VMCATCHER/g
+ * s/vmilsubscriber/vmcatcher/g
+ * s/vmlisub/vmcatcher/g
+ * s/hepixvmcatcher/vmcatcher/g
+ * s/hepixvmlis/vmcatcher/g
+ * s/vmilsubscriber/vmcatcher/g
+ * s/vmlisub_cache/vmcatcher_cache/g
+ * s/vmlisub_endorser/vmcatcher_endorser/g
+ * s/vmlisub_eventHndlExpl/vmcatcher_eventHndlExpl/g
+ * s/vmlisub_image/vmcatcher_image/g
+ * s/vmlisub_sub/vmcatcher_subscribe/g
+
 vmcatcher-0.1.22
  
  * Improved command line processing of logging includine '--verbose','--quiet'
