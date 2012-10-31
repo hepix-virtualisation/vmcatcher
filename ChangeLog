@@ -1,5 +1,11 @@
 Changelog
 
+vmcatcher-0.1.24
+
+ * vmcatcher_image: Fixed crash on getting information on an image list.
+ * vmcatcher_image: Only show the latest image when showing information for an 
+   image.
+
 vmcatcher-0.1.23
 
  * A very big rename
