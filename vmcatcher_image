@@ -323,7 +323,6 @@ class db_controler:
                 self.log.warning("Selections '%s' does not match any known images." % (selector_filter))
                 continue
             view = self.factory_view(output_fileptr,Session,self.anchor)
-
             for imagedef in queryImageDef:
 
                 details = Session.query(model.ImageListInstance,model.ImageInstance).\
@@ -519,9 +518,8 @@ def main():
         if certDir == None:
             certDir = "/etc/grid-security/certificates/"
             log.info("Defaulting Certificate directory to '%s'" % (certDir))
-        anchor = LoadDirChainOfTrust(certDir)
+        database.setup_trust_anchor(certDir)
     # Handle conflicting identifiers
-
     selectors_types = inputformats.intersection(input_format_selected)
     selectors_types_len = len(selectors_types)
     if selectors_types_len > 1:
