@@ -324,11 +324,12 @@ class db_controler:
                 continue
             view = self.factory_view(output_fileptr,Session,self.anchor)
             for imagedef in queryImageDef:
-
                 details = Session.query(model.ImageListInstance,model.ImageInstance).\
                     filter(model.ImageListInstance.id==model.ImageInstance.fkimagelistinstance).\
                     filter(model.ImageDefinition.id == imagedef.id).\
-                    filter(model.ImageInstance.fkIdentifier == model.ImageDefinition.id)
+                    filter(model.ImageInstance.fkIdentifier == model.ImageDefinition.id).\
+                    filter(model.Subscription.id == imagedef.subscription).\
+                    filter(model.Subscription.imagelist_latest == model.ImageListInstance.id)
                 for item in details:
                     imagelist = item[0]
                     image = item[1]
