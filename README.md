@@ -1,9 +1,27 @@
 vmcatcher
--------
 
-This virtual maschine `Virtual Machine Image List`{.literal} subscriber
-implementation is intended to be a production grade referance
+
+[HEPIX Virtualisation Working Group](../index.shtml) \>
+[`Virtual Machine Image`{.literal} Transfer](imagetransfer.shtml) \>
+[`Virtual Machine Image List`{.literal} Subscribing
+Software](imagetransfer-software-subscriber.shtml) \> vmcatcher
+
+vmcatcher
+---------
+
+This virtual machine `Virtual Machine Image List`{.literal} subscriber
+implementation is intended to be a production grade reference
 implementation.
+
+The software makes use of a database to store subscriptions in a simplar
+way to a podcast reader or a linux package manager. The tested Database
+is SqlLight, but it is based upon SQLalchamy so shoudl support many
+databases. Sdllight has proved more than adiquate for the low
+transaction rate of a image list subscriber and so deployment issues are
+mearly backing up a databasefile.
+
+Since the software is made with the Grid in mind it is only natural that
+the X509 certificate model is used.
 
 
 
@@ -84,10 +102,29 @@ date.
 [root] #  fetch-crl
 ~~~~
 
+This suit of applications can use either enviroment variable or command
+line to set most parmaters. If neither enviroment variables or command
+line parameters are not set for critical variables the application will
+provide defaults and show warnings.
+
+The most important setting is the location of the database. This is read
+from VMCATCHER\_RDBMS,
+
+~~~~ {.programlisting}
+[user] $ export VMCATCHER_RDBMS="sqlite:////var/lib/vmcatcher/vmcatcher.db"
+~~~~
+
+The above line instructs the sqlalchamy interfacxe to datavabses to use
+sqlite and path "/var/lib/vmcatcher/vmcatcher.db" on a UNIX system. This
+is the only improtant file and stores the older signed image lists. SQL
+is used to enforce most of the rules such as unique nature of UUID’s and
+the URLS for the subscriptions, this should be backed up. Other
+enviroment varables are documented later.
+
 To add a subscription,
 
 ~~~~ {.programlisting}
-[user] $  wget --no-check-certificate https://cernvm.cern.ch/releases/image.list
+[user] $  wget --no-check-certificate https://dish.desy.de:2880/testing.smime
 ~~~~
 
 Now you can check the `Virtual Machine Image List`{.literal} by visiual
@@ -95,8 +132,8 @@ inspection.
 
 ~~~~ {.programlisting}
 [user] $  grep 'hv:[cd][an]' hepix_signed_image_list
-                "hv:ca": "/DC=ch/DC=cern/CN=CERN Trusted Certification Authority", 
-                "hv:dn": "/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=buncic/CN=379010/CN=Predrag Buncic", 
+                "hv:ca": "/C=DE/O=GermanGrid/CN=GridKa-CA", 
+                "hv:dn": "/C=DE/O=GermanGrid/OU=DESY/CN=Owen Synge", 
 ~~~~
 
 Now create this endorser. The endorser\_uuid can be any string but its
@@ -105,8 +142,8 @@ recommended this is a short string possibly following the uuid standard:
 ~~~~ {.programlisting}
 [user] $  vmcatcher_endorser --create \
        --endorser_uuid='Ian' \
-       --subject='/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=buncic/CN=379010/CN=Predrag Buncic' \
-       --issuer='/DC=ch/DC=cern/CN=CERN Trusted Certification Authority'
+       --subject='/C=DE/O=GermanGrid/OU=DESY/CN=Owen Synge' \
+       --issuer='/C=DE/O=GermanGrid/CN=GridKa-CA'
 ~~~~
 
 Now we can add the subscription, this will automatically link the
@@ -114,7 +151,7 @@ endorser with this subscription.
 
 ~~~~ {.programlisting}
 [user] $  vmcatcher_endorser -l
-Ian    '/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=buncic/CN=379010/CN=Predrag Buncic'        '/DC=ch/DC=cern/CN=CERN Trusted Certification Authority'
+Ian    '/C=DE/O=GermanGrid/OU=DESY/CN=Owen Synge'        '/C=DE/O=GermanGrid/CN=GridKa-CA'
 ~~~~
 
 The above command will show you the endorsers. Note the first column is
@@ -144,9 +181,9 @@ List the registered Images.
 ~~~~ {.programlisting}
 [user] $  vmcatcher_image -l
 INFO:vmcatcher_subscribe.main:Defaulting DB connection to 'sqlite:///vmcatcher.db'
-327016b0-6508-41d2-bce0-c1724cb3d3e2    0       63175437-7d59-4851-b333-c96cb6545a86
-858a817e-0ca2-473f-89d3-d5bdfc51968e    0       63175437-7d59-4851-b333-c96cb6545a86
-da42ca85-179b-4873-b12e-32d549bf02b6    0       63175437-7d59-4851-b333-c96cb6545a86
+327016b0-6508-41d2-bce0-c1724cb3d3e2    0       9b6fad19-d913-4cca-b77d-c4b4fcd9dc36
+5f00fec3-4f2a-4fa0-a965-d52115606044    0       9b6fad19-d913-4cca-b77d-c4b4fcd9dc36
+da42ca85-179b-4873-b12e-32d549bf02b6    0       9b6fad19-d913-4cca-b77d-c4b4fcd9dc36
 ~~~~
 
 The results show the UUID of the image, the availability state and the
@@ -159,7 +196,7 @@ Next update the subscriptions.
 ~~~~ {.programlisting}
 [user] $  vmcatcher_subscribe -U
 INFO:main:Defaulting DB connection to 'sqlite:///vmcatcher.db'
-INFO:db_actions:Updating:63175437-7d59-4851-b333-c96cb6545a86
+INFO:db_actions:Updating:9b6fad19-d913-4cca-b77d-c4b4fcd9dc36
 ~~~~
 
 Now the data base contains the latest version of the
@@ -169,16 +206,16 @@ they can be cached:
 ~~~~ {.programlisting}
 [user] $  vmcatcher_image -l
 INFO:vmcatcher_subscribe.main:Defaulting DB connection to 'sqlite:///vmcatcher.db'
-327016b0-6508-41d2-bce0-c1724cb3d3e2    2       63175437-7d59-4851-b333-c96cb6545a86
-858a817e-0ca2-473f-89d3-d5bdfc51968e    2       63175437-7d59-4851-b333-c96cb6545a86
-da42ca85-179b-4873-b12e-32d549bf02b6    2       63175437-7d59-4851-b333-c96cb6545a86
+327016b0-6508-41d2-bce0-c1724cb3d3e2    2       9b6fad19-d913-4cca-b77d-c4b4fcd9dc36
+5f00fec3-4f2a-4fa0-a965-d52115606044    2       9b6fad19-d913-4cca-b77d-c4b4fcd9dc36
+da42ca85-179b-4873-b12e-32d549bf02b6    2       9b6fad19-d913-4cca-b77d-c4b4fcd9dc36
 ~~~~
 
 Thsi now shows the images are available in the latest
 `Virtual Machine Image List`{.literal}.
 
 ~~~~ {.programlisting}
-[user] $  vmcatcher_image -a -u 858a817e-0ca2-473f-89d3-d5bdfc51968e
+[user] $  vmcatcher_image -a -u 5f00fec3-4f2a-4fa0-a965-d52115606044
 INFO:vmcatcher_subscribe.main:Defaulting DB connection to 'sqlite:///vmcatcher.db'
 ~~~~
 
@@ -187,12 +224,12 @@ The `Virtual Machine Image List`{.literal} state is now changed to
 ~~~~ {.programlisting}
 [user] $  vmcatcher_image -l
 INFO:vmcatcher_subscribe.main:Defaulting DB connection to 'sqlite:///vmcatcher.db'
-327016b0-6508-41d2-bce0-c1724cb3d3e2    2       63175437-7d59-4851-b333-c96cb6545a86
-858a817e-0ca2-473f-89d3-d5bdfc51968e    3       63175437-7d59-4851-b333-c96cb6545a86
-da42ca85-179b-4873-b12e-32d549bf02b6    2       63175437-7d59-4851-b333-c96cb6545a86
+327016b0-6508-41d2-bce0-c1724cb3d3e2    2       9b6fad19-d913-4cca-b77d-c4b4fcd9dc36
+5f00fec3-4f2a-4fa0-a965-d52115606044    3       9b6fad19-d913-4cca-b77d-c4b4fcd9dc36
+da42ca85-179b-4873-b12e-32d549bf02b6    2       9b6fad19-d913-4cca-b77d-c4b4fcd9dc36
 ~~~~
 
-Clearly showing that the image ’858a817e-0ca2-473f-89d3-d5bdfc51968e’ is
+Clearly showing that the image ’5f00fec3-4f2a-4fa0-a965-d52115606044’ is
 subscribed.
 
 Make the directories for caching the images.
@@ -206,8 +243,8 @@ Now cache the images.
 ~~~~ {.programlisting}
 [user] $  vmcatcher_cache
 INFO:vmcatcher_subscribe.main:Defaulting DB connection to 'sqlite:///vmcatcher.db'
-INFO:DownloadDir:Downloading '858a817e-0ca2-473f-89d3-d5bdfc51968e'.
-INFO:CacheMan:moved file 858a817e-0ca2-473f-89d3-d5bdfc51968e
+INFO:DownloadDir:Downloading '5f00fec3-4f2a-4fa0-a965-d52115606044'.
+INFO:CacheMan:moved file 5f00fec3-4f2a-4fa0-a965-d52115606044
 ~~~~
 
 Once this is complete the image from the
@@ -220,55 +257,8 @@ cache/partial
 cache/partial/cache.index
 cache/expired
 cache/expired/cache.index
-cache/858a817e-0ca2-473f-89d3-d5bdfc51968e
+cache/5f00fec3-4f2a-4fa0-a965-d52115606044
 cache/cache.index
-~~~~
-
-
-
-#### Set up for Production using Cron
-
-Then the by hand configuration for your master DB
-
-~~~~ {.programlisting}
-[root] #  useradd vmcatcher
-~~~~
-
-~~~~ {.programlisting}
-[root] #  mkdir -p /var/lib/vmcatcher /var/cache/vmimages/endorsed \
-      /var/cache/vmimages/partial /var/cache/vmimages/expired
-~~~~
-
-~~~~ {.programlisting}
-[root] #  touch /var/log/vmcatcher.log
-~~~~
-
-~~~~ {.programlisting}
-[root] #  chown vmcatcher:vmcatcher /var/lib/vmcatcher  /var/cache/vmimages/endorsed \
-      /var/cache/vmimages/partial /var/cache/vmimages/expired \
-      /var/log/vmcatcher.log
-~~~~
-
-~~~~ {.programlisting}
-[root] #  sudo -u vmcatcher /usr/bin/vmcatcher_subscribe \
-      -s https://cernvm.cern.ch/releases/image.list \
-      -d sqlite:////var/lib/vmcatcher/vmcatcher.db
-~~~~
-
-make a cron job
-
-~~~~ {.programlisting}
-[root] #  cat   /etc/cron.d/vmcatcher
-50 */6 * * *    vmcatcher (/usr/bin/vmcatcher_subscribe -d sqlite:////var/lib/vmcatcher/vmcatcher.db -U; /usr/bin/vmcatcher_cache -d sqlite:////var/lib/vmcatcher/vmcatcher.db -C /var/cache/vmimages/endorsed/ -p /var/cache/vmimages/partial/ -e /var/cache/vmimages/expired/ ) >> /var/log/vmcatcher.log 2>&1
-~~~~
-
-So the script is executed every 6 hours shortly after fetch CRL.
-
-Now at any time users with file permisions can get a list of valid
-images.
-
-~~~~ {.programlisting}
-[user] $  vmcatcher_image -l -d sqlite:////var/lib/vmcatcher/vmcatcher.db
 ~~~~
 
 
@@ -406,13 +396,13 @@ And build a native RPM.
 
 #### Installation on Debian Linux Codename Wheezy or later,
 
-Do not install this on debian 6.0 as the included version of
+Do not install this on Debian 6.0 as the included version of
 python-m2crypto is not stable.
 
 These instructions are for Debian Linux Codename Wheezy or later.
 
-Unfortunatly at this moment the code is not packaged. but all the
-dependacies are available in the debian repository.
+Unfortunately at this moment the code is not packaged. but all the
+dependencies are available in the Debian repository.
 
 For Grid scientific use you can get a trust store easily using the
 egi.eu repository.
@@ -451,7 +441,7 @@ install a tool to download and cache the
 [root] # fetch-crl 
 ~~~~
 
-Now install the code froms git.
+Now install the code from git.
 
 ~~~~ {.programlisting}
 http://grid.desy.de/vm/repo/yum/sl5/noarch/tgz/
@@ -500,8 +490,8 @@ Saving to: `smimeX509validation-0.0.7.tar.gz'
 [root] # cd ..
 ~~~~
 
-The leatest version of vmcatcher-X.X.XX.tar.gz shoudl be
-downloaded extracted and installed.
+The leatest version of vmcatcher-X.X.XX.tar.gz shoudl be downloaded
+extracted and installed.
 
 ~~~~ {.programlisting}
 [root] # 
@@ -524,7 +514,7 @@ Saving to: `vmcatcher-0.1.14.tar.gz'
 
 
 
-#### vmcatcher\_endorser
+### vmcatcher\_endorser
 
 This application is for managing who the subscriber trusts to update
 image lists. Since individuals are identified with x509 certificates,
@@ -537,16 +527,16 @@ ndividuals on rare occasions will need more than one certificate, for
 this reason they are given a unique identifier under this system and
 allowed to have more than one set of credentials.
 
-Adding a individual to the vmcatcher database.
+Adding a individual to the vmli database.
 
 ~~~~ {.programlisting}
 [user] $  vmcatcher_endorser --create \
        --endorser_uuid=e55c1afe-0a62-4d31-a8d7-fb8c825f92a2 \
-       --subject='/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=buncic/CN=379010/CN=Predrag Buncic' \
-       --issuer='/DC=ch/DC=cern/CN=CERN Trusted Certification Authority'
+       --subject='/C=DE/O=GermanGrid/OU=DESY/CN=Owen Synge' \
+       --issuer='/C=DE/O=GermanGrid/CN=GridKa-CA'
 ~~~~
 
-Deleting and individual from a vmcatcher database.
+Deleting and individual from a vmli database.
 
 ~~~~ {.programlisting}
 [user] $  vmcatcher_endorser --delete \
@@ -558,7 +548,7 @@ Allowing an individual to update a subscription.
 ~~~~ {.programlisting}
 [user] $  vmcatcher_endorser --link \
        --endorser_uuid=e55c1afe-0a62-4d31-a8d7-fb8c825f92a2 \
-       --subscription_uuid=63175437-7d59-4851-b333-c96cb6545a86
+       --subscription_uuid=9b6fad19-d913-4cca-b77d-c4b4fcd9dc36
 ~~~~
 
 Removing an individuals right to update a subscription.
@@ -566,7 +556,7 @@ Removing an individuals right to update a subscription.
 ~~~~ {.programlisting}
 [user] $  vmcatcher_endorser --unlink \
        --endorser_uuid=e55c1afe-0a62-4d31-a8d7-fb8c825f92a2 \
-       --subscription_uuid=63175437-7d59-4851-b333-c96cb6545a86
+       --subscription_uuid=9b6fad19-d913-4cca-b77d-c4b4fcd9dc36
 ~~~~
 
 Each endorser\_uuid must be unique or they will be assumed to be the
@@ -575,20 +565,20 @@ same item. The endorser\_uuid could be a more human name:
 ~~~~ {.programlisting}
 [user] $  vmcatcher_endorser --create \
        --endorser_uuid='Ian Gable' \
-       --subject='/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=buncic/CN=379010/CN=Predrag Buncic' \
-       --issuer='/DC=ch/DC=cern/CN=CERN Trusted Certification Authority'
+       --subject='/C=DE/O=GermanGrid/OU=DESY/CN=Owen Synge' \
+       --issuer='/C=DE/O=GermanGrid/CN=GridKa-CA'
 ~~~~
 
 
 
-#### vmcatcher\_subscribe
+### vmcatcher\_subscribe
 
-This application manages your subscriptions and thier update:
+This application manages your subscriptions and their update:
 
 To add a subscription
 
 ~~~~ {.programlisting}
-[user] $  vmcatcher_subscribe  -s https://cernvm.cern.ch/releases/image.list
+[user] $  vmcatcher_subscribe  -s https://dish.desy.de:2880/testing.smime
 ~~~~
 
 Or alternatively you can download a file visually insepect it and
@@ -608,17 +598,17 @@ To list subscriptions
 
 ~~~~ {.programlisting}
 [user] $  vmcatcher_subscribe  -l
-63175437-7d59-4851-b333-c96cb6545a86    True    https://cernvm.cern.ch/releases/image.list
+9b6fad19-d913-4cca-b77d-c4b4fcd9dc36    True    https://dish.desy.de:2880/testing.smime
 ~~~~
 
 Getting Information on a subscription:
 
 ~~~~ {.programlisting}
-[user] $  vmcatcher_subscribe  -i --uuid=63175437-7d59-4851-b333-c96cb6545a86
-dc:identifier=63175437-7d59-4851-b333-c96cb6545a86
-subscription.dc:description=CERN Virtual Machine
+[user] $  vmcatcher_subscribe  -i --uuid=9b6fad19-d913-4cca-b77d-c4b4fcd9dc36
+dc:identifier=9b6fad19-d913-4cca-b77d-c4b4fcd9dc36
+subscription.dc:description=DESY Image List SHaring service
 subscription.sl:authorised=True
-subscription.hv:uri=https://cernvm.cern.ch/releases/image.list
+subscription.hv:uri=https://dish.desy.de:2880/testing.smime
 subscription.dc:date:updated=2011-04-16T19:23:19Z
 imagelist.dc:date:imported=2011-04-16T19:23:18Z
 imagelist.dc:date:created=2011-03-16T00:15:07Z
@@ -628,11 +618,11 @@ imagelist.dc:date:expires=2011-04-13T00:15:07Z
 you can also select on the basis of url:
 
 ~~~~ {.programlisting}
-[user] $  vmcatcher_subscribe  -i -r https://cernvm.cern.ch/releases/image.list
-dc:identifier=63175437-7d59-4851-b333-c96cb6545a86
-subscription.dc:description=CERN Virtual Machine
+[user] $  vmcatcher_subscribe  -i -r https://dish.desy.de:2880/testing.smime
+dc:identifier=9b6fad19-d913-4cca-b77d-c4b4fcd9dc36
+subscription.dc:description=DESY Image List SHaring service
 subscription.sl:authorised=True
-subscription.hv:uri=https://cernvm.cern.ch/releases/image.list
+subscription.hv:uri=https://dish.desy.de:2880/testing.smime
 subscription.dc:date:updated=2011-04-17T19:04:35Z
 imagelist.dc:date:imported=2011-04-17T19:04:34Z
 imagelist.dc:date:created=2011-03-16T00:15:07Z
@@ -643,7 +633,7 @@ Change the output format to get the original message without the
 security wraper, or in original form:
 
 ~~~~ {.programlisting}
-[user] $  vmcatcher_subscribe  -i --uuid=63175437-7d59-4851-b333-c96cb6545a86 -f message
+[user] $  vmcatcher_subscribe  -i --uuid=9b6fad19-d913-4cca-b77d-c4b4fcd9dc36 -f message
 ~~~~
 
 Three formats exist SMIME, message, lines.
@@ -657,12 +647,12 @@ Three formats exist SMIME, message, lines.
 To delete a subscription
 
 ~~~~ {.programlisting}
-[user] $  vmcatcher_subscribe  -D  --uuid=63175437-7d59-4851-b333-c96cb6545a86
+[user] $  vmcatcher_subscribe  -D  --uuid=9b6fad19-d913-4cca-b77d-c4b4fcd9dc36
 ~~~~
 
 
 
-#### vmcatcher\_image
+### vmcatcher\_image
 
 This application manages images within your subscription.
 
@@ -670,9 +660,9 @@ List the available images
 
 ~~~~ {.programlisting}
 [user] $  vmcatcher_image -l
-327016b0-6508-41d2-bce0-c1724cb3d3e2    2       63175437-7d59-4851-b333-c96cb6545a86
-858a817e-0ca2-473f-89d3-d5bdfc51968e    3       63175437-7d59-4851-b333-c96cb6545a86
-da42ca85-179b-4873-b12e-32d549bf02b6    2       63175437-7d59-4851-b333-c96cb6545a86
+327016b0-6508-41d2-bce0-c1724cb3d3e2    2       9b6fad19-d913-4cca-b77d-c4b4fcd9dc36
+5f00fec3-4f2a-4fa0-a965-d52115606044    3       9b6fad19-d913-4cca-b77d-c4b4fcd9dc36
+da42ca85-179b-4873-b12e-32d549bf02b6    2       9b6fad19-d913-4cca-b77d-c4b4fcd9dc36
 ~~~~
 
 The results show the UUID of the image, the availability state and the
@@ -682,7 +672,7 @@ Now we will select an image for local caching.
 
 
 
-##### Selecting Images
+#### Selecting Images
 
 Images can be selected by either UUID or Sha512 hash. This allows
 explicit selection of images or by the sha512 from an old image.
@@ -707,7 +697,7 @@ Unsubscribe an image
 
 
 
-#### vmcatcher\_cache
+### vmcatcher\_cache
 
 This application downloads images. By default it will download images,
 check the sha512 hash of cached images and expire images from old
@@ -720,13 +710,13 @@ INFO:vmcatcher_subscribe.main:Defaulting actions as 'expire', 'sha512' and 'down
 INFO:vmcatcher_subscribe.main:Defaulting cache-dir to 'cache'.
 INFO:vmcatcher_subscribe.main:Defaulting partial-dir to 'cache/partial'.
 INFO:vmcatcher_subscribe.main:Defaulting expired-dir to 'cache/expired'.
-INFO:DownloadDir:Downloading '858a817e-0ca2-473f-89d3-d5bdfc51968e'.
-INFO:CacheMan:moved file 858a817e-0ca2-473f-89d3-d5bdfc51968e
+INFO:DownloadDir:Downloading '5f00fec3-4f2a-4fa0-a965-d52115606044'.
+INFO:CacheMan:moved file 5f00fec3-4f2a-4fa0-a965-d52115606044
 ~~~~
 
 
 
-##### vmcatcher\_cache Event interface
+#### vmcatcher\_cache Event interface
 
 Since this application suite is intended to be embedded in a larger
 application and concerned with downloading and managing updates of VM
@@ -778,7 +768,7 @@ These correspond to the variables within the
 
 
 
-###### vmcatcher\_cache Event Environment variables
+##### vmcatcher\_cache Event Environment variables
 
 
 
@@ -879,17 +869,63 @@ The Image file name.
 
 
 
-#### Logging configuration
 
-All scripts have a logging option. This is used to configure pythons
-logging library. An example is shown below.
+
+#### Set up for Production using Cron
+
+Then the by hand configuration for your master DB
 
 ~~~~ {.programlisting}
-[user] $  vmcatcher_image -L /usr/share/doc/vmcatcher/logger.conf -l
+[root] #  useradd vmcatcher
 ~~~~
 
-Logging can be independently set up for each object to multiple
-locations, and with different log levels.
+~~~~ {.programlisting}
+[root] #  mkdir -p /var/lib/vmcatcher /var/cache/vmimages/endorsed \
+      /var/cache/vmimages/partial /var/cache/vmimages/expired
+~~~~
+
+~~~~ {.programlisting}
+[root] #  touch /var/log/vmcatcher.log
+~~~~
+
+~~~~ {.programlisting}
+[root] #  chown vmcatcher:vmcatcher /var/lib/vmcatcher  /var/cache/vmimages/endorsed \
+      /var/cache/vmimages/partial /var/cache/vmimages/expired \
+      /var/log/vmcatcher.log
+~~~~
+
+~~~~ {.programlisting}
+[root] #  sudo -u vmcatcher /usr/bin/vmcatcher_subscribe \
+      -s https://dish.desy.de:2880/testing.smime \
+      -d sqlite:////var/lib/vmcatcher/vmcatcher.db
+~~~~
+
+make a cron job
+
+~~~~ {.programlisting}
+[root] #  cat   /etc/cron.d/vmcatcher
+export VMCATCHER_RDBMS="sqlite:////var/lib/vmcatcher/vmcatcher.db"
+export VMCATCHER_CACHE_DIR_CACHE="/var/cache/vmimages/endorsed/"
+export VMCATCHER_CACHE_DIR_DOWNLOAD="/var/cache/vmimages/partial/"
+export VMCATCHER_CACHE_DIR_EXPIRE="/var/cache/vmimages/expired/"
+export VMCATCHER_CACHE_EVENT="python /usr/share/doc/vmcatcher-0.1.17/vmcatcher_eventHndlExpl  --output_file=/tmp/foo --datetime"
+
+50 */6 * * *    vmcatcher   (/usr/bin/vmcatcher_subscribe -U; /usr/bin/vmcatcher_cache  ) >> /var/log/vmcatcher.log 2>&1
+~~~~
+
+So the script is executed every 6 hours shortly after fetch CRL.
+
+If a new `Virtual Machine Image`{.literal} is downloaded, or an old
+`Virtual Machine Image`{.literal} is expired the event will triggor
+"VMCATCHER\_CACHE\_EVENT" and the application vmcatcher\_eventHndlExpl
+will append the data to /tmp/foo
+
+Now at any time users with file permisions can get a list of valid
+images.
+
+~~~~ {.programlisting}
+[user] $ VMCATCHER_RDBMS="sqlite:////var/lib/vmcatcher/vmcatcher.db" vmcatcher_image -l
+~~~~
 
 
 
@@ -956,8 +992,8 @@ longer endorsed.
 
 ##### VMCATCHER\_CACHE\_ACTION\_DOWNLOAD
 
-Instructs ’vmcatcher\_endorser’ to download the latest VM images and check
-integrity.
+Instructs ’vmcatcher\_endorser’ to download the latest VM images and
+check integrity.
 
 
 
@@ -975,10 +1011,26 @@ longer endorsed.
 
 
 
+#### Logging configuration
+
+All scripts have a logging option. This is used to configure pythons
+logging library. An example is shown below.
+
+~~~~ {.programlisting}
+[user] $  vmcatcher_image -L /usr/share/doc/vmcatcher/logger.conf -l
+~~~~
+
+Logging can be independently set up for each object to multiple
+locations, and with different log levels.
+
+
+
 ### To Do (16-05-2012)
 
 -   Only message authenticity is checked, does not yet check
     authenticity of transport.
+-   PGP signatures.
+-   Support encrypted messages.
 
 While it does check the authenticity of the message using X509, at the
 moment the authenticity of the host is unchecked. For the
