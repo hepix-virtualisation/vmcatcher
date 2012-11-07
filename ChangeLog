@@ -1,5 +1,14 @@
 Changelog
 
+vmcatcher-0.1.24
+
+ * vmcatcher_image: Fixed crash on getting information on an image list, 
+   when checking the imagelist signature before displaying the metadata.
+ * vmcatcher_image: Only show the latest image when showing information 
+   for an image, not iterate through all old version of the image and 
+   displaying them in an undefined order (though in practice it seemed 
+   to be chronological).
+
 vmcatcher-0.1.23
 
  * A very big rename
