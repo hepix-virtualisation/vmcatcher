@@ -476,9 +476,9 @@ class fileView(object):
         self.Json = jsonData
         return 
 class db_controler(object):
-    def __init__(self,dboptions,echo = False):
+    def __init__(self,dboptions,dblog = False):
         self.log = logging.getLogger("db_controler")
-        self.engine = create_engine(dboptions, echo=echo)
+        self.engine = create_engine(dboptions, echo=dblog)
         model.init(self.engine)
         self.SessionFactory = sessionmaker(bind=self.engine)
         self.anchor = None
@@ -924,7 +924,7 @@ def main():
     logFile = None
     certDir = None
     eventExecutionString = None
-    debugQqlEcho = False
+    debugSqlEcho = False
     if 'VMCATCHER_RDBMS' in os.environ:
         databaseConnectionString = os.environ['VMCATCHER_RDBMS']
     if 'VMCATCHER_LOG_CONF' in os.environ:
@@ -973,7 +973,7 @@ def main():
     log = logging.getLogger("main")
     # Now logging is set up process other options    
     if options.log_sql_info:
-        debugQqlEcho = True
+        debugSqlEcho = True
     if options.cert_dir:
         certDir = options.cert_dir
     if options.list:
@@ -1031,7 +1031,7 @@ def main():
         sys.exit(1)
 
     # 1.1 Initate DB
-    database = db_controler(databaseConnectionString,debugQqlEcho)
+    database = db_controler(databaseConnectionString,debugSqlEcho)
     # 1.2 Set up callbacks
     if eventExecutionString != None:
         EventInstance = EventObj(eventExecutionString)

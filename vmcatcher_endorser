@@ -166,9 +166,9 @@ class output_driver_lines(output_driver_base):
                 self.display_subscription(subscription)
 
 class db_controler:
-    def __init__(self,dboptions,echo = False):
+    def __init__(self,dboptions,dblog = False):
         self.log = logging.getLogger("db_controler")
-        self.engine = create_engine(dboptions, echo=echo)
+        self.engine = create_engine(dboptions, echo=dblog)
         model.init(self.engine)
         self.SessionFactory = sessionmaker(bind=self.engine)
         self.anchor = None
@@ -416,7 +416,7 @@ def main():
     actionsrequiring_issuer = set(['create'])
     databaseConnectionString = None
     logFile = None
-    debugQqlEcho = False
+    debugSqlEcho = False
     if 'VMCATCHER_RDBMS' in os.environ:
         databaseConnectionString = os.environ['VMCATCHER_RDBMS']
     if 'VMCATCHER_LOG_CONF' in os.environ:
@@ -461,7 +461,7 @@ def main():
     log = logging.getLogger("main")
     # Now logging is set up process other options
     if options.log_sql_info:
-        debugQqlEcho = True
+        debugSqlEcho = True
     if options.list:
         actions.add('list')
     if options.links:
@@ -501,7 +501,7 @@ def main():
         log.error("More than one action selected.")
         sys.exit(1)
     # 1.1 Initate DB
-    database = db_controler(databaseConnectionString,debugQqlEcho)
+    database = db_controler(databaseConnectionString,debugSqlEcho)
 
 
     # Handle actions selections beign required.

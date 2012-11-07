@@ -519,7 +519,7 @@ def main():
     databaseConnectionString = None
     eventExecutionString = None
     logFile = None
-    debugQqlEcho = False
+    debugSqlEcho = False
     if 'VMCATCHER_RDBMS' in os.environ:
         databaseConnectionString = os.environ['VMCATCHER_RDBMS']
     if 'VMCATCHER_LOG_CONF' in os.environ:
@@ -583,7 +583,7 @@ def main():
     log = logging.getLogger("main")
     # Now logging is set up process other options
     if options.log_sql_info:
-        debugQqlEcho = True
+        debugSqlEcho = True
     if options.cache_dir:
         dir_cache = options.cache_dir
     if options.partial_dir:
@@ -637,7 +637,7 @@ def main():
         sys.exit(1)
 
 
-    ThisCacheManager = CacheMan(databaseConnectionString,debugQqlEcho,dir_cache, dir_partial, dir_expired)
+    ThisCacheManager = CacheMan(databaseConnectionString,debugSqlEcho,dir_cache, dir_partial, dir_expired)
     if eventExecutionString != None:
         EventInstance = EventObj(eventExecutionString)
         ThisCacheManager.callbackEventAvailablePrefix = EventInstance.eventAvailablePrefix

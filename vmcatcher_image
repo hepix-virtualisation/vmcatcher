@@ -413,7 +413,7 @@ def main():
     databaseConnectionString = None
     certDir = None
     logFile = None
-    debugQqlEcho = False
+    debugSqlEcho = False
     if 'VMCATCHER_RDBMS' in os.environ:
         databaseConnectionString = os.environ['VMCATCHER_RDBMS']
     if 'VMCATCHER_LOG_CONF' in os.environ:
@@ -462,7 +462,7 @@ def main():
     log = logging.getLogger("main")
     # Now logging is set up process other options
     if options.log_sql_info:
-        debugQqlEcho = True
+        debugSqlEcho = True
     if options.cert_dir:
         certDir = options.cert_dir
     if options.list:
@@ -514,7 +514,7 @@ def main():
     # 1 So we have some actions to process
 
     # 1.1 Initate DB
-    database = db_controler(databaseConnectionString,debugQqlEcho)
+    database = db_controler(databaseConnectionString,debugSqlEcho)
     # 2 Initate CA's to manage files
     if anchor_needed:
         if certDir == None:
