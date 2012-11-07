@@ -289,9 +289,9 @@ class output_driver_lines(output_driver_base):
             self.file_pointer.write ("%s\t%s\t%s\n" % (item.uuid,item.authorised,item.url))
 
 class db_controler:
-    def __init__(self,dboptions):
+    def __init__(self,dboptions, dblog):
         self.log = logging.getLogger("vmcatcher_image.controler")
-        self.engine = create_engine(dboptions, echo=False)
+        self.engine = create_engine(dboptions, echo=dblog)
         model.init(self.engine)
         self.SessionFactory = sessionmaker(bind=self.engine)
         self.anchor = None
@@ -394,7 +394,7 @@ def main():
     p.add_option('--verbose', action ='count',help='Change global log level, increasing log output.', metavar='LOGFILE')
     p.add_option('--quiet', action ='count',help='Change global log level, decreasing log output.', metavar='LOGFILE')
     p.add_option('--log-config', action ='store',help='Logfile configuration file, (overrides command line).', metavar='LOGFILE')
-
+    p.add_option('--log-sql-info', action ='store_true',help='Echo all SQL commands.')
     outputformats = set(['SMIME','message','lines'])
     output_format_selected = set([])
     options, arguments = p.parse_args()
@@ -413,7 +413,7 @@ def main():
     databaseConnectionString = None
     certDir = None
     logFile = None
-    
+    debugQqlEcho = False
     if 'VMCATCHER_RDBMS' in os.environ:
         databaseConnectionString = os.environ['VMCATCHER_RDBMS']
     if 'VMCATCHER_LOG_CONF' in os.environ:
@@ -461,7 +461,8 @@ def main():
         logging.basicConfig(level=LoggingLevel)
     log = logging.getLogger("main")
     # Now logging is set up process other options
-    
+    if options.log_sql_info:
+        debugQqlEcho = True
     if options.cert_dir:
         certDir = options.cert_dir
     if options.list:
@@ -513,7 +514,7 @@ def main():
     # 1 So we have some actions to process
 
     # 1.1 Initate DB
-    database = db_controler(databaseConnectionString)
+    database = db_controler(databaseConnectionString,debugQqlEcho)
     # 2 Initate CA's to manage files
     if anchor_needed:
         if certDir == None:

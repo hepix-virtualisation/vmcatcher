@@ -166,9 +166,9 @@ class output_driver_lines(output_driver_base):
                 self.display_subscription(subscription)
 
 class db_controler:
-    def __init__(self,dboptions):
+    def __init__(self,dboptions,echo = False):
         self.log = logging.getLogger("db_controler")
-        self.engine = create_engine(dboptions, echo=False)
+        self.engine = create_engine(dboptions, echo=echo)
         model.init(self.engine)
         self.SessionFactory = sessionmaker(bind=self.engine)
         self.anchor = None
@@ -400,7 +400,8 @@ def main():
     p.add_option('--verbose', action ='count',help='Change global log level, increasing log output.', metavar='LOGFILE')
     p.add_option('--quiet', action ='count',help='Change global log level, decreasing log output.', metavar='LOGFILE')
     p.add_option('--log-config', action ='store',help='Logfile configuration file, (overrides command line).', metavar='LOGFILE')
-   
+    p.add_option('--log-sql-info', action ='store_true',help='Echo all SQL commands.', metavar='LOGFILE')
+    
     options, arguments = p.parse_args()
     anchor_needed = False
 
@@ -415,7 +416,7 @@ def main():
     actionsrequiring_issuer = set(['create'])
     databaseConnectionString = None
     logFile = None
-    
+    debugQqlEcho = False
     if 'VMCATCHER_RDBMS' in os.environ:
         databaseConnectionString = os.environ['VMCATCHER_RDBMS']
     if 'VMCATCHER_LOG_CONF' in os.environ:
@@ -459,6 +460,8 @@ def main():
         logging.basicConfig(level=LoggingLevel)
     log = logging.getLogger("main")
     # Now logging is set up process other options
+    if options.log_sql_info:
+        debugQqlEcho = True
     if options.list:
         actions.add('list')
     if options.links:
@@ -498,7 +501,7 @@ def main():
         log.error("More than one action selected.")
         sys.exit(1)
     # 1.1 Initate DB
-    database = db_controler(databaseConnectionString)
+    database = db_controler(databaseConnectionString,debugQqlEcho)
 
 
     # Handle actions selections beign required.
