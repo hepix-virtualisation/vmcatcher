@@ -1,6 +1,5 @@
 vmcatcher
 
-
 [HEPIX Virtualisation Working Group](../index.shtml) \>
 [`Virtual Machine Image`{.literal} Transfer](imagetransfer.shtml) \>
 [`Virtual Machine Image List`{.literal} Subscribing
@@ -124,7 +123,7 @@ enviroment varables are documented later.
 To add a subscription,
 
 ~~~~ {.programlisting}
-[user] $  wget --no-check-certificate https://dish.desy.de:2880/testing.smime
+[user] $  wget --no-check-certificate https://cernvm.cern.ch/releases/image.list
 ~~~~
 
 Now you can check the `Virtual Machine Image List`{.literal} by visiual
@@ -132,8 +131,8 @@ inspection.
 
 ~~~~ {.programlisting}
 [user] $  grep 'hv:[cd][an]' hepix_signed_image_list
-                "hv:ca": "/C=DE/O=GermanGrid/CN=GridKa-CA", 
-                "hv:dn": "/C=DE/O=GermanGrid/OU=DESY/CN=Owen Synge", 
+                "hv:ca": "/DC=ch/DC=cern/CN=CERN Trusted Certification Authority", 
+                "hv:dn": "/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=buncic/CN=379010/CN=Predrag Buncic", 
 ~~~~
 
 Now create this endorser. The endorser\_uuid can be any string but its
@@ -141,9 +140,9 @@ recommended this is a short string possibly following the uuid standard:
 
 ~~~~ {.programlisting}
 [user] $  vmcatcher_endorser --create \
-       --endorser_uuid='Ian' \
-       --subject='/C=DE/O=GermanGrid/OU=DESY/CN=Owen Synge' \
-       --issuer='/C=DE/O=GermanGrid/CN=GridKa-CA'
+       --endorser_uuid='Predrag Buncic' \
+       --subject='/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=buncic/CN=379010/CN=Predrag Buncic' \
+       --issuer='/DC=ch/DC=cern/CN=CERN Trusted Certification Authority'
 ~~~~
 
 Now we can add the subscription, this will automatically link the
@@ -151,7 +150,7 @@ endorser with this subscription.
 
 ~~~~ {.programlisting}
 [user] $  vmcatcher_endorser -l
-Ian    '/C=DE/O=GermanGrid/OU=DESY/CN=Owen Synge'        '/C=DE/O=GermanGrid/CN=GridKa-CA'
+Predrag Buncic    '/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=buncic/CN=379010/CN=Predrag Buncic'        '/DC=ch/DC=cern/CN=CERN Trusted Certification Authority'
 ~~~~
 
 The above command will show you the endorsers. Note the first column is
@@ -181,9 +180,9 @@ List the registered Images.
 ~~~~ {.programlisting}
 [user] $  vmcatcher_image -l
 INFO:vmcatcher_subscribe.main:Defaulting DB connection to 'sqlite:///vmcatcher.db'
-327016b0-6508-41d2-bce0-c1724cb3d3e2    0       9b6fad19-d913-4cca-b77d-c4b4fcd9dc36
-5f00fec3-4f2a-4fa0-a965-d52115606044    0       9b6fad19-d913-4cca-b77d-c4b4fcd9dc36
-da42ca85-179b-4873-b12e-32d549bf02b6    0       9b6fad19-d913-4cca-b77d-c4b4fcd9dc36
+327016b0-6508-41d2-bce0-c1724cb3d3e2    0       63175437-7d59-4851-b333-c96cb6545a86
+858a817e-0ca2-473f-89d3-d5bdfc51968e    0       63175437-7d59-4851-b333-c96cb6545a86
+da42ca85-179b-4873-b12e-32d549bf02b6    0       63175437-7d59-4851-b333-c96cb6545a86
 ~~~~
 
 The results show the UUID of the image, the availability state and the
@@ -196,7 +195,7 @@ Next update the subscriptions.
 ~~~~ {.programlisting}
 [user] $  vmcatcher_subscribe -U
 INFO:main:Defaulting DB connection to 'sqlite:///vmcatcher.db'
-INFO:db_actions:Updating:9b6fad19-d913-4cca-b77d-c4b4fcd9dc36
+INFO:db_actions:Updating:63175437-7d59-4851-b333-c96cb6545a86
 ~~~~
 
 Now the data base contains the latest version of the
@@ -206,16 +205,16 @@ they can be cached:
 ~~~~ {.programlisting}
 [user] $  vmcatcher_image -l
 INFO:vmcatcher_subscribe.main:Defaulting DB connection to 'sqlite:///vmcatcher.db'
-327016b0-6508-41d2-bce0-c1724cb3d3e2    2       9b6fad19-d913-4cca-b77d-c4b4fcd9dc36
-5f00fec3-4f2a-4fa0-a965-d52115606044    2       9b6fad19-d913-4cca-b77d-c4b4fcd9dc36
-da42ca85-179b-4873-b12e-32d549bf02b6    2       9b6fad19-d913-4cca-b77d-c4b4fcd9dc36
+327016b0-6508-41d2-bce0-c1724cb3d3e2    2       63175437-7d59-4851-b333-c96cb6545a86
+858a817e-0ca2-473f-89d3-d5bdfc51968e    2       63175437-7d59-4851-b333-c96cb6545a86
+da42ca85-179b-4873-b12e-32d549bf02b6    2       63175437-7d59-4851-b333-c96cb6545a86
 ~~~~
 
 Thsi now shows the images are available in the latest
 `Virtual Machine Image List`{.literal}.
 
 ~~~~ {.programlisting}
-[user] $  vmcatcher_image -a -u 5f00fec3-4f2a-4fa0-a965-d52115606044
+[user] $  vmcatcher_image -a -u 858a817e-0ca2-473f-89d3-d5bdfc51968e
 INFO:vmcatcher_subscribe.main:Defaulting DB connection to 'sqlite:///vmcatcher.db'
 ~~~~
 
@@ -224,12 +223,12 @@ The `Virtual Machine Image List`{.literal} state is now changed to
 ~~~~ {.programlisting}
 [user] $  vmcatcher_image -l
 INFO:vmcatcher_subscribe.main:Defaulting DB connection to 'sqlite:///vmcatcher.db'
-327016b0-6508-41d2-bce0-c1724cb3d3e2    2       9b6fad19-d913-4cca-b77d-c4b4fcd9dc36
-5f00fec3-4f2a-4fa0-a965-d52115606044    3       9b6fad19-d913-4cca-b77d-c4b4fcd9dc36
-da42ca85-179b-4873-b12e-32d549bf02b6    2       9b6fad19-d913-4cca-b77d-c4b4fcd9dc36
+327016b0-6508-41d2-bce0-c1724cb3d3e2    2       63175437-7d59-4851-b333-c96cb6545a86
+858a817e-0ca2-473f-89d3-d5bdfc51968e    3       63175437-7d59-4851-b333-c96cb6545a86
+da42ca85-179b-4873-b12e-32d549bf02b6    2       63175437-7d59-4851-b333-c96cb6545a86
 ~~~~
 
-Clearly showing that the image ’5f00fec3-4f2a-4fa0-a965-d52115606044’ is
+Clearly showing that the image ’858a817e-0ca2-473f-89d3-d5bdfc51968e’ is
 subscribed.
 
 Make the directories for caching the images.
@@ -243,8 +242,8 @@ Now cache the images.
 ~~~~ {.programlisting}
 [user] $  vmcatcher_cache
 INFO:vmcatcher_subscribe.main:Defaulting DB connection to 'sqlite:///vmcatcher.db'
-INFO:DownloadDir:Downloading '5f00fec3-4f2a-4fa0-a965-d52115606044'.
-INFO:CacheMan:moved file 5f00fec3-4f2a-4fa0-a965-d52115606044
+INFO:DownloadDir:Downloading '858a817e-0ca2-473f-89d3-d5bdfc51968e'.
+INFO:CacheMan:moved file 858a817e-0ca2-473f-89d3-d5bdfc51968e
 ~~~~
 
 Once this is complete the image from the
@@ -257,7 +256,7 @@ cache/partial
 cache/partial/cache.index
 cache/expired
 cache/expired/cache.index
-cache/5f00fec3-4f2a-4fa0-a965-d52115606044
+cache/858a817e-0ca2-473f-89d3-d5bdfc51968e
 cache/cache.index
 ~~~~
 
@@ -531,32 +530,32 @@ Adding a individual to the vmli database.
 
 ~~~~ {.programlisting}
 [user] $  vmcatcher_endorser --create \
-       --endorser_uuid=e55c1afe-0a62-4d31-a8d7-fb8c825f92a2 \
-       --subject='/C=DE/O=GermanGrid/OU=DESY/CN=Owen Synge' \
-       --issuer='/C=DE/O=GermanGrid/CN=GridKa-CA'
+       --endorser_uuid='e55c1afe-0a62-4d31-a8d7-fb8c825f92a2' \
+       --subject='/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=buncic/CN=379010/CN=Predrag Buncic' \
+       --issuer='/DC=ch/DC=cern/CN=CERN Trusted Certification Authority'
 ~~~~
 
 Deleting and individual from a vmli database.
 
 ~~~~ {.programlisting}
 [user] $  vmcatcher_endorser --delete \
-       --endorser_uuid=e55c1afe-0a62-4d31-a8d7-fb8c825f92a2
+       --endorser_uuid='e55c1afe-0a62-4d31-a8d7-fb8c825f92a2'
 ~~~~
 
 Allowing an individual to update a subscription.
 
 ~~~~ {.programlisting}
 [user] $  vmcatcher_endorser --link \
-       --endorser_uuid=e55c1afe-0a62-4d31-a8d7-fb8c825f92a2 \
-       --subscription_uuid=9b6fad19-d913-4cca-b77d-c4b4fcd9dc36
+       --endorser_uuid='e55c1afe-0a62-4d31-a8d7-fb8c825f92a2' \
+       --subscription_uuid=63175437-7d59-4851-b333-c96cb6545a86
 ~~~~
 
 Removing an individuals right to update a subscription.
 
 ~~~~ {.programlisting}
 [user] $  vmcatcher_endorser --unlink \
-       --endorser_uuid=e55c1afe-0a62-4d31-a8d7-fb8c825f92a2 \
-       --subscription_uuid=9b6fad19-d913-4cca-b77d-c4b4fcd9dc36
+       --endorser_uuid='e55c1afe-0a62-4d31-a8d7-fb8c825f92a2' \
+       --subscription_uuid=63175437-7d59-4851-b333-c96cb6545a86
 ~~~~
 
 Each endorser\_uuid must be unique or they will be assumed to be the
@@ -564,9 +563,9 @@ same item. The endorser\_uuid could be a more human name:
 
 ~~~~ {.programlisting}
 [user] $  vmcatcher_endorser --create \
-       --endorser_uuid='Ian Gable' \
-       --subject='/C=DE/O=GermanGrid/OU=DESY/CN=Owen Synge' \
-       --issuer='/C=DE/O=GermanGrid/CN=GridKa-CA'
+       --endorser_uuid='e55c1afe-0a62-4d31-a8d7-fb8c825f92a2' \
+       --subject='/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=buncic/CN=379010/CN=Predrag Buncic' \
+       --issuer='/DC=ch/DC=cern/CN=CERN Trusted Certification Authority'
 ~~~~
 
 
@@ -578,7 +577,7 @@ This application manages your subscriptions and their update:
 To add a subscription
 
 ~~~~ {.programlisting}
-[user] $  vmcatcher_subscribe  -s https://dish.desy.de:2880/testing.smime
+[user] $  vmcatcher_subscribe  -s https://cernvm.cern.ch/releases/image.list
 ~~~~
 
 Or alternatively you can download a file visually insepect it and
@@ -598,17 +597,17 @@ To list subscriptions
 
 ~~~~ {.programlisting}
 [user] $  vmcatcher_subscribe  -l
-9b6fad19-d913-4cca-b77d-c4b4fcd9dc36    True    https://dish.desy.de:2880/testing.smime
+63175437-7d59-4851-b333-c96cb6545a86    True    https://cernvm.cern.ch/releases/image.list
 ~~~~
 
 Getting Information on a subscription:
 
 ~~~~ {.programlisting}
-[user] $  vmcatcher_subscribe  -i --uuid=9b6fad19-d913-4cca-b77d-c4b4fcd9dc36
-dc:identifier=9b6fad19-d913-4cca-b77d-c4b4fcd9dc36
-subscription.dc:description=DESY Image List SHaring service
+[user] $  vmcatcher_subscribe  -i --uuid=63175437-7d59-4851-b333-c96cb6545a86
+dc:identifier=63175437-7d59-4851-b333-c96cb6545a86
+subscription.dc:description=CERN Virtual Machine
 subscription.sl:authorised=True
-subscription.hv:uri=https://dish.desy.de:2880/testing.smime
+subscription.hv:uri=https://cernvm.cern.ch/releases/image.list
 subscription.dc:date:updated=2011-04-16T19:23:19Z
 imagelist.dc:date:imported=2011-04-16T19:23:18Z
 imagelist.dc:date:created=2011-03-16T00:15:07Z
@@ -618,11 +617,11 @@ imagelist.dc:date:expires=2011-04-13T00:15:07Z
 you can also select on the basis of url:
 
 ~~~~ {.programlisting}
-[user] $  vmcatcher_subscribe  -i -r https://dish.desy.de:2880/testing.smime
-dc:identifier=9b6fad19-d913-4cca-b77d-c4b4fcd9dc36
-subscription.dc:description=DESY Image List SHaring service
+[user] $  vmcatcher_subscribe  -i -r https://cernvm.cern.ch/releases/image.list
+dc:identifier=63175437-7d59-4851-b333-c96cb6545a86
+subscription.dc:description=CERN Virtual Machine
 subscription.sl:authorised=True
-subscription.hv:uri=https://dish.desy.de:2880/testing.smime
+subscription.hv:uri=https://cernvm.cern.ch/releases/image.list
 subscription.dc:date:updated=2011-04-17T19:04:35Z
 imagelist.dc:date:imported=2011-04-17T19:04:34Z
 imagelist.dc:date:created=2011-03-16T00:15:07Z
@@ -633,7 +632,7 @@ Change the output format to get the original message without the
 security wraper, or in original form:
 
 ~~~~ {.programlisting}
-[user] $  vmcatcher_subscribe  -i --uuid=9b6fad19-d913-4cca-b77d-c4b4fcd9dc36 -f message
+[user] $  vmcatcher_subscribe  -i --uuid=63175437-7d59-4851-b333-c96cb6545a86 -f message
 ~~~~
 
 Three formats exist SMIME, message, lines.
@@ -647,7 +646,7 @@ Three formats exist SMIME, message, lines.
 To delete a subscription
 
 ~~~~ {.programlisting}
-[user] $  vmcatcher_subscribe  -D  --uuid=9b6fad19-d913-4cca-b77d-c4b4fcd9dc36
+[user] $  vmcatcher_subscribe  -D  --uuid=63175437-7d59-4851-b333-c96cb6545a86
 ~~~~
 
 
@@ -660,9 +659,9 @@ List the available images
 
 ~~~~ {.programlisting}
 [user] $  vmcatcher_image -l
-327016b0-6508-41d2-bce0-c1724cb3d3e2    2       9b6fad19-d913-4cca-b77d-c4b4fcd9dc36
-5f00fec3-4f2a-4fa0-a965-d52115606044    3       9b6fad19-d913-4cca-b77d-c4b4fcd9dc36
-da42ca85-179b-4873-b12e-32d549bf02b6    2       9b6fad19-d913-4cca-b77d-c4b4fcd9dc36
+327016b0-6508-41d2-bce0-c1724cb3d3e2    2       63175437-7d59-4851-b333-c96cb6545a86
+858a817e-0ca2-473f-89d3-d5bdfc51968e    3       63175437-7d59-4851-b333-c96cb6545a86
+da42ca85-179b-4873-b12e-32d549bf02b6    2       63175437-7d59-4851-b333-c96cb6545a86
 ~~~~
 
 The results show the UUID of the image, the availability state and the
@@ -710,8 +709,8 @@ INFO:vmcatcher_subscribe.main:Defaulting actions as 'expire', 'sha512' and 'down
 INFO:vmcatcher_subscribe.main:Defaulting cache-dir to 'cache'.
 INFO:vmcatcher_subscribe.main:Defaulting partial-dir to 'cache/partial'.
 INFO:vmcatcher_subscribe.main:Defaulting expired-dir to 'cache/expired'.
-INFO:DownloadDir:Downloading '5f00fec3-4f2a-4fa0-a965-d52115606044'.
-INFO:CacheMan:moved file 5f00fec3-4f2a-4fa0-a965-d52115606044
+INFO:DownloadDir:Downloading '858a817e-0ca2-473f-89d3-d5bdfc51968e'.
+INFO:CacheMan:moved file 858a817e-0ca2-473f-89d3-d5bdfc51968e
 ~~~~
 
 
@@ -896,7 +895,7 @@ Then the by hand configuration for your master DB
 
 ~~~~ {.programlisting}
 [root] #  sudo -u vmcatcher /usr/bin/vmcatcher_subscribe \
-      -s https://dish.desy.de:2880/testing.smime \
+      -s https://cernvm.cern.ch/releases/image.list \
       -d sqlite:////var/lib/vmcatcher/vmcatcher.db
 ~~~~
 
