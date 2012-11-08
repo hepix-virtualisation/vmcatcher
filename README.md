@@ -1,11 +1,4 @@
 vmcatcher
-
-[HEPIX Virtualisation Working Group](../index.shtml) \>
-[`Virtual Machine Image`{.literal} Transfer](imagetransfer.shtml) \>
-[`Virtual Machine Image List`{.literal} Subscribing
-Software](imagetransfer-software-subscriber.shtml) \> vmcatcher
-
-vmcatcher
 ---------
 
 This virtual machine `Virtual Machine Image List`{.literal} subscriber
