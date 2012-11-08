@@ -1,5 +1,10 @@
 Changelog
 
+vmcatcher-0.1.25
+
+ * Improvements to the README.md 
+ * Added options --log-sql-info to log all data base SQL operations.
+
 vmcatcher-0.1.24
 
  * vmcatcher_image: Fixed crash on getting information on an image list, 
