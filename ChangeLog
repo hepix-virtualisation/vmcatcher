@@ -1,5 +1,13 @@
 Changelog
 
+ * We thought we had a bug with soem undefined behaviour. This is hopefully now resolved 
+   as better error reporting.
+ * Added two new error codes
+   #  16 New version number is same as old version number.
+   #  17 New version number is less than old version number.
+
+
+
 vmcatcher-0.1.25
 
  * Improvements to the README.md 

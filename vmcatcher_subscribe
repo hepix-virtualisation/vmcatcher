@@ -51,6 +51,9 @@ except:
 #  13 Endorser not authorised on subscription.
 #  14 trust anchor missing
 #  15 Database integrity error.
+#  16 New version number is same as old version number.
+#  17 New version number is less than old version number.
+
 
 #  31 imagelist dc:identifier invalid.
 #  32 image dc:identifier invalid.
@@ -737,8 +740,6 @@ class db_controler(object):
             return checker.errorNo
         if checker.Json == None:
             return 14
-        messageVersion = checker.Json[u'hv:imagelist'][u'hv:version']
-        self.log.debug('messageVersion:%s' % (messageVersion))
         metadata = checker.vmilist.metadata
         metadata[u'data'] = update_unprocessed
         metadata[u'data-hash'] = messagehash
@@ -777,7 +778,6 @@ class db_controler(object):
         if qeryJunction.count() == 0:
             #"we have no older version"
             self.log.info("First version of:%s" % (ProcessingSubscriptionUuid))
-            VersionCompare = 1
         else:
             if qeryJunction.count() != 1:
                 self.log.error('Database Error processing  qeryJunction:%s' % (ProcessingSubscriptionUuid))
@@ -801,15 +801,16 @@ class db_controler(object):
                     self.log.info('imageList Expired:%s' % (ProcessingSubscriptionUuid))
                     imageList.expired = now
                     Session.commit()
-                return 0
+                return 0    
+            messageVersion = checker.Json[u'hv:imagelist'][u'hv:version']
+            self.log.debug('Downloaded version:%s' % (messageVersion))
             VersionCompare = split_numeric_sort(imageList.version,messageVersion)
-
-        if VersionCompare == 0:
-            self.log.error('ProcessingSubscriptionUuid invalid version number:%s' % (messageVersion))
-            return 0
-        if VersionCompare < 0:
-            self.log.error('New version has lower version number:%s' % (VersionCompare))
-            return 0
+            if VersionCompare == 0:
+                self.log.error('Downloaded version "%s" has the same version number than the old version "%s".' % (messageVersion, imageList.version))                
+                return 16 #  16 New version number is same as old version number.
+            if VersionCompare < 0:
+                self.log.error('Downloaded version "%s" has lower version number than the old version "%s".' % (messageVersion, imageList.version))
+                return 17 #  17 New version number is less than old version number.
         
         
         imagelist = model.ImageListInstance(auth.id,metadata)
