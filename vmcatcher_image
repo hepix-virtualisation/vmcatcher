@@ -379,7 +379,7 @@ def pairsNnot(list_a,list_b):
 def main():
     """Runs program and handles command line options"""
     p = optparse.OptionParser(version = "%prog " + version)
-    p.add_option('-l', '--list', action ='store_true',help='list subscriptions')
+    p.add_option('-l', '--list', action ='store_true',help='list all images.')
     p.add_option('-d', '--database', action ='store', help='Database Initiation string')
     p.add_option('-c', '--cert-dir', action ='store',help='Certificate directory.', metavar='INPUTDIR',
         default='/etc/grid-security/certificates/')
