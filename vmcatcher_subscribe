@@ -205,12 +205,14 @@ class EventObj(object):
             if key in metadata.keys():
                 newEnv[str(mappingdict[key])] = str(metadata[key])
         rc,stdout,stderr = self.launch(newEnv)
-        if rc != 0:
-            self.log.error("Event command '%s' exit code '%s' failed for VMCATCHER_EVENT_TYPE='%s'." % (self.eventExecutionString,rc,newEnv['VMCATCHER_EVENT_TYPE']))
+        if rc == 0:
+            self.log.debug("event '%s' executed '%s'" % (newEnv['VMCATCHER_EVENT_TYPE'],self.eventExecutionString))
+            self.log.debug("stdout=%s" % (stdout))
+            self.log.debug("stderr=%s" % (stderr))
+        else:
+            self.log.error("Event '%s' executed '%s' with exit code '%s'." % (newEnv['VMCATCHER_EVENT_TYPE'],self.eventExecutionString,rc))
             self.log.info("stdout=%s" % (stdout))
             self.log.info("stderr=%s" % (stderr))
-            return
-        self.log.debug("stdout=%s" % (stdout))
         return
     def eventImageNew(self,metadata):
         self.eventProcess("ImageNew",metadata)
