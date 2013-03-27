@@ -1,8 +1,16 @@
 Changelog
 
+
+vmcatcher-0.1.27
+
+ * vmcatcher_subscribe and vmcatcher_cache: Better logging of handler events:
+   # logging of stderr output of the handler.
+   # debug level logging of handler stdout on success.
+ * vmcatcher_image fix to command line help.
+
 vmcatcher-0.1.26
 
- * We thought we had a bug with some undefined behavior. This is hopefully now resolved
+ * We thought we had a bug with some undefined behaviour. This is hopefully now resolved
    as better error reporting.
  * Added two new error codes
    #  16 New version number is same as old version number.
