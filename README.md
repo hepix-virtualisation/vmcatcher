@@ -294,7 +294,7 @@ gpgcheck=0
 ~~~~
 
 Install the Grid CA repository for details please see
-https://wiki.egi.eu/wiki/EGI\_IGTF\_Release
+https://wiki.egi.eu/wiki/EGI_IGTF_Release
 
 ~~~~ {.programlisting}
 [root] # cat /etc/yum.repos.d/egi-trust-anchor.repo
