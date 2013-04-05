@@ -289,6 +289,10 @@ class db_actions(object):
         self.session.commit()
         ImageDefinitionQuery = self.ImageDefinition_get(subscriptionKey,metadata)
         return ImageDefinitionQuery
+    def ImageDefinition_list(self,subscriptionKey):
+        imagedefList = self.session.query(model.ImageDefinition).\
+                filter(model.ImageDefinition.subscription==subscriptionKey)
+        return imagedefList
 
 
 class queryby_base(object):
@@ -531,10 +535,13 @@ class db_controler(object):
         Session = self.SessionFactory()
         db = db_actions(Session)
         selector = self.factory_selector(Session)
-        query_subscription = selector.subscription_get(subscriptions_selected)
         for selection_item in subscriptions_selected:
             query_subscription = selector.subscription_get(selection_item)
             for a_sub in query_subscription:
+                # Shoudl not need thsi code but do maybe a bug in slqalchamy or more likely my db definition"
+                query_image_def_linked = db.ImageDefinition_list(a_sub.id)
+                for image_def_linked in query_image_def_linked:
+                    Session.delete(image_def_linked)
                 Session.delete(a_sub)
                 foundOne = True
         Session.commit()
