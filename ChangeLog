@@ -2,8 +2,8 @@ Changelog
 
 vmcatcher-0.1.28
 
- * Better protection against endorsers being added twice.
- * Cleaning up old registered image UUID's when their imagelist is deleted.
+ * vmcatcher_endorser: Better protection against endorsers being added twice.
+ * vmcatcher_subscribe: Cleaning up old registered image UUID's when their imagelist is deleted.
  
 vmcatcher-0.1.27
 
