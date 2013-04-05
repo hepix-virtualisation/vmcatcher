@@ -234,7 +234,10 @@ class db_actions(object):
                 filter(model.EndorserPrincible.hv_dn==metadata[u'hv:dn']).\
                 filter(model.EndorserPrincible.hv_ca==metadata[u'hv:ca'])
     def endorser_create(self,metadata):
-        gotquery = self.endorser_get(metadata)
+        hv_dn_str = metadata[u'hv:dn']
+        gotquery = self.session.query(model.Endorser).\
+            filter(model.Endorser.id==model.EndorserPrincible.id).\
+            filter(model.EndorserPrincible.hv_dn==metadata[u'hv:dn'])
         if gotquery.count() != 0:
             return gotquery
         newlist = model.Endorser(metadata)
