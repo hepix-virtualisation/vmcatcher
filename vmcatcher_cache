@@ -78,10 +78,13 @@ class BaseDir(object):
     def __init__(self, directory):
         self.directory = directory
         self.indexFile = "cache.index"
+        self.index = {}
         self.indexLoad()
         # self.files = { 'uuid' : { 'sha512' : 'hash', 'message' : 'signed message' , 'date' : }
         self.indexUnknownClear()
         self.log = logging.getLogger("BaseDir")
+ 
+        
     def getFiles(self):
         output = set()
         directoryList = os.listdir(self.directory)
@@ -101,8 +104,6 @@ class BaseDir(object):
             tmp = json.loads(lines)
             if type(tmp) is dict:
                 self.index = tmp
-        else:
-            self.index = {}
         return True
 
     def indexSave(self):
