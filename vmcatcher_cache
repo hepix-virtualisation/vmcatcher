@@ -479,7 +479,7 @@ class CacheMan(object):
                 self.DownloadDir.indexSave()
                 continue
             if self.callbackEventAvailablePrefix != None:
-                self.callbackEventAvailablePrefix(downloadsneeded[key])
+                self.callbackEventAvailablePrefix(self.DownloadDir.index[key])
             if not self.cacheDir.moveFrom(self.DownloadDir,key):
                 self.log.error("Failed to Move file '%s' into the enbdorsed directory." % (key))
                 continue
@@ -487,7 +487,7 @@ class CacheMan(object):
             self.cacheDir.indexSave()
             self.log.info("moved file %s" % (key))
             if self.callbackEventAvailablePostfix != None:
-                self.callbackEventAvailablePostfix(downloadsneeded[key])
+                self.callbackEventAvailablePostfix(self.cacheDir.index[key])
         return True
 
 
