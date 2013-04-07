@@ -305,6 +305,7 @@ class EventObj(object):
             'dc:description' : 'VMCATCHER_EVENT_DC_DESCRIPTION',
             'dc:title' : 'VMCATCHER_EVENT_DC_TITLE',
             'hv:hypervisor' : 'VMCATCHER_EVENT_HV_HYPERVISOR',
+            "hv:format" : 'VMCATCHER_EVENT_HV_FORMAT',
             'hv:version' : 'VMCATCHER_EVENT_HV_VERSION',
             'sl:arch' : 'VMCATCHER_EVENT_SL_ARCH',
             'sl:comments' : 'VMCATCHER_EVENT_SL_COMMENTS',
