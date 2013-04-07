@@ -645,6 +645,10 @@ def main():
     ThisCacheManager = CacheMan(databaseConnectionString,debugSqlEcho,dir_cache, dir_partial, dir_expired)
     if eventExecutionString != None:
         EventInstance = EventObj(eventExecutionString)
+        EventInstance.env['VMCATCHER_CACHE_DIR_CACHE'] = dir_cache
+        EventInstance.env['VMCATCHER_CACHE_DIR_DOWNLOAD'] = dir_partial
+        EventInstance.env['VMCATCHER_CACHE_DIR_EXPIRE'] = dir_expired
+        
         ThisCacheManager.callbackEventAvailablePrefix = EventInstance.eventAvailablePrefix
         ThisCacheManager.callbackEventAvailablePostfix = EventInstance.eventAvailablePostfix
         ThisCacheManager.callbackEventExpirePrefix = EventInstance.eventExpirePrefix
