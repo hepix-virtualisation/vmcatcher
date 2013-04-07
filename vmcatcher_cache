@@ -173,8 +173,10 @@ class DownloadDir(BaseDir):
         self.indexSave()
         if self.index[uuid]['size'] != None:
             stats = os.statvfs(self.directory)
-            if self.index[uuid]['size'] > (stats[statvfs.F_BSIZE] * stats[statvfs.F_BAVAIL]):
-                self.log.error("Image '%s' is too large %s bytes." % (uuid,self.index[uuid]['size']))
+            diskspace = (stats[statvfs.F_BSIZE] * stats[statvfs.F_BAVAIL])
+            imagesize = self.index[uuid]['size']
+            if imagesize > diskspace:
+                self.log.error("Image '%s' is too large at '%s' bytes, available disk space is '%s' bytes." % (uuid,imagesize,diskspace))
                 return False
         self.log.info("Downloading '%s'." % (uuid))
         filepath = os.path.join(self.directory,self.index[uuid]['filename'])
