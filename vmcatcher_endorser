@@ -390,13 +390,14 @@ def main():
     p.add_option('-s', '--subscription_uuid', action ='append',help='Select subscription by uuid.', metavar='UUID')
     p.add_option('-e', '--endorser_uuid', action ='append',help='Select endorser by uuid.', metavar='UUID')
     p.add_option('-C', '--create', action ='store_true',help='Create an endorser.')
-    p.add_option('-S', '--subject',action ='append',help='Endorsers certificate subject.', metavar='SUBJECT')
-    p.add_option('-I', '--issuer',action ='append',help='Endorsers certificate issuer.', metavar='SUBJECT') 
+    p.add_option('-n', '--dn',action ='append',help='Endorsers certificate distinguished name.', metavar='DN')
+    p.add_option('-I', '--issuer',action ='append',help="Endorsers certificate issuer's distinguished name.", metavar='ISSUER') 
     p.add_option('-D', '--delete', action ='store_true',help='Delete an endorser.')
     p.add_option('-K', '--links', action ='store_true',help='List endorser subscription links.')
     p.add_option('-k', '--link', action ='store_true',help='Add endorser to subscription.')
     p.add_option('-u', '--unlink', action ='store_true',help='Remove endorser from Subscription.')
     p.add_option('-i', '--info', action ='store_true',help='Information on endoser.')
+    p.add_option('-S', '--subject',action ='append',help='Depricated version of --dn.', metavar='DN')
     p.add_option('--verbose', action ='count',help='Change global log level, increasing log output.', metavar='LOGFILE')
     p.add_option('--quiet', action ='count',help='Change global log level, decreasing log output.', metavar='LOGFILE')
     p.add_option('--log-config', action ='store',help='Logfile configuration file, (overrides command line).', metavar='LOGFILE')
@@ -486,7 +487,10 @@ def main():
     if options.database:
         databaseConnectionString = options.database
     if options.subject:
+        log.info("Option '--subject' and '-S' are depricated in favour of '--dn'.")
         subjects_selected = options.subject
+    if options.dn:
+        subjects_selected = options.dn
     if options.issuer:
         issuers_selected = options.issuer
         
