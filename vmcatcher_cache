@@ -41,6 +41,7 @@ from hepixvmitrust.vmitrustlib import file_extract_metadata as file_extract_meta
 import os, statvfs
 import shutil
 import commands
+from M2Crypto import  BIO, SMIME, X509
 try:
     import simplejson as json
 except:
@@ -142,7 +143,7 @@ class BaseDir(object):
             self.log.error("not a BaseDir object code error")
             return False
         if not uuid in aDir.index.keys():
-            self.log.error("uuid '%s' is not in directory %s" % aDir)
+            self.log.error("uuid '%s' is not in directory %s" % (aDir, self.directory))
             return False
         origin = os.path.join(aDir.directory,aDir.index[uuid]['filename'])
         destination = os.path.join(self.directory,uuid)
@@ -303,9 +304,10 @@ class EventObj(object):
             'hv:uri' : 'VMCATCHER_EVENT_HV_URI',
             'hv:size' : 'VMCATCHER_EVENT_HV_SIZE',
             'dc:description' : 'VMCATCHER_EVENT_DC_DESCRIPTION',
+            'hv:imagelist.dc:identifier' : 'VMCATCHER_EVENT_IL_DC_IDENTIFIER',
             'dc:title' : 'VMCATCHER_EVENT_DC_TITLE',
             'hv:hypervisor' : 'VMCATCHER_EVENT_HV_HYPERVISOR',
-            "hv:format" : 'VMCATCHER_EVENT_HV_FORMAT',
+            "hv:image.hv:format" : 'VMCATCHER_EVENT_HV_FORMAT',
             'hv:version' : 'VMCATCHER_EVENT_HV_VERSION',
             'sl:arch' : 'VMCATCHER_EVENT_SL_ARCH',
             'sl:comments' : 'VMCATCHER_EVENT_SL_COMMENTS',
@@ -317,6 +319,7 @@ class EventObj(object):
         for key in mappingdict.keys():
             if key in metadata.keys():
                 newEnv[str(mappingdict[key])] = str(metadata[key])
+        
         rc,stdout,stderr = self.launch(newEnv)
         if rc == 0:
             self.log.debug("event '%s' executed '%s'" % (newEnv['VMCATCHER_EVENT_TYPE'],self.eventExecutionString))
@@ -445,11 +448,13 @@ class CacheMan(object):
             imageListInst = line[2]
             ImageInst = line[3]
             uuid = imageDef.identifier
+            
             details = {'hv:uri' : str(ImageInst.uri),
                     'sl:checksum:sha512' : str(ImageInst.sha512),
                     'hv:size': int(ImageInst.size),
                     'dc:identifier' : uuid,
                     'message' : str(imageListInst.data),
+                    'hv:imagelist.dc:identifier' : str(sub.identifier),
                     'msgHash' : str(imageListInst.data_hash),
                     'dc:title' : str(ImageInst.title),
                     'dc:description' : str(ImageInst.description),
@@ -464,6 +469,36 @@ class CacheMan(object):
                     'size': int(ImageInst.size),
                     'uuid' : uuid,
                     }
+            
+            
+            # read message
+            
+            buf = BIO.MemoryBuffer(str(imageListInst.data))
+            sk = X509.X509_Stack()
+            p7, data = SMIME.smime_load_pkcs7_bio(buf)
+            data_str = data.read()
+
+            try:
+                jsonData = json.loads(str(data_str))
+            except ValueError:
+                self.log.error("proiblem reading JSON")
+                continue
+            if jsonData == None:
+                self.log.error("Downlaoded jsonData was not valid image.")
+                continue
+            vmilist = VMimageListDecoder(jsonData)
+            if vmilist == None:
+                self.log.error("Downlaoded metadata from '%s' was not valid image list Object." % (subscriptionKey))
+            matchingImage = None
+            for image in vmilist.images:
+                if "dc:identifier" in image.metadata.keys():
+                    if uuid == image.metadata["dc:identifier"]:
+                        matchingImage = image
+            if matchingImage != None:
+                for metafield in matchingImage.metadata.keys():
+                    newfield = "hv:image.%s" % (metafield)
+                    details[newfield] = matchingImage.metadata[metafield]
+            
             if not uuid in self.cacheDir.index.keys():
                 downloadsneeded[uuid] = details
                 continue
@@ -479,7 +514,12 @@ class CacheMan(object):
                 self.DownloadDir.indexSave()
                 continue
             if self.callbackEventAvailablePrefix != None:
-                self.callbackEventAvailablePrefix(self.DownloadDir.index[key])
+                metadata = {}
+                metadata.update(dict(downloadsneeded[key]))
+                metadata.update(dict(self.DownloadDir.index[key]))
+                #for pkey in  metadata.keys():
+                #    print "%s---%s" % (pkey, metadata[pkey])
+                self.callbackEventAvailablePrefix(metadata)
             if not self.cacheDir.moveFrom(self.DownloadDir,key):
                 self.log.error("Failed to Move file '%s' into the enbdorsed directory." % (key))
                 continue
@@ -487,7 +527,10 @@ class CacheMan(object):
             self.cacheDir.indexSave()
             self.log.info("moved file %s" % (key))
             if self.callbackEventAvailablePostfix != None:
-                self.callbackEventAvailablePostfix(self.cacheDir.index[key])
+                metadata = {}
+                #metadata.update(dict(ddownloadsneeded[key]))
+                metadata.update(dict(self.cacheDir.index[key]))
+                self.callbackEventAvailablePostfix(metadata)
         return True
 
 
