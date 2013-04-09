@@ -1,10 +1,12 @@
 Changelog
 
 vmcatcher-0.1.29
- * vmcatcher_cache: Force environment variables VMCATCHER_CACHE_DIR_CACHE, VMCATCHER_CACHE_DIR_DOWNLOAD and VMCATCHER_CACHE_DIR_EXPIRE to be set for handlers under all set ups.
+
+ * vmcatcher_cache: Force environment variables VMCATCHER_CACHE_DIR_CACHE, VMCATCHER_CACHE_DIR_DOWNLOAD and VMCATCHER_CACHE_DIR_EXPIRE to be set for handlers under all set ups and not just my setup.
  * vmcatcher_cache: Added environment variables for handlers, VMCATCHER_EVENT_IL_DC_IDENTIFIER and VMCATCHER_EVENT_HV_FORMAT (if available) and can now import variables easily form the image list.
  * vmcatcher_cache: Some code clean up.
  * vmcatcher_endorser: Added command line option '--dn' as its more consistent with modern naming than '--subject', which now issues and info level message.
+ * Updated README.md to document the environment variables.
 
 vmcatcher-0.1.28
 
