@@ -860,6 +860,14 @@ The Operating System version
 The Image file name.
 
 
+###### VMCATCHER\_EVENT\_IL\_DC\_IDENTIFIER
+
+The image list the image comes from.
+
+###### VMCATCHER\_EVENT\_HV\_FORMAT
+
+The format of the image. This is only available if the image list contains the format metadata.
+
 
 
 
