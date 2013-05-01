@@ -5,12 +5,12 @@ This virtual machine `Virtual Machine Image List`{.literal} subscriber
 implementation is intended to be a production grade reference
 implementation.
 
-The software makes use of a database to store subscriptions in a simplar
-way to a podcast reader or a linux package manager. The tested Database
-is SqlLight, but it is based upon SQLalchamy so shoudl support many
-databases. Sdllight has proved more than adiquate for the low
+The software makes use of a database to store subscriptions in a similar
+way to a podcast reader or a Linux package manager. The tested Database
+is SqlLight, but it is based upon SQLalchamy so should support many
+databases. SqlLight has proved more than adequate for the low
 transaction rate of a image list subscriber and so deployment issues are
-mearly backing up a databasefile.
+mealy backing up a database file.
 
 Since the software is made with the Grid in mind it is only natural that
 the X509 certificate model is used.
@@ -24,7 +24,7 @@ This application allows users to subscribe to virtual machine
 in the `Virtual Machine Image List`{.literal}, validate the images list
 with x509 based public key cryptography, and validate the images against
 sha512 hashes in the images lists and provide events for further
-applications to process updates or expiries of virtual machine images
+applications to process updates or expires of virtual machine images
 without having to further validate the images.
 
 This software is available at:
@@ -46,7 +46,7 @@ directory.
 
 -   Add and delete multiple subscriptions to
     `Virtual Machine Image List`{.literal}s.
--   Update subscriptions checking authenticity of the message useng x509
+-   Update subscriptions checking authenticity of the message using x509
     based signatures.
 -   Automation as a cron script.
 -   Subscribe and unsubscribe to images from
@@ -71,7 +71,7 @@ all messages in import. Because these are just caches of
 `Virtual Machine Image List`{.literal}s they are meant to be used the
 majority of the time without intervention.
 
-If you are signing a list using the hepix
+If you are signing a list using the HEPiX
 `Virtual Machine Image List`{.literal} signer, you should also install
 this application and subscribe to your current image.
 
@@ -94,8 +94,8 @@ date.
 [root] #  fetch-crl
 ~~~~
 
-This suit of applications can use either enviroment variable or command
-line to set most parmaters. If neither enviroment variables or command
+This suit of applications can use either environment variable or command
+line to set most parameters. If neither environment variables or command
 line parameters are not set for critical variables the application will
 provide defaults and show warnings.
 
@@ -106,12 +106,12 @@ from VMCATCHER\_RDBMS,
 [user] $ export VMCATCHER_RDBMS="sqlite:////var/lib/vmcatcher/vmcatcher.db"
 ~~~~
 
-The above line instructs the sqlalchamy interfacxe to datavabses to use
+The above line instructs the SQLalchamy interface to databases to use
 sqlite and path "/var/lib/vmcatcher/vmcatcher.db" on a UNIX system. This
-is the only improtant file and stores the older signed image lists. SQL
+is the only important file and stores the older signed image lists. SQL
 is used to enforce most of the rules such as unique nature of UUID’s and
 the URLS for the subscriptions, this should be backed up. Other
-enviroment varables are documented later.
+environment variables are documented later.
 
 To add a subscription,
 
@@ -119,11 +119,11 @@ To add a subscription,
 [user] $  wget --no-check-certificate https://cernvm.cern.ch/releases/image.list
 ~~~~
 
-Now you can check the `Virtual Machine Image List`{.literal} by visiual
+Now you can check the `Virtual Machine Image List`{.literal} by visual
 inspection.
 
 ~~~~ {.programlisting}
-[user] $  grep 'hv:[cd][an]' hepix_signed_image_list
+[user] $  grep 'hv:[cd][an]' HEPiX_signed_image_list
                 "hv:ca": "/DC=ch/DC=cern/CN=CERN Trusted Certification Authority", 
                 "hv:dn": "/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=buncic/CN=379010/CN=Predrag Buncic", 
 ~~~~
@@ -203,7 +203,7 @@ INFO:vmcatcher_subscribe.main:Defaulting DB connection to 'sqlite:///vmcatcher.d
 da42ca85-179b-4873-b12e-32d549bf02b6    2       63175437-7d59-4851-b333-c96cb6545a86
 ~~~~
 
-Thsi now shows the images are available in the latest
+This now shows the images are available in the latest
 `Virtual Machine Image List`{.literal}.
 
 ~~~~ {.programlisting}
@@ -368,7 +368,7 @@ install fetch-crl
 [root] # yum install fetch-crl
 ~~~~
 
-Install the hepix `Virtual Machine Image List`{.literal} subscriber.
+Install the HEPiX `Virtual Machine Image List`{.literal} subscriber.
 
 ~~~~ {.programlisting}
 [root] # yum install vmcatcher
@@ -439,7 +439,7 @@ Now install the code from git.
 http://grid.desy.de/vm/repo/yum/sl5/noarch/tgz/
 ~~~~
 
-The leatest version of hepixvmitrust-X.X.XX.tar.gz shoudl be downloaded
+The latest version of hepixvmitrust-X.X.XX.tar.gz should be downloaded
 extracted and installed.
 
 ~~~~ {.programlisting}
@@ -460,8 +460,8 @@ Saving to: `hepixvmitrust-0.0.14.tar.gz'
 [root] # cd ..
 ~~~~
 
-The leatest version ofsmimeX509validation-0.0.7.tar.gz -X.X.XX.tar.gz
-shoudl be downloaded extracted and installed.
+The latest version ofsmimeX509validation-0.0.7.tar.gz -X.X.XX.tar.gz
+should be downloaded extracted and installed.
 
 ~~~~ {.programlisting}
 [root] # 
@@ -482,7 +482,7 @@ Saving to: `smimeX509validation-0.0.7.tar.gz'
 [root] # cd ..
 ~~~~
 
-The leatest version of vmcatcher-X.X.XX.tar.gz shoudl be downloaded
+The latest version of vmcatcher-X.X.XX.tar.gz should be downloaded
 extracted and installed.
 
 ~~~~ {.programlisting}
@@ -515,7 +515,7 @@ Each certificate has an issuing certificate and a unique string called a
 and the ’subject’ of the issuing certificate combined are called
 ’credentials’, and will be globally unique.
 
-ndividuals on rare occasions will need more than one certificate, for
+individuals on rare occasions will need more than one certificate, for
 this reason they are given a unique identifier under this system and
 allowed to have more than one set of credentials.
 
@@ -573,7 +573,7 @@ To add a subscription
 [user] $  vmcatcher_subscribe  -s https://cernvm.cern.ch/releases/image.list
 ~~~~
 
-Or alternatively you can download a file visually insepect it and
+Or alternatively you can download a file visually inspect it and
 subscribe to the local file.
 
 ~~~~ {.programlisting}
@@ -607,7 +607,7 @@ imagelist.dc:date:created=2011-03-16T00:15:07Z
 imagelist.dc:date:expires=2011-04-13T00:15:07Z
 ~~~~
 
-you can also select on the basis of url:
+you can also select on the basis of URI:
 
 ~~~~ {.programlisting}
 [user] $  vmcatcher_subscribe  -i -r https://cernvm.cern.ch/releases/image.list
@@ -622,7 +622,7 @@ imagelist.dc:date:expires=2011-04-13T00:15:07Z
 ~~~~
 
 Change the output format to get the original message without the
-security wraper, or in original form:
+security wrapper, or in original form:
 
 ~~~~ {.programlisting}
 [user] $  vmcatcher_subscribe  -i --uuid=63175437-7d59-4851-b333-c96cb6545a86 -f message
@@ -713,7 +713,7 @@ INFO:CacheMan:moved file 858a817e-0ca2-473f-89d3-d5bdfc51968e
 Since this application suite is intended to be embedded in a larger
 application and concerned with downloading and managing updates of VM
 images into a cloud infrastructure, it is some times beneficial to have
-an event interface so that applicatyions may embed these applications in
+an event interface so that applications may embed these applications in
 larger systems.
 
 ~~~~ {.programlisting}
@@ -833,7 +833,7 @@ The images architecture.
 
 ###### VMCATCHER\_EVENT\_SL\_CHECKSUM\_SHA512
 
-The Images sha512 checksum.
+The Images sha512 check sum.
 
 
 
@@ -916,11 +916,11 @@ export VMCATCHER_CACHE_EVENT="python /usr/share/doc/vmcatcher-0.1.17/vmcatcher_e
 So the script is executed every 6 hours shortly after fetch CRL.
 
 If a new `Virtual Machine Image`{.literal} is downloaded, or an old
-`Virtual Machine Image`{.literal} is expired the event will triggor
+`Virtual Machine Image`{.literal} is expired the event will trigger
 "VMCATCHER\_CACHE\_EVENT" and the application vmcatcher\_eventHndlExpl
 will append the data to /tmp/foo
 
-Now at any time users with file permisions can get a list of valid
+Now at any time users with file permissions can get a list of valid
 images.
 
 ~~~~ {.programlisting}
@@ -945,9 +945,9 @@ Sets the path to the database. For example "sqlite:///vmcatcher.db"
 ##### VMCATCHER\_CACHE\_EVENT
 
 Sets the executions string. Command line options can be set as
-enviroment variables just like the command line interface. Users of the
-"sh shell" must protect the envroment variables from being substituted
-by thier shell.
+environment variables just like the command line interface. Users of the
+"sh shell" must protect the environment variables from being substituted
+by their shell.
 
 ~~~~ {.programlisting}
 [user] $  export VMCATCHER_CACHE_EVENT="./myEventProcessor \$VMCATCHER_EVENT_TYPE"
@@ -1034,6 +1034,6 @@ locations, and with different log levels.
 
 While it does check the authenticity of the message using X509, at the
 moment the authenticity of the host is unchecked. For the
-programmability it would be far simpler to use x509 certificates to
+ease of programing it would be far simpler to use x509 certificates to
 check the host server. In terms of deployment it would be far easier
 just to check any host key mechanism, as this is sufficient.
