@@ -1,7 +1,7 @@
 vmcatcher
 ---------
 
-This virtual machine `Virtual Machine Image List`{.literal} subscriber
+This virtual machine `Virtual Machine Image List` subscriber
 implementation is intended to be a production grade reference
 implementation.
 
@@ -20,8 +20,8 @@ the X509 certificate model is used.
 ### Introduction
 
 This application allows users to subscribe to virtual machine
-`Virtual Machine Image List`{.literal}s, cache the images referenced to
-in the `Virtual Machine Image List`{.literal}, validate the images list
+`Virtual Machine Image List`s, cache the images referenced to
+in the `Virtual Machine Image List`, validate the images list
 with x509 based public key cryptography, and validate the images against
 sha512 hashes in the images lists and provide events for further
 applications to process updates or expires of virtual machine images
@@ -29,11 +29,11 @@ without having to further validate the images.
 
 This software is available at:
 
-`https://github.com/hepix-virtualisation/vmcatcher`{.code}
+`https://github.com/hepix-virtualisation/vmcatcher`
 
 The software is based upon a simple database that stores subscriptions
-to `Virtual Machine Image List`{.literal}s, who can sign the
-`Virtual Machine Image List`{.literal}, and which images belong to which
+to `Virtual Machine Image List`s, who can sign the
+`Virtual Machine Image List`, and which images belong to which
 subscriptions. It allows images to selected for subscription.
 
 Subscribed images can be downloaded verified and cached. Cached images
@@ -45,39 +45,39 @@ directory.
 #### Features
 
 -   Add and delete multiple subscriptions to
-    `Virtual Machine Image List`{.literal}s.
+    `Virtual Machine Image List`s.
 -   Update subscriptions checking authenticity of the message using x509
     based signatures.
 -   Automation as a cron script.
 -   Subscribe and unsubscribe to images from
-    `Virtual Machine Image List`{.literal}s.
+    `Virtual Machine Image List`s.
 -   Download verify images into a local cache.
 -   Expire images to an archive when no longer endorsed or corrupt.
 
 This set of applications are designed to provide a similar work flow
-from each area of control to the `Virtual Machine Image List`{.literal}
+from each area of control to the `Virtual Machine Image List`
 archive.
 
 -   vmcatcher\_endorser - Endorsers of
-    `Virtual Machine Image List`{.literal} subscriptions.
+    `Virtual Machine Image List` subscriptions.
 -   vmcatcher\_subscribe - Subscription list details.
 -   vmcatcher\_image - Image details.
 -   vmcatcher\_cache - Cache images and update events.
 
 They work in conjunction with a database to ease navigation, a local
-cache of `Virtual Machine Image List`{.literal} subscriptions. The
+cache of `Virtual Machine Image List` subscriptions. The
 database is message format agnostic, but it authenticates and validates
 all messages in import. Because these are just caches of
-`Virtual Machine Image List`{.literal}s they are meant to be used the
+`Virtual Machine Image List`s they are meant to be used the
 majority of the time without intervention.
 
 If you are signing a list using the HEPiX
-`Virtual Machine Image List`{.literal} signer, you should also install
+`Virtual Machine Image List` signer, you should also install
 this application and subscribe to your current image.
 
 It is intended to with a couple of cron scripts to be informed at any
 time if your local images are matching signatures in the
-`Virtual Machine Image List`{.literal}.
+`Virtual Machine Image List`.
 
 Anyone curious about this application should consider this application a
 software application similar to Debian’s ’aptitude’ or Redhats ’yum’,
@@ -119,7 +119,7 @@ To add a subscription,
 [user] $  wget --no-check-certificate https://cernvm.cern.ch/releases/image.list
 ~~~~
 
-Now you can check the `Virtual Machine Image List`{.literal} by visual
+Now you can check the `Virtual Machine Image List` by visual
 inspection.
 
 ~~~~ {.programlisting}
@@ -180,7 +180,7 @@ da42ca85-179b-4873-b12e-32d549bf02b6    0       63175437-7d59-4851-b333-c96cb654
 
 The results show the UUID of the image, the availability state and the
 subscription UUID. The state value is a bitmap, 1 is subscribed, 2 means
-its available in the current `Virtual Machine Image List`{.literal}s.
+its available in the current `Virtual Machine Image List`s.
 Now we will select an image for local caching.
 
 Next update the subscriptions.
@@ -192,7 +192,7 @@ INFO:db_actions:Updating:63175437-7d59-4851-b333-c96cb6545a86
 ~~~~
 
 Now the data base contains the latest version of the
-`Virtual Machine Image List`{.literal}. To query the available images
+`Virtual Machine Image List`. To query the available images
 they can be cached:
 
 ~~~~ {.programlisting}
@@ -204,14 +204,14 @@ da42ca85-179b-4873-b12e-32d549bf02b6    2       63175437-7d59-4851-b333-c96cb654
 ~~~~
 
 This now shows the images are available in the latest
-`Virtual Machine Image List`{.literal}.
+`Virtual Machine Image List`.
 
 ~~~~ {.programlisting}
 [user] $  vmcatcher_image -a -u 858a817e-0ca2-473f-89d3-d5bdfc51968e
 INFO:vmcatcher_subscribe.main:Defaulting DB connection to 'sqlite:///vmcatcher.db'
 ~~~~
 
-The `Virtual Machine Image List`{.literal} state is now changed to
+The `Virtual Machine Image List` state is now changed to
 
 ~~~~ {.programlisting}
 [user] $  vmcatcher_image -l
@@ -240,7 +240,7 @@ INFO:CacheMan:moved file 858a817e-0ca2-473f-89d3-d5bdfc51968e
 ~~~~
 
 Once this is complete the image from the
-`Virtual Machine Image List`{.literal} will be cached.
+`Virtual Machine Image List` will be cached.
 
 ~~~~ {.programlisting}
 [user] $  find cache/
@@ -368,7 +368,7 @@ install fetch-crl
 [root] # yum install fetch-crl
 ~~~~
 
-Install the HEPiX `Virtual Machine Image List`{.literal} subscriber.
+Install the HEPiX `Virtual Machine Image List` subscriber.
 
 ~~~~ {.programlisting}
 [root] # yum install vmcatcher
@@ -421,10 +421,10 @@ for example:
     /etc/apt/sources.list
 ~~~~
 
-Now install the ` Certification Authorities`{.literal} for the grid
-(Other ` Certification Authorities`{.literal} can be substituted),
+Now install the ` Certification Authorities` for the grid
+(Other ` Certification Authorities` can be substituted),
 install a tool to download and cache the
-`Certificate Revocation Lists`{.literal}
+`Certificate Revocation Lists`
 
 ~~~~ {.programlisting}
 [root] # aptitude update
@@ -659,7 +659,7 @@ da42ca85-179b-4873-b12e-32d549bf02b6    2       63175437-7d59-4851-b333-c96cb654
 
 The results show the UUID of the image, the availability state and the
 subscription UUID. The state value is a bitmap, 1 is subscribed, 2 means
-its available in the current `Virtual Machine Image List`{.literal}s.
+its available in the current `Virtual Machine Image List`s.
 Now we will select an image for local caching.
 
 
@@ -693,7 +693,7 @@ Unsubscribe an image
 
 This application downloads images. By default it will download images,
 check the sha512 hash of cached images and expire images from old
-`Virtual Machine Image List`{.literal}s.
+`Virtual Machine Image List`s.
 
 ~~~~ {.programlisting}
 [user] $  vmcatcher_cache
@@ -756,7 +756,7 @@ The following environment variables may be set by events:
 -   VMCATCHER\_EVENT\_FILENAME
 
 These correspond to the variables within the
-`Virtual Machine Image List`{.literal}.
+`Virtual Machine Image List`.
 
 
 
@@ -795,7 +795,7 @@ The description text in the image.
 ###### VMCATCHER\_EVENT\_DC\_IDENTIFIER
 
 Unique identifier of the image. Its suggested that image producers use
-RFC 4122 UUID for `Virtual Machine Image List`{.literal} this allows
+RFC 4122 UUID for `Virtual Machine Image List` this allows
 updating the list, and uniqueness.
 
 
@@ -915,8 +915,8 @@ export VMCATCHER_CACHE_EVENT="python /usr/share/doc/vmcatcher-0.1.17/vmcatcher_e
 
 So the script is executed every 6 hours shortly after fetch CRL.
 
-If a new `Virtual Machine Image`{.literal} is downloaded, or an old
-`Virtual Machine Image`{.literal} is expired the event will trigger
+If a new `Virtual Machine Image` is downloaded, or an old
+`Virtual Machine Image` is expired the event will trigger
 "VMCATCHER\_CACHE\_EVENT" and the application vmcatcher\_eventHndlExpl
 will append the data to /tmp/foo
 
