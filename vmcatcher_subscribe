@@ -541,7 +541,7 @@ class db_controler(object):
         for selection_item in subscriptions_selected:
             query_subscription = selector.subscription_get(selection_item)
             for a_sub in query_subscription:
-                # Shoudl not need thsi code but do maybe a bug in slqalchamy or more likely my db definition"
+                # should not need thsi code but do maybe a bug in slqalchamy or more likely my db definition"
                 query_image_def_linked = db.ImageDefinition_list(a_sub.id)
                 for image_def_linked in query_image_def_linked:
                     Session.delete(image_def_linked)
