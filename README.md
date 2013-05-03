@@ -46,6 +46,8 @@ verified, and if invalid or expired they are moved to an expiry directory.
   * Subscribe and unsubscribe to images from `Virtual Machine Image List`s.
   * Download verify images into a local cache.
   * Expire images to an archive when no longer endorsed or corrupt.
+  * Open Stack intgration by Mattieu Puel CC-IN2P3.fr.
+  * OpenNebula intgration by Roberto Rosende Dopazo CESGA.es.
 
 This set of applications are designed to provide a similar work flow from each
 area of control to the `Virtual Machine Image List` archive.
@@ -70,6 +72,45 @@ your local images are matching signatures in the `Virtual Machine Image List`.
 Anyone curious about this application should consider this application a
 software application similar to Debian's 'aptitude' or Redhats 'yum', but
 rather for virtual machines, authenticated by the `x.509` signatures.
+
+Like yum and apt this tool can be extended. The following handlers have been
+developed
+
+TableCloud Integration with vmcatcher
+
+CloudNameAuthorEmployerURI
+
+Open Stack
+
+glancepush-vmcatcher
+
+Mattieu Puel
+
+CC-IN2P3.fr
+
+https://github.com/EGI-FCTF/glancepush-vmcatcher
+
+Open Stack
+
+glancepush
+
+Mattieu Puel
+
+CC-IN2P3.fr
+
+https://github.com/EGI-FCTF/glancepush
+
+OpenNebula
+
+Cesga cloud tools
+
+Roberto Rosende Dopazo
+
+Cesga.es
+
+https://github.com/grid-admin/cloud
+
+  
 
 
 
@@ -231,8 +272,9 @@ cached.
 ### Installation
 
 The latest build system artefacts are published here
+http://www.yokel.org/pub/software/yokel.org/release/
 
-`http://www.yokel.org/pub/software/yokel.org/release/`
+.
 
 
 
