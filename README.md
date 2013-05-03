@@ -260,7 +260,7 @@ Install EPEL for dependencies.
     
     [root] # **rpm -i http://download.fedora.redhat.com/pub/epel/6/x86_64/epel-release-6-5.noarch.rpm**
 
-Install DESY yum repository.
+Install Yokel yum repository.
 
     
     [root] # **cat /etc/yum.repos.d/vmcasting.repo**
@@ -462,6 +462,86 @@ extracted and installed.
     [root] # **python setup install**
     [root] # **echo $?**
     [root] # **cd ..**
+
+
+
+### Environment Variables
+
+Environment variables can be used to set default values but the command line
+options will override any set environment options.
+
+
+
+#### VMCATCHER_RDBMS
+
+Sets the path to the database. For example "sqlite:///vmcatcher.db"
+
+
+
+#### VMCATCHER_CACHE_EVENT
+
+Sets the executions string. Command line options can be set as environment
+variables just like the command line interface. Users of the "sh shell" must
+protect the environment variables from being substituted by their shell.
+
+    
+    [user] $ ** export VMCATCHER_CACHE_EVENT="./myEventProcessor \$VMCATCHER_EVENT_TYPE"**
+
+An example of how to execute a command with an action command line.
+
+
+
+#### VMCATCHER_LOG_CONF
+
+Sets the path to the logging configuration file.
+
+
+
+#### VMCATCHER_DIR_CERT
+
+Sets the Path to the certificate authorities public keys, certificate
+revocation lists and certificate name spaces.
+
+
+
+#### VMCATCHER_CACHE_DIR_CACHE
+
+Path used by '`vmcatcher_endorser`' to store verified VM images.
+
+
+
+#### VMCATCHER_CACHE_DIR_DOWNLOAD
+
+Path used by '`vmcatcher_endorser`' to download VM images before VM image
+integrity is checked.
+
+
+
+#### VMCATCHER_CACHE_DIR_EXPIRE
+
+Path used by '`vmcatcher_endorser`' to store VM images when they are no longer
+endorsed.
+
+
+
+#### VMCATCHER_CACHE_ACTION_DOWNLOAD
+
+Instructs '`vmcatcher_endorser`' to download the latest VM images and check
+integrity.
+
+
+
+#### VMCATCHER_CACHE_ACTION_CHECK
+
+Instructs '`vmcatcher_endorser`' check integrity for all currently stored VM
+images.
+
+
+
+#### VMCATCHER_CACHE_ACTION_EXPIRE
+
+Instructs '`vmcatcher_endorser`' to expire stored VM images that are no longer
+endorsed.
 
 
 
@@ -893,86 +973,6 @@ should do very little and end quickly as then `vmcatcher_cache` can process
 the next download without blocking. Since events are not resent so error
 handling is more complex, it may be wise to use a message queue, or storing
 the event and processing after, rather than just using a simple fork.
-
-
-
-#### Environment Variables
-
-Environment variables can be used to set default values but the command line
-options will override any set environment options.
-
-
-
-##### VMCATCHER_RDBMS
-
-Sets the path to the database. For example "sqlite:///vmcatcher.db"
-
-
-
-##### VMCATCHER_CACHE_EVENT
-
-Sets the executions string. Command line options can be set as environment
-variables just like the command line interface. Users of the "sh shell" must
-protect the environment variables from being substituted by their shell.
-
-    
-    [user] $ ** export VMCATCHER_CACHE_EVENT="./myEventProcessor \$VMCATCHER_EVENT_TYPE"**
-
-An example of how to execute a command with an action command line.
-
-
-
-##### VMCATCHER_LOG_CONF
-
-Sets the path to the logging configuration file.
-
-
-
-##### VMCATCHER_DIR_CERT
-
-Sets the Path to the certificate authorities public keys, certificate
-revocation lists and certificate name spaces.
-
-
-
-##### VMCATCHER_CACHE_DIR_CACHE
-
-Path used by '`vmcatcher_endorser`' to store verified VM images.
-
-
-
-##### VMCATCHER_CACHE_DIR_DOWNLOAD
-
-Path used by '`vmcatcher_endorser`' to download VM images before VM image
-integrity is checked.
-
-
-
-##### VMCATCHER_CACHE_DIR_EXPIRE
-
-Path used by '`vmcatcher_endorser`' to store VM images when they are no longer
-endorsed.
-
-
-
-##### VMCATCHER_CACHE_ACTION_DOWNLOAD
-
-Instructs '`vmcatcher_endorser`' to download the latest VM images and check
-integrity.
-
-
-
-##### VMCATCHER_CACHE_ACTION_CHECK
-
-Instructs '`vmcatcher_endorser`' check integrity for all currently stored VM
-images.
-
-
-
-##### VMCATCHER_CACHE_ACTION_EXPIRE
-
-Instructs '`vmcatcher_endorser`' to expire stored VM images that are no longer
-endorsed.
 
 
 
