@@ -58,11 +58,11 @@ This set of applications are designed to provide a similar work flow
 from each area of control to the `Virtual Machine Image List`
 archive.
 
--   vmcatcher\_endorser - Endorsers of
+-   vmcatcher_endorser - Endorsers of
     `Virtual Machine Image List` subscriptions.
--   vmcatcher\_subscribe - Subscription list details.
--   vmcatcher\_image - Image details.
--   vmcatcher\_cache - Cache images and update events.
+-   vmcatcher_subscribe - Subscription list details.
+-   vmcatcher_image - Image details.
+-   vmcatcher_cache - Cache images and update events.
 
 They work in conjunction with a database to ease navigation, a local
 cache of `Virtual Machine Image List` subscriptions. The
@@ -100,7 +100,7 @@ line parameters are not set for critical variables the application will
 provide defaults and show warnings.
 
 The most important setting is the location of the database. This is read
-from VMCATCHER\_RDBMS,
+from VMCATCHER_RDBMS,
 
 ~~~~ {.programlisting}
 [user] $ export VMCATCHER_RDBMS="sqlite:////var/lib/vmcatcher/vmcatcher.db"
@@ -128,7 +128,7 @@ inspection.
                 "hv:dn": "/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=buncic/CN=379010/CN=Predrag Buncic", 
 ~~~~
 
-Now create this endorser. The endorser\_uuid can be any string but its
+Now create this endorser. The endorser_uuid can be any string but its
 recommended this is a short string possibly following the uuid standard:
 
 ~~~~ {.programlisting}
@@ -344,7 +344,7 @@ gpgcheck=0
 ~~~~
 
 Install the Grid CA repository for details please see
-https://wiki.egi.eu/wiki/EGI\_IGTF\_Release
+https://wiki.egi.eu/wiki/EGI_IGTF_Release
 
 ~~~~ {.programlisting}
 [root] # cat /etc/yum.repos.d/egi-trust-anchor.repo
@@ -506,7 +506,7 @@ Saving to: `vmcatcher-0.1.14.tar.gz'
 
 
 
-### vmcatcher\_endorser
+### vmcatcher_endorser
 
 This application is for managing who the subscriber trusts to update
 image lists. Since individuals are identified with x509 certificates,
@@ -551,8 +551,8 @@ Removing an individuals right to update a subscription.
        --subscription_uuid=63175437-7d59-4851-b333-c96cb6545a86
 ~~~~
 
-Each endorser\_uuid must be unique or they will be assumed to be the
-same item. The endorser\_uuid could be a more human name:
+Each endorser_uuid must be unique or they will be assumed to be the
+same item. The endorser_uuid could be a more human name:
 
 ~~~~ {.programlisting}
 [user] $  vmcatcher_endorser --create \
@@ -563,7 +563,7 @@ same item. The endorser\_uuid could be a more human name:
 
 
 
-### vmcatcher\_subscribe
+### vmcatcher_subscribe
 
 This application manages your subscriptions and their update:
 
@@ -644,7 +644,7 @@ To delete a subscription
 
 
 
-### vmcatcher\_image
+### vmcatcher_image
 
 This application manages images within your subscription.
 
@@ -689,7 +689,7 @@ Unsubscribe an image
 
 
 
-### vmcatcher\_cache
+### vmcatcher_cache
 
 This application downloads images. By default it will download images,
 check the sha512 hash of cached images and expire images from old
@@ -708,7 +708,7 @@ INFO:CacheMan:moved file 858a817e-0ca2-473f-89d3-d5bdfc51968e
 
 
 
-#### vmcatcher\_cache Event interface
+#### vmcatcher_cache Event interface
 
 Since this application suite is intended to be embedded in a larger
 application and concerned with downloading and managing updates of VM
@@ -729,7 +729,7 @@ it will be sent a termination signal. See the following example:
 ~~~~
 
 All Events have a type. This is given to the event handler by setting
-the variable, VMCATCHER\_EVENT\_TYPE with the following values
+the variable, VMCATCHER_EVENT_TYPE with the following values
 "AvailablePrefix", "AvailablePostfix", "ExpirePrefix" and
 "ExpirePosfix".
 
@@ -740,31 +740,31 @@ occur after the state change.
 
 The following environment variables may be set by events:
 
--   VMCATCHER\_EVENT\_TYPE
--   VMCATCHER\_EVENT\_DC\_DESCRIPTION
--   VMCATCHER\_EVENT\_DC\_IDENTIFIER
--   VMCATCHER\_EVENT\_DC\_TITLE
--   VMCATCHER\_EVENT\_HV\_HYPERVISOR
--   VMCATCHER\_EVENT\_HV\_SIZE
--   VMCATCHER\_EVENT\_HV\_URI
--   VMCATCHER\_EVENT\_SL\_ARCH
--   VMCATCHER\_EVENT\_SL\_CHECKSUM\_SHA512
--   VMCATCHER\_EVENT\_SL\_COMMENTS
--   VMCATCHER\_EVENT\_SL\_OS
--   VMCATCHER\_EVENT\_SL\_OSVERSION
--   VMCATCHER\_EVENT\_TYPE
--   VMCATCHER\_EVENT\_FILENAME
+-   VMCATCHER_EVENT_TYPE
+-   VMCATCHER_EVENT_DC_DESCRIPTION
+-   VMCATCHER_EVENT_DC_IDENTIFIER
+-   VMCATCHER_EVENT_DC_TITLE
+-   VMCATCHER_EVENT_HV_HYPERVISOR
+-   VMCATCHER_EVENT_HV_SIZE
+-   VMCATCHER_EVENT_HV_URI
+-   VMCATCHER_EVENT_SL_ARCH
+-   VMCATCHER_EVENT_SL_CHECKSUM_SHA512
+-   VMCATCHER_EVENT_SL_COMMENTS
+-   VMCATCHER_EVENT_SL_OS
+-   VMCATCHER_EVENT_SL_OSVERSION
+-   VMCATCHER_EVENT_TYPE
+-   VMCATCHER_EVENT_FILENAME
 
 These correspond to the variables within the
 `Virtual Machine Image List`.
 
 
 
-##### vmcatcher\_cache Event Environment variables
+##### vmcatcher_cache Event Environment variables
 
 
 
-###### VMCATCHER\_EVENT\_TYPE
+###### VMCATCHER_EVENT_TYPE
 
 -   AvailablePrefix
 
@@ -786,13 +786,13 @@ These correspond to the variables within the
 
 
 
-###### VMCATCHER\_EVENT\_DC\_DESCRIPTION
+###### VMCATCHER_EVENT_DC_DESCRIPTION
 
 The description text in the image.
 
 
 
-###### VMCATCHER\_EVENT\_DC\_IDENTIFIER
+###### VMCATCHER_EVENT_DC_IDENTIFIER
 
 Unique identifier of the image. Its suggested that image producers use
 RFC 4122 UUID for `Virtual Machine Image List` this allows
@@ -800,71 +800,71 @@ updating the list, and uniqueness.
 
 
 
-###### VMCATCHER\_EVENT\_DC\_TITLE
+###### VMCATCHER_EVENT_DC_TITLE
 
 Image Title.
 
 
 
-###### VMCATCHER\_EVENT\_HV\_HYPERVISOR
+###### VMCATCHER_EVENT_HV_HYPERVISOR
 
 Typically set to reflect the Virtualization technology values such as
 "xen", "kvm".
 
 
 
-###### VMCATCHER\_EVENT\_HV\_SIZE
+###### VMCATCHER_EVENT_HV_SIZE
 
 The Image Size
 
 
 
-###### VMCATCHER\_EVENT\_HV\_URI
+###### VMCATCHER_EVENT_HV_URI
 
 The Original URI for the image
 
 
 
-###### VMCATCHER\_EVENT\_SL\_ARCH
+###### VMCATCHER_EVENT_SL_ARCH
 
 The images architecture.
 
 
 
-###### VMCATCHER\_EVENT\_SL\_CHECKSUM\_SHA512
+###### VMCATCHER_EVENT_SL_CHECKSUM_SHA512
 
 The Images sha512 check sum.
 
 
 
-###### VMCATCHER\_EVENT\_SL\_COMMENTS
+###### VMCATCHER_EVENT_SL_COMMENTS
 
 Comments added by the image author
 
 
 
-###### VMCATCHER\_EVENT\_SL\_OS
+###### VMCATCHER_EVENT_SL_OS
 
 The Operating System the VM image contains
 
 
 
-###### VMCATCHER\_EVENT\_SL\_OSVERSION
+###### VMCATCHER_EVENT_SL_OSVERSION
 
 The Operating System version
 
 
 
-###### VMCATCHER\_EVENT\_FILENAME
+###### VMCATCHER_EVENT_FILENAME
 
 The Image file name.
 
 
-###### VMCATCHER\_EVENT\_IL\_DC\_IDENTIFIER
+###### VMCATCHER_EVENT_IL_DC_IDENTIFIER
 
 The image list the image comes from.
 
-###### VMCATCHER\_EVENT\_HV\_FORMAT
+###### VMCATCHER_EVENT_HV_FORMAT
 
 The format of the image. This is only available if the image list contains the format metadata.
 
@@ -917,7 +917,7 @@ So the script is executed every 6 hours shortly after fetch CRL.
 
 If a new `Virtual Machine Image` is downloaded, or an old
 `Virtual Machine Image` is expired the event will trigger
-"VMCATCHER\_CACHE\_EVENT" and the application vmcatcher\_eventHndlExpl
+"VMCATCHER_CACHE_EVENT" and the application vmcatcher_eventHndlExpl
 will append the data to /tmp/foo
 
 Now at any time users with file permissions can get a list of valid
@@ -936,13 +936,13 @@ line options will override any set environment options.
 
 
 
-##### VMCATCHER\_RDBMS
+##### VMCATCHER_RDBMS
 
 Sets the path to the database. For example "sqlite:///vmcatcher.db"
 
 
 
-##### VMCATCHER\_CACHE\_EVENT
+##### VMCATCHER_CACHE_EVENT
 
 Sets the executions string. Command line options can be set as
 environment variables just like the command line interface. Users of the
@@ -957,56 +957,56 @@ An example of how to execute a command with an action command line.
 
 
 
-##### VMCATCHER\_LOG\_CONF
+##### VMCATCHER_LOG_CONF
 
 Sets the path to the logging configuration file.
 
 
 
-##### VMCATCHER\_DIR\_CERT
+##### VMCATCHER_DIR_CERT
 
 Sets the Path to the certificate authorities public keys, certificate
 revocation lists and certificate name spaces.
 
 
 
-##### VMCATCHER\_CACHE\_DIR\_CACHE
+##### VMCATCHER_CACHE_DIR_CACHE
 
-Path used by ’vmcatcher\_endorser’ to store verified VM images.
+Path used by ’vmcatcher_endorser’ to store verified VM images.
 
 
 
-##### VMCATCHER\_CACHE\_DIR\_DOWNLOAD
+##### VMCATCHER_CACHE_DIR_DOWNLOAD
 
-Path used by ’vmcatcher\_endorser’ to download VM images before VM image
+Path used by ’vmcatcher_endorser’ to download VM images before VM image
 integrity is checked.
 
 
 
-##### VMCATCHER\_CACHE\_DIR\_EXPIRE
+##### VMCATCHER_CACHE_DIR_EXPIRE
 
-Path used by ’vmcatcher\_endorser’ to store VM images when they are no
+Path used by ’vmcatcher_endorser’ to store VM images when they are no
 longer endorsed.
 
 
 
-##### VMCATCHER\_CACHE\_ACTION\_DOWNLOAD
+##### VMCATCHER_CACHE_ACTION_DOWNLOAD
 
-Instructs ’vmcatcher\_endorser’ to download the latest VM images and
+Instructs ’vmcatcher_endorser’ to download the latest VM images and
 check integrity.
 
 
 
-##### VMCATCHER\_CACHE\_ACTION\_CHECK
+##### VMCATCHER_CACHE_ACTION_CHECK
 
-Instructs ’vmcatcher\_endorser’ check integrity for all currently stored
+Instructs ’vmcatcher_endorser’ check integrity for all currently stored
 VM images.
 
 
 
-##### VMCATCHER\_CACHE\_ACTION\_EXPIRE
+##### VMCATCHER_CACHE_ACTION_EXPIRE
 
-Instructs ’vmcatcher\_endorser’ to expire stored VM images that are no
+Instructs ’vmcatcher_endorser’ to expire stored VM images that are no
 longer endorsed.
 
 
