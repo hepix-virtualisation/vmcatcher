@@ -78,7 +78,7 @@ rather for virtual machines, authenticated by the `x.509` signatures.
 First make sure that all the Certificate Revocation Lists (CRL) are upto date.
 
     
-    [root] #  **fetch-crl**
+    [root] #  fetch-crl
 
 This suit of applications can use either environment variable or command line
 to set most parameters. If neither environment variables or command line
@@ -89,7 +89,7 @@ The most important setting is the location of the database. This is read from
 VMCATCHER_RDBMS,
 
     
-    [user] $ **export VMCATCHER_RDBMS="sqlite:////var/lib/vmcatcher/vmcatcher.db"**
+    [user] $ export VMCATCHER_RDBMS="sqlite:////var/lib/vmcatcher/vmcatcher.db"
 
 The above line instructs the SQLalchamy interface to databases to use sqlite
 and path "/var/lib/vmcatcher/vmcatcher.db" on a UNIX system. This is the only
@@ -101,12 +101,12 @@ documented later.
 To add a subscription,
 
     
-    [user] $  **wget --no-check-certificate https://cernvm.cern.ch/releases/image.list**
+    [user] $  wget --no-check-certificate https://cernvm.cern.ch/releases/image.list
 
 Now you can check the `Virtual Machine Image List` by visual inspection.
 
     
-    [user] $  **grep 'hv:[cd][an]' hepix_signed_image_list**
+    [user] $  grep 'hv:[cd][an]' hepix_signed_image_list
                     "hv:ca": "/DC=ch/DC=cern/CN=CERN Trusted Certification Authority", 
                     "hv:dn": "/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=buncic/CN=379010/CN=Predrag Buncic", 
 
@@ -115,16 +115,16 @@ recommended this is a short string possibly following the `RFC 4122 UUID`
 standard:
 
     
-    [user] $  **vmcatcher_endorser --create \
+    [user] $  vmcatcher_endorser --create \
            --endorser_uuid='Predrag Buncic' \
            --subject='/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=buncic/CN=379010/CN=Predrag Buncic' \
-           --issuer='/DC=ch/DC=cern/CN=CERN Trusted Certification Authority'**
+           --issuer='/DC=ch/DC=cern/CN=CERN Trusted Certification Authority'
 
 Now we can add the subscription, this will automatically link the endorser
 with this subscription.
 
     
-    [user] $  **vmcatcher_endorser -l**
+    [user] $  vmcatcher_endorser -l
     Ian    '/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=buncic/CN=379010/CN=Predrag Buncic'        '/DC=ch/DC=cern/CN=CERN Trusted Certification Authority'
 
 The above command will show you the endorsers. Note the first column is the
@@ -133,7 +133,7 @@ is the users certificate subject (some times know as distinguished name) while
 the third column is the subject of the issuing certificate authority.
 
     
-    [user] $  **vmcatcher_subscribe -s file:////`pwd`/hepix_signed_image_list**
+    [user] $  vmcatcher_subscribe -s file:////`pwd`/hepix_signed_image_list
     INFO:main:Defaulting DB connection to 'sqlite:///vmcatcher.db'
     WARNING:db_actions:list hv:uri does not match subscription uri
 
@@ -143,14 +143,14 @@ certificate subjects are added to the database automatically. This is
 particularly useful for testing.
 
     
-    [user] $  **vmcatcher_subscribe  --auto-endorse -s file:////`pwd`/hepix_signed_image_list**
+    [user] $  vmcatcher_subscribe  --auto-endorse -s file:////`pwd`/hepix_signed_image_list
     INFO:main:Defaulting DB connection to 'sqlite:///vmcatcher.db'
     WARNING:db_actions:list hv:uri does not match subscription uri
 
 List the registered Images.
 
     
-    [user] $  **vmcatcher_image -l**
+    [user] $  vmcatcher_image -l
     INFO:vmcatcher_subscribe.main:Defaulting DB connection to 'sqlite:///vmcatcher.db'
     327016b0-6508-41d2-bce0-c1724cb3d3e2    0       63175437-7d59-4851-b333-c96cb6545a86
     858a817e-0ca2-473f-89d3-d5bdfc51968e    0       63175437-7d59-4851-b333-c96cb6545a86
@@ -167,7 +167,7 @@ Now we will select an image for local caching.
 Next update the subscriptions.
 
     
-    [user] $  **vmcatcher_subscribe -U**
+    [user] $  vmcatcher_subscribe -U
     INFO:main:Defaulting DB connection to 'sqlite:///vmcatcher.db'
     INFO:db_actions:Updating:63175437-7d59-4851-b333-c96cb6545a86
 
@@ -175,7 +175,7 @@ Now the data base contains the latest version of the `Virtual Machine Image
 List`. To list the available images referenced in the local database:
 
     
-    [user] $  **vmcatcher_image -l**
+    [user] $  vmcatcher_image -l
     INFO:vmcatcher_subscribe.main:Defaulting DB connection to 'sqlite:///vmcatcher.db'
     327016b0-6508-41d2-bce0-c1724cb3d3e2    2       63175437-7d59-4851-b333-c96cb6545a86
     858a817e-0ca2-473f-89d3-d5bdfc51968e    2       63175437-7d59-4851-b333-c96cb6545a86
@@ -185,13 +185,13 @@ This now shows the images are available in the latest `Virtual Machine Image
 List`.
 
     
-    [user] $  **vmcatcher_image -a -u 858a817e-0ca2-473f-89d3-d5bdfc51968e**
+    [user] $  vmcatcher_image -a -u 858a817e-0ca2-473f-89d3-d5bdfc51968e
     INFO:vmcatcher_subscribe.main:Defaulting DB connection to 'sqlite:///vmcatcher.db'
 
 The `Virtual Machine Image List` state is now changed to
 
     
-    [user] $  **vmcatcher_image -l**
+    [user] $  vmcatcher_image -l
     INFO:vmcatcher_subscribe.main:Defaulting DB connection to 'sqlite:///vmcatcher.db'
     327016b0-6508-41d2-bce0-c1724cb3d3e2    2       63175437-7d59-4851-b333-c96cb6545a86
     858a817e-0ca2-473f-89d3-d5bdfc51968e    3       63175437-7d59-4851-b333-c96cb6545a86
@@ -203,12 +203,12 @@ subscribed.
 Make the directories for caching the images.
 
     
-    [user] $  **mkdir cache cache/partial cache/expired**
+    [user] $  mkdir cache cache/partial cache/expired
 
 Now cache the images.
 
     
-    [user] $ ** vmcatcher_cache**
+    [user] $  vmcatcher_cache
     INFO:vmcatcher_subscribe.main:Defaulting DB connection to 'sqlite:///vmcatcher.db'
     INFO:DownloadDir:Downloading '858a817e-0ca2-473f-89d3-d5bdfc51968e'.
     INFO:CacheMan:moved file 858a817e-0ca2-473f-89d3-d5bdfc51968e
@@ -217,7 +217,7 @@ Once this is complete the image from the `Virtual Machine Image List` will be
 cached.
 
     
-    [user] $ ** find cache/**
+    [user] $  find cache/
     cache/
     cache/partial
     cache/partial/cache.index
@@ -258,12 +258,12 @@ and the RPM.
 Install EPEL for dependencies.
 
     
-    [root] # **rpm -i http://download.fedora.redhat.com/pub/epel/6/x86_64/epel-release-6-5.noarch.rpm**
+    [root] # rpm -i http://download.fedora.redhat.com/pub/epel/6/x86_64/epel-release-6-5.noarch.rpm
 
 Install Yokel yum repository.
 
     
-    [root] # **cat /etc/yum.repos.d/vmcasting.repo**
+    [root] # cat /etc/yum.repos.d/vmcasting.repo
     [vmcasting]
     name=vmcasting
     baseurl=http://www.yokel.org/pub/software/yokel.org/release/x86_64/scientific/6x/rpm/
@@ -274,7 +274,7 @@ Install the Grid CA repository for details please see
 https://wiki.egi.eu/wiki/EGI_IGTF_Release
 
     
-    [root] # **cat /etc/yum.repos.d/egi-trust-anchor.repo**
+    [root] # cat /etc/yum.repos.d/egi-trust-anchor.repo
     [EGI-trustanchors]
     name=EGI-trustanchors
     baseurl=http://repository.egi.eu/sw/production/cas/1/current/
@@ -285,14 +285,14 @@ https://wiki.egi.eu/wiki/EGI_IGTF_Release
 install the ca-policy-egi-core
 
     
-    [root] # **yum install ca-policy-egi-core**
+    [root] # yum install ca-policy-egi-core
 
 install fetch-crl
 
     
-    [root] # **yum install fetch-crl**
+    [root] # yum install fetch-crl
     
-    [root] # **yum install vmcatcher**
+    [root] # yum install vmcatcher
 
 
 
@@ -304,12 +304,12 @@ still need this platform.
 Install EPEL for dependencies.
 
     
-    [root] # **rpm -i http://download.fedora.redhat.com/pub/epel/5/x86_64/epel-release-5-4.noarch.rpm**
+    [root] # rpm -i http://download.fedora.redhat.com/pub/epel/5/x86_64/epel-release-5-4.noarch.rpm
 
 Install DESY yum repository.
 
     
-    [root] # **cat /etc/yum.repos.d/vmcasting.repo**
+    [root] # cat /etc/yum.repos.d/vmcasting.repo
     [vmcasting]
     name=vmcasting
     baseurl=http://grid.desy.de/vm/repo/yum/sl5/noarch/RPMS.stable/
@@ -320,7 +320,7 @@ Install the Grid CA repository for details please see
 https://wiki.egi.eu/wiki/EGI_IGTF_Release
 
     
-    [root] # **cat /etc/yum.repos.d/egi-trust-anchor.repo**
+    [root] # cat /etc/yum.repos.d/egi-trust-anchor.repo
     [EGI-trustanchors]
     name=EGI-trustanchors
     baseurl=http://repository.egi.eu/sw/production/cas/1/current/
@@ -331,17 +331,17 @@ https://wiki.egi.eu/wiki/EGI_IGTF_Release
 Install the lcg-CA
 
     
-    [root] # **yum install lcg-CA**
+    [root] # yum install lcg-CA
 
 install fetch-crl
 
     
-    [root] # **yum install fetch-crl**
+    [root] # yum install fetch-crl
 
 Install the HEPiX `Virtual Machine Image List` subscriber.
 
     
-    [root] # **yum install vmcatcher**
+    [root] # yum install vmcatcher
 
 This may fail due to a dependency of m2crypto that cannot be satisfied. This
 is due to known bugs in m2crypto in the version shipped in RHEL5. If this is a
@@ -368,9 +368,9 @@ For Grid scientific use you can get a trust store easily using the egi.eu
 repository.
 
     
-    [root] # **wget -q -O - \
+    [root] # wget -q -O - \
     https://dist.eugridpma.info/distribution/igtf/current/GPG-KEY-EUGridPMA-RPM-3 \
-     | apt-key add -**
+     | apt-key add -
 
 Add the following line to your sources.list file for APT:
 
@@ -381,20 +381,20 @@ Add the following line to your sources.list file for APT:
 for example:
 
     
-    [root] # **echo '#### EGI Trust Anchor Distribution ####' >> \
-        /etc/apt/sources.list**
-    [root] # **echo 'deb http://repository.egi.eu/sw/production/cas/1/current egi-igtf core' >> \
-        /etc/apt/sources.list**
+    [root] # echo '#### EGI Trust Anchor Distribution ####' >> \
+        /etc/apt/sources.list
+    [root] # echo 'deb http://repository.egi.eu/sw/production/cas/1/current egi-igtf core' >> \
+        /etc/apt/sources.list
 
 Now install the ` Certification Authorities` for the grid (Other `
 Certification Authorities` can be substituted), install a tool to download and
 cache the `Certificate Revocation Lists`
 
     
-    [root] # **aptitude update**
-    [root] # **aptitude install ca-policy-egi-core**
-    [root] # **aptitude install fetch-crl**
-    [root] # **fetch-crl **
+    [root] # aptitude update
+    [root] # aptitude install ca-policy-egi-core
+    [root] # aptitude install fetch-crl
+    [root] # fetch-crl 
 
 Now install the code from git.
 
@@ -405,7 +405,7 @@ The latest version of hepixvmitrust-X.X.XX.src.tar.gz should be downloaded
 extracted and installed.
 
     
-    [root] # **wget http://www.yokel.org/pub/software/yokel.org/release/source/debian/7.0/tgz/hepixvmitrust-0.0.15.src.tar.gz**
+    [root] # wget http://www.yokel.org/pub/software/yokel.org/release/source/debian/7.0/tgz/hepixvmitrust-0.0.15.src.tar.gz
     Resolving grid.desy.de (grid.desy.de)... 131.169.180.46
     Connecting to grid.desy.de (grid.desy.de)|131.169.180.46|:80... connected.
     HTTP request sent, awaiting response... 200 OK
@@ -415,18 +415,18 @@ extracted and installed.
     100%[======================================>] 19,922      --.-K/s   in 0.05s   
     
     2012-05-28 19:45:45 (413 KB/s) - `hepixvmitrust-0.0.15.src.tar.gz' saved [19922/19922]
-    [root] # **tar -zxf hepixvmitrust-0.0.15.src.tar.gz **
-    [root] # **cd hepixvmitrust-0.0.15**
-    [root] # **python setup install**
-    [root] # **echo $?**
-    [root] # **cd ..**
+    [root] # tar -zxf hepixvmitrust-0.0.15.src.tar.gz 
+    [root] # cd hepixvmitrust-0.0.15
+    [root] # python setup install
+    [root] # echo $?
+    [root] # cd ..
 
 The latest version ofsmimeX509validation-0.0.11.src.tar.gz -X.X.XX.src.tar.gz
 should be downloaded extracted and installed.
 
     
-    [root] # ****
-    [root] # **wget http://www.yokel.org/pub/software/yokel.org/release/source/debian/7.0/tgz/smimeX509validation-0.0.11.src.tar.gz**
+    [root] # 
+    [root] # wget http://www.yokel.org/pub/software/yokel.org/release/source/debian/7.0/tgz/smimeX509validation-0.0.11.src.tar.gz
     Resolving grid.desy.de (grid.desy.de)... 131.169.180.46
     Connecting to grid.desy.de (grid.desy.de)|131.169.180.46|:80... connected.
     HTTP request sent, awaiting response... 200 OK
@@ -436,18 +436,18 @@ should be downloaded extracted and installed.
     100%[======================================>] 19,922      --.-K/s   in 0.05s   
     
     2012-05-28 19:45:45 (413 KB/s) - `smimeX509validation-0.0.11.src.tar.gz' saved [19922/19922]
-    [root] # **tar -zxf smimeX509validation-0.0.11.src.tar.gz **
-    [root] # **cd smimeX509validation-0.0.11**
-    [root] # **python setup install**
-    [root] # **echo $?**
-    [root] # **cd ..**
+    [root] # tar -zxf smimeX509validation-0.0.11.src.tar.gz 
+    [root] # cd smimeX509validation-0.0.11
+    [root] # python setup install
+    [root] # echo $?
+    [root] # cd ..
 
 The latest version of vmcatcher-X.X.XX.src.tar.gz should be downloaded
 extracted and installed.
 
     
-    [root] # ****
-    [root] # **wget http://www.yokel.org/pub/software/yokel.org/release/source/debian/7.0/tgz/vmcatcher-0.1.29.src.tar.gz**
+    [root] # 
+    [root] # wget http://www.yokel.org/pub/software/yokel.org/release/source/debian/7.0/tgz/vmcatcher-0.1.29.src.tar.gz
     Resolving grid.desy.de (grid.desy.de)... 131.169.180.46
     Connecting to grid.desy.de (grid.desy.de)|131.169.180.46|:80... connected.
     HTTP request sent, awaiting response... 200 OK
@@ -457,11 +457,11 @@ extracted and installed.
     100%[======================================>] 19,922      --.-K/s   in 0.05s   
     
     2012-05-28 19:45:45 (413 KB/s) - `vmcatcher-0.1.29.src.tar.gz' saved [19922/19922]
-    [root] # **tar -zxf vmcatcher-0.1.29.src.tar.gz **
-    [root] # **cd vmcatcher-0.1.29**
-    [root] # **python setup install**
-    [root] # **echo $?**
-    [root] # **cd ..**
+    [root] # tar -zxf vmcatcher-0.1.29.src.tar.gz 
+    [root] # cd vmcatcher-0.1.29
+    [root] # python setup install
+    [root] # echo $?
+    [root] # cd ..
 
 
 
@@ -485,7 +485,7 @@ variables just like the command line interface. Users of the "sh shell" must
 protect the environment variables from being substituted by their shell.
 
     
-    [user] $ ** export VMCATCHER_CACHE_EVENT="./myEventProcessor \$VMCATCHER_EVENT_TYPE"**
+    [user] $  export VMCATCHER_CACHE_EVENT="./myEventProcessor \$VMCATCHER_EVENT_TYPE"
 
 An example of how to execute a command with an action command line.
 
@@ -561,39 +561,39 @@ have more than one set of credentials.
 Adding a individual to the `vmcatcher` database.
 
     
-    [user] $  **vmcatcher_endorser --create \
+    [user] $  vmcatcher_endorser --create \
            --endorser_uuid=e55c1afe-0a62-4d31-a8d7-fb8c825f92a2 \
            --subject='/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=buncic/CN=379010/CN=Predrag Buncic' \
-           --issuer='/DC=ch/DC=cern/CN=CERN Trusted Certification Authority'**
+           --issuer='/DC=ch/DC=cern/CN=CERN Trusted Certification Authority'
 
 Deleting and individual from a `vmcatcher` database.
 
     
-    [user] $  **vmcatcher_endorser --delete \
-           --endorser_uuid=e55c1afe-0a62-4d31-a8d7-fb8c825f92a2**
+    [user] $  vmcatcher_endorser --delete \
+           --endorser_uuid=e55c1afe-0a62-4d31-a8d7-fb8c825f92a2
 
 Allowing an individual to update a subscription.
 
     
-    [user] $  **vmcatcher_endorser --link \
+    [user] $  vmcatcher_endorser --link \
            --endorser_uuid=e55c1afe-0a62-4d31-a8d7-fb8c825f92a2 \
-           --subscription_uuid=63175437-7d59-4851-b333-c96cb6545a86**
+           --subscription_uuid=63175437-7d59-4851-b333-c96cb6545a86
 
 Removing an individuals right to update a subscription.
 
     
-    [user] $  **vmcatcher_endorser --unlink \
+    [user] $  vmcatcher_endorser --unlink \
            --endorser_uuid=e55c1afe-0a62-4d31-a8d7-fb8c825f92a2 \
-           --subscription_uuid=63175437-7d59-4851-b333-c96cb6545a86**
+           --subscription_uuid=63175437-7d59-4851-b333-c96cb6545a86
 
 Each endorser_uuid must be unique or they will be assumed to be the same item.
 The endorser_uuid could be a more human name:
 
     
-    [user] $  **vmcatcher_endorser --create \
+    [user] $  vmcatcher_endorser --create \
            --endorser_uuid='Predrag Buncic' \
            --subject='/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=buncic/CN=379010/CN=Predrag Buncic' \
-           --issuer='/DC=ch/DC=cern/CN=CERN Trusted Certification Authority'**
+           --issuer='/DC=ch/DC=cern/CN=CERN Trusted Certification Authority'
 
 
 
@@ -604,29 +604,29 @@ This application manages your subscriptions and their update:
 To add a subscription
 
     
-    [user] $  **vmcatcher_subscribe  -s https://cernvm.cern.ch/releases/image.list**
+    [user] $  vmcatcher_subscribe  -s https://cernvm.cern.ch/releases/image.list
 
 Or alternatively you can download a file visually inspect it and subscribe to
 the local file.
 
     
-    [user] $  **vmcatcher_subscribe  -s file:////`pwd`/hepix_signed_image_list**
+    [user] $  vmcatcher_subscribe  -s file:////`pwd`/hepix_signed_image_list
 
 To update your subscriptions
 
     
-    [user] $  **vmcatcher_subscribe  -U**
+    [user] $  vmcatcher_subscribe  -U
 
 To list subscriptions
 
     
-    [user] $  **vmcatcher_subscribe  -l**
+    [user] $  vmcatcher_subscribe  -l
     63175437-7d59-4851-b333-c96cb6545a86    True    https://cernvm.cern.ch/releases/image.list
 
 Getting Information on a subscription:
 
     
-    [user] $  **vmcatcher_subscribe  -i --uuid=63175437-7d59-4851-b333-c96cb6545a86**
+    [user] $  vmcatcher_subscribe  -i --uuid=63175437-7d59-4851-b333-c96cb6545a86
     dc:identifier=63175437-7d59-4851-b333-c96cb6545a86
     subscription.dc:description=CERN Virtual Machine
     subscription.sl:authorised=True
@@ -639,7 +639,7 @@ Getting Information on a subscription:
 you can also select on the basis of url:
 
     
-    [user] $  **vmcatcher_subscribe  -i -r https://cernvm.cern.ch/releases/image.list**
+    [user] $  vmcatcher_subscribe  -i -r https://cernvm.cern.ch/releases/image.list
     dc:identifier=63175437-7d59-4851-b333-c96cb6545a86
     subscription.dc:description=CERN Virtual Machine
     subscription.sl:authorised=True
@@ -653,7 +653,7 @@ Change the output format to get the original message without the security
 wrapper, or in original form:
 
     
-    [user] $  **vmcatcher_subscribe  -i --uuid=63175437-7d59-4851-b333-c96cb6545a86 -f message**
+    [user] $  vmcatcher_subscribe  -i --uuid=63175437-7d59-4851-b333-c96cb6545a86 -f message
 
 Three formats exist SMIME, message, lines.
 
@@ -664,7 +664,7 @@ Three formats exist SMIME, message, lines.
 To delete a subscription
 
     
-    [user] $  **vmcatcher_subscribe  -D  --uuid=63175437-7d59-4851-b333-c96cb6545a86**
+    [user] $  vmcatcher_subscribe  -D  --uuid=63175437-7d59-4851-b333-c96cb6545a86
 
 
 
@@ -675,7 +675,7 @@ This application manages images within your subscription.
 List the available images
 
     
-    [user] $  **vmcatcher_image -l**
+    [user] $  vmcatcher_image -l
     327016b0-6508-41d2-bce0-c1724cb3d3e2    2       63175437-7d59-4851-b333-c96cb6545a86
     858a817e-0ca2-473f-89d3-d5bdfc51968e    3       63175437-7d59-4851-b333-c96cb6545a86
     da42ca85-179b-4873-b12e-32d549bf02b6    2       63175437-7d59-4851-b333-c96cb6545a86
@@ -695,17 +695,17 @@ explicit selection of images or by the sha512 from an old image.
 Delete the subscription by image.
 
     
-    [user] $  **vmcatcher_image -D -u 327016b0-6508-41d2-bce0-c1724cb3d3e2**
+    [user] $  vmcatcher_image -D -u 327016b0-6508-41d2-bce0-c1724cb3d3e2
 
 Subscribe to an image.
 
     
-    [user] $  **vmcatcher_image -a -u 327016b0-6508-41d2-bce0-c1724cb3d3e2**
+    [user] $  vmcatcher_image -a -u 327016b0-6508-41d2-bce0-c1724cb3d3e2
 
 Unsubscribe an image
 
     
-    [user] $  **vmcatcher_image -r -u 327016b0-6508-41d2-bce0-c1724cb3d3e2**
+    [user] $  vmcatcher_image -r -u 327016b0-6508-41d2-bce0-c1724cb3d3e2
 
 
 
@@ -716,7 +716,7 @@ the sha512 hash of cached images and expire images from old `Virtual Machine
 Image List`s.
 
     
-    [user] $  **vmcatcher_cache**
+    [user] $  vmcatcher_cache
     INFO:vmcatcher_subscribe.main:Defaulting DB connection to 'sqlite:///vmcatcher.db'
     INFO:vmcatcher_subscribe.main:Defaulting actions as 'expire', 'sha512' and 'download'.
     INFO:vmcatcher_subscribe.main:Defaulting cache-dir to 'cache'.
@@ -736,14 +736,14 @@ into a cloud infrastructure, it is some times beneficial to have an event
 interface so that applications may embed these applications in larger systems.
 
     
-    [user] $  **vmcatcher_cache -x "/usr/bin/VmImageUpdateProcessor \$VMCATCHER_EVENT_TYPE"**
+    [user] $  vmcatcher_cache -x "/usr/bin/VmImageUpdateProcessor \$VMCATCHER_EVENT_TYPE"
 
 The events interface launches a shell with a series of environment variables.
 The event must process its command within 10 seconds or else it will be sent a
 termination signal. See the following example:
 
     
-    [user] $  **vmcatcher_cache -x 'env  ; exit 1'**
+    [user] $  vmcatcher_cache -x 'env  ; exit 1'
 
 All Events have a type. This is given to the event handler by setting the
 variable, `VMCATCHER_EVENT_TYPE` with the following values "AvailablePrefix",
@@ -896,25 +896,25 @@ format metadata.
 Then the by hand configuration for your master DB
 
     
-    [root] #  **useradd vmcatcher**
+    [root] #  useradd vmcatcher
     
-    [root] #  **mkdir -p /var/lib/vmcatcher /var/cache/vmimages/endorsed \
-          /var/cache/vmimages/partial /var/cache/vmimages/expired**
+    [root] #  mkdir -p /var/lib/vmcatcher /var/cache/vmimages/endorsed \
+          /var/cache/vmimages/partial /var/cache/vmimages/expired
     
-    [root] #  **touch /var/log/vmcatcher.log**
+    [root] #  touch /var/log/vmcatcher.log
     
-    [root] #  **chown vmcatcher:vmcatcher /var/lib/vmcatcher  /var/cache/vmimages/endorsed \
+    [root] #  chown vmcatcher:vmcatcher /var/lib/vmcatcher  /var/cache/vmimages/endorsed \
           /var/cache/vmimages/partial /var/cache/vmimages/expired \
-          /var/log/vmcatcher.log**
+          /var/log/vmcatcher.log
     
-    [root] #  **sudo -u vmcatcher /usr/bin/vmcatcher_subscribe \
+    [root] #  sudo -u vmcatcher /usr/bin/vmcatcher_subscribe \
           -s https://cernvm.cern.ch/releases/image.list \
-          -d sqlite:////var/lib/vmcatcher/vmcatcher.db**
+          -d sqlite:////var/lib/vmcatcher/vmcatcher.db
 
 make a cron job
 
     
-    [root] # ** cat   /etc/cron.d/vmcatcher**
+    [root] #  cat   /etc/cron.d/vmcatcher
     export VMCATCHER_RDBMS="sqlite:////var/lib/vmcatcher/vmcatcher.db"
     export VMCATCHER_CACHE_DIR_CACHE="/var/cache/vmimages/endorsed/"
     export VMCATCHER_CACHE_DIR_DOWNLOAD="/var/cache/vmimages/partial/"
@@ -932,7 +932,7 @@ application `vmcatcher_eventHndlExplscript` will append the data to /tmp/foo
 Now at any time users with file permissions can get a list of valid images.
 
     
-    [user] $ **VMCATCHER_RDBMS="sqlite:////var/lib/vmcatcher/vmcatcher.db" vmcatcher_image -l**
+    [user] $ VMCATCHER_RDBMS="sqlite:////var/lib/vmcatcher/vmcatcher.db" vmcatcher_image -l
 
 
 
@@ -948,7 +948,7 @@ setups.
 So with a cron job like:
 
     
-    [root] # ** cat   /etc/cron.d/vmcatcher**
+    [root] #  cat   /etc/cron.d/vmcatcher
     export VMCATCHER_RDBMS="sqlite:////var/lib/vmcatcher/vmcatcher.db"
     export VMCATCHER_CACHE_DIR_CACHE="/var/cache/vmimages/endorsed/"
     export VMCATCHER_CACHE_DIR_DOWNLOAD="/var/cache/vmimages/partial/"
@@ -982,7 +982,7 @@ All scripts have a logging option. This is used to configure pythons logging
 library. An example is shown below.
 
     
-    [user] $ ** vmcatcher_image -L /usr/share/doc/vmcatcher/logger.conf -l**
+    [user] $  vmcatcher_image -L /usr/share/doc/vmcatcher/logger.conf -l
 
 Logging can be independently set up for each object to multiple locations, and
 with different log levels.
