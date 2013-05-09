@@ -1,5 +1,10 @@
 Changelog
 
+vmcatcher-0.1.30
+
+ * Many changes in the README.md which now benefits from the updated docbook.
+ * vmcatcher_eventHndlExpl now include the new environment variables for handlers, VMCATCHER_EVENT_IL_DC_IDENTIFIER and VMCATCHER_EVENT_HV_FORMAT (if available).
+
 vmcatcher-0.1.29
 
  * vmcatcher_cache: Force environment variables VMCATCHER_CACHE_DIR_CACHE, VMCATCHER_CACHE_DIR_DOWNLOAD and VMCATCHER_CACHE_DIR_EXPIRE to be set for handlers under all set ups and not just my setup.
