@@ -910,7 +910,11 @@ class db_controler(object):
 
             if output_file_name != None:
                 output_fileptr.close()
-
+    def subscriptions_image_accept(self,subscriptions_selected,outputfiles,images_aproved):
+        pass
+    def subscriptions_image_refuse(self,subscriptions_selected,outputfiles,images_aproved):
+        pass
+    
 # User interface
 
 def pairsNnot(list_a,list_b):
@@ -1186,6 +1190,10 @@ def main():
         database.subscriptions_info(subscriptions_selected,outputfiles)
     if 'image_list' in actions:
         database.subscriptions_image_list(subscriptions_selected,outputfiles)
+    if 'image_accept' in actions:
+        database.subscriptions_image_accept(subscriptions_selected,outputfiles,images_aproved)
+    if 'image_refuse' in actions:
+        database.subscriptions_image_refuse(subscriptions_selected,outputfiles,images_refused)
     
     sys.exit(rc)
 if __name__ == "__main__":
