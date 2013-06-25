@@ -1,0 +1,28 @@
+import sys
+import logging
+
+def endorser():
+    print 'here'
+    
+
+def main():
+    LoggingLevel= logging.WARNING
+    modules = { 'endorser' : endorser}
+    if len(sys.argv) < 2 :
+        logging.basicConfig(level=LoggingLevel)
+        log = logging.getLogger("main")
+        log.error("Not enough arguments.")
+        sys.exit(1)
+    if sys.argv[1] in modules.keys():
+        modules[sys.argv[1]]()
+    else:
+        logging.basicConfig(level=LoggingLevel)
+        log = logging.getLogger("main")
+        log.error("Invalid Method.")
+        output =  modules.keys()
+            
+        sys.exit(1)
+    
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.WARNING)
+    main()
