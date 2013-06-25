@@ -352,6 +352,8 @@ class output_driver_base(object):
         pass
     def subscriptions_lister(self):
         pass
+    def display_subscription_images(self,subscription):
+        pass
 
 class output_driver_smime(output_driver_base):
     def display_subscription(self,subscription):
@@ -402,7 +404,13 @@ class output_driver_lines(output_driver_base):
         subauthq = self.session.query(model.Subscription).all()
         for item in subauthq:
             self.file_pointer.write ("%s\t%s\t%s\n" % (item.identifier,item.authorised,item.uri))
-
+    def display_subscription_images(self,subscription):
+        images = self.session.query(model.ImageDefinition).\
+            filter(subscription.id==model.ImageDefinition.subscription)
+        print 'dddddddddddddddd'
+        for image in images:
+            print image
+            
 class fileView(object):
     def __init__(self,anchor,fileRaw,MatchMetadata):
         self.log = logging.getLogger("fileView")
@@ -870,7 +878,38 @@ class db_controler(object):
             if thisRc != 0:
                 rc = thisRc
         return rc
-         
+    def subscriptions_image_list(self,subscriptions_selected,outputfiles):
+        if not self.check_factories():
+            return False
+        pairs, extra_selectors ,extra_paths = pairsNnot(subscriptions_selected,outputfiles)
+
+        for item in extra_selectors:
+            pairs.append([item,None])
+
+        errorhappened = False
+        Session = self.SessionFactory()
+        selector = self.factory_selector(Session)
+        for pair in pairs:
+            selector_filter = pair[0]
+            output_file_name = pair[1]
+            output_fileptr = sys.stdout
+            if output_file_name != None:
+                output_fileptr = open(output_file_name,'w+')
+                output_fileptr.flush()
+            query_subscription = selector.subscription_get(selector_filter)
+            if query_subscription.count() == 0:
+                self.log.warning("Selections '%s' does not match any known subscriptions." % (selector_filter))
+                continue
+            view = self.factory_view(output_fileptr,Session,self.anchor)
+
+            for item in query_subscription:
+                view.display_subscription(item)
+                query_imagelist = selector.imagelist_by_id(item.imagelist_latest)
+                for imagelist in query_imagelist:
+                    view.display_subscription_images(imagelist)
+
+            if output_file_name != None:
+                output_fileptr.close()
 
 # User interface
 
@@ -906,13 +945,15 @@ def main():
     p.add_option('-e', '--auto-endorse', action ='store_true',help='Add endorser in your subscribe to imagelist action.')
     p.add_option('-c', '--cert-dir', action ='store',help='Certificate directory.', metavar='INPUTDIR')
     p.add_option('-U', '--update', action ='store_true',help='update image metadata')
+    p.add_option('--image-list', action ='store_true',help='list accepted image UUID for a subscription.', metavar='image UUID')
+    p.add_option('--image-accept', action ='append',help='accept image UUID in subscription.', metavar='image UUID')
+    p.add_option('--image-refuse', action ='append',help='refuse image UUID in subscription.', metavar='image UUID')
     p.add_option('-u', '--uuid', action ='append',help='Select subscription', metavar='UUID')
     p.add_option('-r', '--uri', action ='append',help='Select subscription', metavar='URL')
     p.add_option('-f', '--format', action ='store',help='Sets the output format')
     p.add_option('-D', '--delete', action ='store_true',help='Delete subscription')
     p.add_option('-i', '--info', action ='store_true',help='Information on subscription')
     p.add_option('-o', '--output', action ='append',help='Export File.', metavar='OUTPUTFILE')
-    p.add_option('-L', '--logfile', action ='store',help='Logfile configuration file.', metavar='LOGFILE')
     p.add_option('-x', '--execute', action ='store',help='Event application to launch.', metavar='EVENT')
     p.add_option('--verbose', action ='count',help='Change global log level, increasing log output.', metavar='LOGFILE')
     p.add_option('--quiet', action ='count',help='Change global log level, decreasing log output.', metavar='LOGFILE')
@@ -932,6 +973,8 @@ def main():
     inputformats = set(['uuid','url'])
     input_format_selected = set([])
     outputfiles = []
+    images_aproved = []
+    images_refused = []
     databaseConnectionString = None
     eventCmd = None
     logFile = None
@@ -996,6 +1039,15 @@ def main():
         actions.add('update')
         anchor_needed = True
         output_format_selected.add('lines')
+    if options.image_list:
+        actions.add('image_list')
+    if options.image_accept:
+        actions.add('image_accept')
+        images_aproved = options.image_accept
+    if options.image_refuse:
+        actions.add('image_refuse')
+        images_refused = options.image_refuse
+        
     if options.subscribe:
         anchor_needed = True
         actions.add('subscribe')
@@ -1126,6 +1178,9 @@ def main():
         database.dumpfiles(subscriptions_selected,outputfiles)
     if 'info' in actions:
         database.subscriptions_info(subscriptions_selected,outputfiles)
+    if 'image_list' in actions:
+        database.subscriptions_image_list(subscriptions_selected,outputfiles)
+    
     sys.exit(rc)
 if __name__ == "__main__":
     main()
