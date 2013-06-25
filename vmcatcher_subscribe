@@ -911,9 +911,9 @@ class db_controler(object):
             if output_file_name != None:
                 output_fileptr.close()
     def subscriptions_image_accept(self,subscriptions_selected,outputfiles,images_aproved):
-        pass
+        self.log.error("method not implemented")
     def subscriptions_image_refuse(self,subscriptions_selected,outputfiles,images_aproved):
-        pass
+        self.log.error("method not implemented")
     
 # User interface
 
