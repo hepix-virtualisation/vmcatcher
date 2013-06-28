@@ -352,7 +352,7 @@ class output_driver_base(object):
         pass
     def subscriptions_lister(self):
         pass
-    def display_subscription_images(self,subscription):
+    def display_image_def(self,subscription):
         pass
 
 class output_driver_smime(output_driver_base):
@@ -404,13 +404,9 @@ class output_driver_lines(output_driver_base):
         subauthq = self.session.query(model.Subscription).all()
         for item in subauthq:
             self.file_pointer.write ("%s\t%s\t%s\n" % (item.identifier,item.authorised,item.uri))
-    def display_subscription_images(self,subscription):
-        images = self.session.query(model.ImageDefinition).\
-            filter(subscription.id==model.ImageDefinition.subscription)
-        print 'dddddddddddddddd'
-        for image in images:
-            print image
-            
+    def display_image_def(self,imagedef):
+        self.file_pointer.write ('subscription.image.dc:identifier=%s\n' % (imagedef.identifier))
+           
 class fileView(object):
     def __init__(self,anchor,fileRaw,MatchMetadata):
         self.log = logging.getLogger("fileView")
@@ -901,13 +897,12 @@ class db_controler(object):
                 self.log.warning("Selections '%s' does not match any known subscriptions." % (selector_filter))
                 continue
             view = self.factory_view(output_fileptr,Session,self.anchor)
-
             for item in query_subscription:
                 view.display_subscription(item)
-                query_imagelist = selector.imagelist_by_id(item.imagelist_latest)
-                for imagelist in query_imagelist:
-                    view.display_subscription_images(imagelist)
-
+                query_image_def = Session.query(model.ImageDefinition).\
+                    filter(model.ImageDefinition.subscription==item.id)
+                for imagedef in query_image_def:
+                    view.display_image_def(imagedef)
             if output_file_name != None:
                 output_fileptr.close()
     def subscriptions_image_accept(self,subscriptions_selected,outputfiles,images_aproved):
