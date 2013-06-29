@@ -666,10 +666,10 @@ class db_controler(object):
             return False
         return True
     
-    def subscript_image_bind(self,Session,subscriptionKey,image):
+    def subscript_image_bind(self,Session,subscriptionKey,imagekey):
         db = db_actions(Session)
         
-        metadata[u'dc:identifier'] = image
+        metadata[u'dc:identifier'] = imagekey
         ImageDefinition_query = db.ImageDefinition_create(subscriptionKey,metadata)
         if ImageDefinition_query.count() != 1:
             self.log.error('Creation of ImageDefinition referance failed.')
