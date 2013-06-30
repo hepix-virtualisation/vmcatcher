@@ -292,8 +292,6 @@ class db_actions(object):
         self.session.commit()
         ImageDefinitionQuery = self.ImageDefinition_get(subscriptionKey,metadata)
         return ImageDefinitionQuery
-    def ImageDefinition_delete(self,subscriptionKey,metadata):
-        self.log.error("not yet implemented")
     def ImageDefinition_list(self,subscriptionKey):
         imagedefList = self.session.query(model.ImageDefinition).\
                 filter(model.ImageDefinition.subscription==subscriptionKey)
@@ -656,23 +654,13 @@ class db_controler(object):
             # Now we creat image definitions
             metadata = {}
             metadata.update(imageReferance.metadata)
-            imagekey = imageReferance.metadata[u'dc:identifier']
             metadata['cache'] = 0
-            if self.subscript_image_bind(Session,subscriptionKey,imagekey):
+            ImageDefinition_query = db.ImageDefinition_create(subscriptionKey,metadata)
+            if ImageDefinition_query.count() != 1:
                 self.log.error('Creation of ImageDefinition referance failed.')
                 failedToCreateImages.append(imageReferance)
                 continue
         if len(failedToCreateImages) > 0:
-            return False
-        return True
-    
-    def subscript_image_bind(self,Session,subscriptionKey,imagekey):
-        db = db_actions(Session)
-        
-        metadata[u'dc:identifier'] = imagekey
-        ImageDefinition_query = db.ImageDefinition_create(subscriptionKey,metadata)
-        if ImageDefinition_query.count() != 1:
-            self.log.error('Creation of ImageDefinition referance failed.')
             return False
         return True
     
