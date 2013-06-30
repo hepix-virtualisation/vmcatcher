@@ -658,7 +658,7 @@ class db_controler(object):
             metadata.update(imageReferance.metadata)
             imagekey = imageReferance.metadata[u'dc:identifier']
             metadata['cache'] = 0
-            if self.subscript_image_bind(Session,subscriptionKey,imagekey)
+            if self.subscript_image_bind(Session,subscriptionKey,imagekey):
                 self.log.error('Creation of ImageDefinition referance failed.')
                 failedToCreateImages.append(imageReferance)
                 continue
