@@ -931,7 +931,8 @@ class db_controler(object):
                 self.log.error("Subscription '%s' is unknown." % (sub_uuid))
                 errors = errors + 1
                 return False
-            key = sub_known.one()
+            key = sub_known.one()[0]
+            
             metadata = { 'dc:identifier' : image_uuid,
                 'cache' : 0}
             newlist = model.ImageDefinition(key,metadata)
