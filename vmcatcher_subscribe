@@ -905,32 +905,45 @@ class db_controler(object):
                     view.display_image_def(imagedef)
             if output_file_name != None:
                 output_fileptr.close()
-    def subscriptions_image_accept(self,subscriptions_selected,images_aproved):
-        if not self.check_factories():
+    def subscriptions_image_accept(self,subscriptions,images):
+        pairs, extra_subscriptions ,extra_images = pairsNnot(subscriptions,images)
+        if len(extra_subscriptions) > 0:
+            self.log.error('Not enough images selected')
             return False
-        pairs, extra_selectors ,extra_paths = pairsNnot(subscriptions_selected,images_aproved)
-
-        for item in extra_selectors:
-            pairs.append([item,None])
-        errorhappened = False
+        if len(extra_images) > 0:
+            self.log.error('Not enough subscriptions selected')
+            return False
         Session = self.SessionFactory()
-        selector = self.factory_selector(Session)
-        for pair in pairs:
-            selector_filter = pair[0]
-            new_imagedef = pair[1]
-            query_subscription = selector.subscription_get(selector_filter)
-            if query_subscription.count() == 0:
-                self.log.warning("Selections '%s' does not match any known subscriptions." % (selector_filter))
+        errors = 0
+        for sub_uuid, image_uuid in pairs:
+            
+            image_known = Session.query(model.ImageDefinition.identifier,model.Subscription.identifier).\
+                filter(model.ImageDefinition.identifier == image_uuid).\
+                filter(model.ImageDefinition.subscription == model.Subscription.id)
+            if image_known.count() > 0:
+                iident, sident = image_known.one()
+                self.log.error("Ignoring, as subscription '%s' has image '%s' already." % (sident,iident))
+                errors = errors + 1
                 continue
-            for item in query_subscription:
-                ImageDefinition_get(self,subscriptionKey,metadata)
-                query_image_def = Session.query(model.ImageDefinition).\
-                    filter(model.ImageDefinition.subscription==item.id)
-                for imagedef in query_image_def:
-                    view.display_image_def(imagedef)
-            if output_file_name != None:
-                output_fileptr.close()
-        print (self,subscriptions_selected,outputfiles,images_aproved)
+            sub_known = Session.query(model.Subscription.id).\
+                filter(model.Subscription.identifier == sub_uuid)
+            if sub_known.count() == 0:
+                self.log.error("Subscription '%s' is unknown." % (sub_uuid))
+                errors = errors + 1
+                return False
+            key = sub_known.one()
+            metadata = { 'dc:identifier' : image_uuid,
+                'cache' : 0}
+            newlist = model.ImageDefinition(key,metadata)
+            Session.add(newlist)
+            Session.commit()
+            self.log.info("Subscription '%s' include image '%s'." % (sub_uuid,image_uuid))
+        if errors != 0:
+            return False
+        return True
+                  
+                            
+            
     def subscriptions_image_refuse(self,subscriptions_selected,outputfiles,images_aproved):
         self.log.error("method not implemented")
     
@@ -1210,9 +1223,9 @@ def main():
     if 'image_list' in actions:
         database.subscriptions_image_list(subscriptions_selected,outputfiles)
     if 'image_accept' in actions:
-        database.subscriptions_image_accept(subscriptions_selected,outputfiles,images_aproved)
+        database.subscriptions_image_accept(subscriptions_selected,images_aproved)
     if 'image_refuse' in actions:
-        database.subscriptions_image_refuse(subscriptions_selected,outputfiles,images_refused)
+        database.subscriptions_image_refuse(subscriptions_selected,images_refused)
     
     sys.exit(rc)
 if __name__ == "__main__":
