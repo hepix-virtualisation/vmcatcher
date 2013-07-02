@@ -945,8 +945,36 @@ class db_controler(object):
                   
                             
             
-    def subscriptions_image_refuse(self,subscriptions_selected,outputfiles,images_aproved):
-        self.log.error("method not implemented")
+    def subscriptions_image_refuse(self,subscriptions,images):
+        pairs, extra_subscriptions ,extra_images = pairsNnot(subscriptions,images)
+        if len(extra_subscriptions) > 0:
+            self.log.error('Not enough images selected')
+            return False
+        if len(extra_images) > 0:
+            self.log.error('Not enough subscriptions selected')
+            return False
+        Session = self.SessionFactory()
+        errors = 0
+        for sub_uuid, image_uuid in pairs:
+            image_known = Session.query(model.ImageDefinition).\
+                filter(model.ImageDefinition.identifier == image_uuid).\
+                filter(model.ImageDefinition.subscription == model.Subscription.id).\
+                filter(model.Subscription.identifier == sub_uuid)
+            if image_known.count() == 0:
+                iident, sident = image_known.one()
+                self.log.error("Ignoring, as subscription '%s' has does not accept image '%s'." % (sident,iident))
+                errors = errors + 1
+                continue
+            imageDef = image_known.one()
+            imageInstance_known = Session.query(model.ImageInstance).\
+                filter(model.ImageInstance.fkIdentifier == imageDef.id)
+            for instance in imageInstance_known:
+                Session.delete(instance)
+            Session.delete(imageDef)
+            Session.commit()
+        if errors != 0:
+            return False
+        return True
     
 # User interface
 

@@ -17,7 +17,10 @@ from sqlalchemy.ext.declarative import declarative_base
 import datetime
 Base = declarative_base()
 
-
+""" Things to change in data base.
+1) Images definitions need more status flags.
+2) 
+"""
 class Endorser(Base):
     """This table defines the Human Name for the Endorser."""
     __tablename__ = 'endorser'
