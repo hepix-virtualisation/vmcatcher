@@ -490,7 +490,9 @@ class fileView(object):
         self.vmilist = vmilist
         self.errorNo = 0
         self.Json = jsonData
-        return 
+        return
+
+ 
 class db_controler(object):
     def __init__(self,dboptions,dblog = False):
         self.log = logging.getLogger("db_controler")
@@ -682,7 +684,7 @@ class db_controler(object):
             if self.callbackEventImageNew != None:
                 self.callbackEventImageNew(imageObj.metadata)
             # Triggor an event for new image.
-            self.log.error("ImageId '%s' not accepted for subscription '%s'" %
+            self.log.info("ImageId '%s' refused by subscription '%s'" %
                 (imageObj.metadata[u'dc:identifier'],ProcessingSubscriptionUuid))
             # Error code - image dc:identifier invalid.
             return 32
@@ -922,29 +924,31 @@ class db_controler(object):
                 filter(model.ImageDefinition.subscription == model.Subscription.id)
             if image_known.count() > 0:
                 iident, sident = image_known.one()
-                self.log.error("Ignoring, as subscription '%s' has image '%s' already." % (sident,iident))
+                self.log.error("Subscription '%s' has image '%s' already." % (sident,iident))
                 errors = errors + 1
                 continue
-            sub_known = Session.query(model.Subscription.id).\
+            sub_known = Session.query(model.Subscription).\
                 filter(model.Subscription.identifier == sub_uuid)
             if sub_known.count() == 0:
                 self.log.error("Subscription '%s' is unknown." % (sub_uuid))
                 errors = errors + 1
                 return False
-            key = sub_known.one()[0]
+            subscription = sub_known.one()
+            subscription.imagelist_latest = None
+            key = subscription.id
             
             metadata = { 'dc:identifier' : image_uuid,
                 'cache' : 0}
             newlist = model.ImageDefinition(key,metadata)
             Session.add(newlist)
+            Session.add(subscription)
             Session.commit()
-            self.log.info("Subscription '%s' include image '%s'." % (sub_uuid,image_uuid))
+            #self.log.info("Subscription '%s' include image '%s'." % (sub_uuid,image_uuid))
         if errors != 0:
             return False
         return True
-                  
-                            
-            
+
+
     def subscriptions_image_refuse(self,subscriptions,images):
         pairs, extra_subscriptions ,extra_images = pairsNnot(subscriptions,images)
         if len(extra_subscriptions) > 0:
@@ -956,21 +960,22 @@ class db_controler(object):
         Session = self.SessionFactory()
         errors = 0
         for sub_uuid, image_uuid in pairs:
-            image_known = Session.query(model.ImageDefinition).\
+            image_known = Session.query(model.Subscription,model.ImageDefinition).\
                 filter(model.ImageDefinition.identifier == image_uuid).\
                 filter(model.ImageDefinition.subscription == model.Subscription.id).\
                 filter(model.Subscription.identifier == sub_uuid)
             if image_known.count() == 0:
-                iident, sident = image_known.one()
-                self.log.error("Ignoring, as subscription '%s' has does not accept image '%s'." % (sident,iident))
+                self.log.error("Subscription '%s' already refuses image '%s'." % (sub_uuid,image_uuid))
                 errors = errors + 1
                 continue
-            imageDef = image_known.one()
+            subscription ,imageDef = image_known.one()
             imageInstance_known = Session.query(model.ImageInstance).\
                 filter(model.ImageInstance.fkIdentifier == imageDef.id)
             for instance in imageInstance_known:
                 Session.delete(instance)
+            subscription.imagelist_latest = None
             Session.delete(imageDef)
+            Session.add(subscription)
             Session.commit()
         if errors != 0:
             return False
