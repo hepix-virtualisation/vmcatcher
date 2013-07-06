@@ -554,8 +554,8 @@ def main():
     p.add_option('-D', '--download', action ='store_true',help='Download subscribed images to cache directory.')
     p.add_option('-s', '--sha512', action ='store_true',help='Check cache directory images Sha512.')
     p.add_option('-E', '--expire', action ='store_true',help='Remove expired images from cache directory.')
-    p.add_option('--verbose', action ='count',help='Change global log level, increasing log output.', metavar='LOGFILE')
-    p.add_option('--quiet', action ='count',help='Change global log level, decreasing log output.', metavar='LOGFILE')
+    p.add_option('-v', '--verbose', action ='count',help='Change global log level, increasing log output.', metavar='LOGFILE')
+    p.add_option('-q', '--quiet', action ='count',help='Change global log level, decreasing log output.', metavar='LOGFILE')
     p.add_option('--log-config', action ='store',help='Logfile configuration file, (overrides command line).', metavar='LOGFILE')
     p.add_option('--log-sql-info', action ='store_true',help='Echo all SQL commands.', metavar='LOGFILE')
     

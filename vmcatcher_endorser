@@ -398,8 +398,8 @@ def main():
     p.add_option('-u', '--unlink', action ='store_true',help='Remove endorser from Subscription.')
     p.add_option('-i', '--info', action ='store_true',help='Information on endoser.')
     p.add_option('-S', '--subject',action ='append',help='Depricated version of --dn.', metavar='DN')
-    p.add_option('--verbose', action ='count',help='Change global log level, increasing log output.', metavar='LOGFILE')
-    p.add_option('--quiet', action ='count',help='Change global log level, decreasing log output.', metavar='LOGFILE')
+    p.add_option('-v', '--verbose', action ='count',help='Change global log level, increasing log output.', metavar='LOGFILE')
+    p.add_option('-q', '--quiet', action ='count',help='Change global log level, decreasing log output.', metavar='LOGFILE')
     p.add_option('--log-config', action ='store',help='Logfile configuration file, (overrides command line).', metavar='LOGFILE')
     p.add_option('--log-sql-info', action ='store_true',help='Echo all SQL commands.', metavar='LOGFILE')
     
