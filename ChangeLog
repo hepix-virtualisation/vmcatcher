@@ -1,5 +1,10 @@
 Changelog
 
+vmcatcher-0.1.31
+
+ * New commands for managing images bound to an imagelist.
+ * Added -v and -q short options for --verbose and --quiet.
+
 vmcatcher-0.1.30
 
  * Many changes in the README.md which now benefits from the updated docbook.
