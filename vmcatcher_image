@@ -330,6 +330,8 @@ class db_controler:
                     filter(model.ImageInstance.fkIdentifier == model.ImageDefinition.id).\
                     filter(model.Subscription.id == imagedef.subscription).\
                     filter(model.Subscription.imagelist_latest == model.ImageListInstance.id)
+                if details.count() == 0:
+                    self.log.warning("Image '%s' has expired." % (selector_filter))
                 for item in details:
                     imagelist = item[0]
                     image = item[1]
