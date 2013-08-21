@@ -427,7 +427,7 @@ class fileView(object):
         try:
             smimeProcessor.Process(str(self.data))
         except smimeX509ValidationError,E:
-            self.log.error("Failed to process validate text for produced error" )
+            self.log.error(E)
             # Error code - failed to validate image list.
             self.errorNo =  11
             return
@@ -755,6 +755,7 @@ class db_controler(object):
         #self.log.error("errr:%s" % (ProcessingSubscriptionUuid))
         checker = fileView(self.anchor,update_unprocessed,metadataFV)
         if checker.errorNo != 0:
+            self.log.error("Failed to verify subscription '%s' with URI '%s'" % (subscription.identifier,subscription.uri))
             return checker.errorNo
         if checker.Json == None:
             return 14
@@ -824,10 +825,10 @@ class db_controler(object):
             self.log.debug('Downloaded version:%s' % (messageVersion))
             VersionCompare = split_numeric_sort(imageList.version,messageVersion)
             if VersionCompare == 0:
-                self.log.error('Downloaded version "%s" has the same version number than the old version "%s".' % (messageVersion, imageList.version))                
-                return 16 #  16 New version number is same as old version number.
+                self.log.warning('Downloaded version "%s" version "%s" has the same version number than the old version "%s".' % (ProcessingSubscriptionUuid,messageVersion, imageList.version))                
+                #return 16 #  16 New version number is same as old version number.
             if VersionCompare < 0:
-                self.log.error('Downloaded version "%s" has lower version number than the old version "%s".' % (messageVersion, imageList.version))
+                self.log.error('Downloaded version "%s" version "%s" has lower version number than the old version "%s".' % (ProcessingSubscriptionUuid,messageVersion, imageList.version))
                 return 17 #  17 New version number is less than old version number.
         
         
