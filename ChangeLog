@@ -9,6 +9,9 @@ vmcatcher-0.2.0
  * Dont reject imagelists with the same number only issue a warning.
  * Better logging of certificate verify error.
  * Better logging of version number errors.
+ * Endorser "identifier" now constrained in Database to be Unique
+ * Random Endorser "identifier" created when Endorser is automatically added from subscription.
+ * Catch exceptions parsing structure of image list and reject image list.
 
 vmcatcher-0.1.31
 
