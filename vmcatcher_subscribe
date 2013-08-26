@@ -37,6 +37,7 @@ import urllib2
 import urllib
 import hashlib
 import datetime
+import uuid
 from hepixvmitrust.vmitrustlib import VMimageListDecoder as VMimageListDecoder
 from hepixvmitrust.vmitrustlib import time_format_definition as time_format_definition
 try:
@@ -279,7 +280,6 @@ class db_actions(object):
 
     def ImageDefinition_get(self,subscriptionKey,metadata):
         subscriptionlist = self.session.query(model.ImageDefinition).\
-                filter(model.ImageDefinition.subscription==subscriptionKey).\
                 filter(model.ImageDefinition.identifier == metadata[u'dc:identifier'])
         return subscriptionlist
 
@@ -648,7 +648,9 @@ class db_controler(object):
                 return False
             else:
                 # We can create an endorser.
-                endorser_list = db.endorser_create(metadata)
+                newmetadata = dict(metadata)
+                newmetadata[u'dc:identifier'] = unicode(uuid.uuid4())
+                endorser_list = db.endorser_create(newmetadata)
                 self.log.warning("Endorser '%s':'%s' added to database." % (metadata[u'hv:dn'],metadata[u'hv:ca']))
                 
                 if endorser_list.count() == 0:
