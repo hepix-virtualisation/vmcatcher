@@ -304,17 +304,14 @@ Install EPEL for dependencies.
 
 Install Yokel yum repository.
 
-    
-    [root] # cat /etc/yum.repos.d/vmcasting.repo
-    [vmcasting]
-    name=vmcasting
-    baseurl=http://www.yokel.org/pub/software/yokel.org/release/x86_64/scientific/6x/rpm/
+    [yokel_scientific_release_6]
+    name=yokel_scientific_release_6
+    baseurl=http://www.yokel.org/pub/software/yokel.org/scientific/6/release/x86_64/rpm/
     enabled=1
     gpgcheck=0
 
 Install the Grid CA repository for details please see
 https://wiki.egi.eu/wiki/EGI_IGTF_Release
-
     
     [root] # cat /etc/yum.repos.d/egi-trust-anchor.repo
     [EGI-trustanchors]
@@ -1016,7 +1013,24 @@ the next download without blocking. Since events are not resent so error
 handling is more complex, it may be wise to use a message queue, or storing
 the event and processing after, rather than just using a simple fork.
 
+#### Data base migration from versions prior to 0.2.X
 
+
+First back up your data base
+
+    $ cp vmcatcher.db vmcatcher.db.bak
+
+Now dump the data base content
+
+    $ sqlite3 vmcatcher.db .dump > dump
+
+No regenerate the data base.
+
+    $ vmcatcher_image -l
+
+Then after checking the data base is restored, add the content.
+
+    $ sqlite3 vmcatcher.db < dump 
 
 #### Logging configuration
 
