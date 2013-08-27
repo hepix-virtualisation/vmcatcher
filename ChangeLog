@@ -4,9 +4,9 @@ Changelog
 vmcatcher-0.2.0
 
  * Changed the event handling to include "ProcessPrefix" which is always the first event.
- * Changed the event handling to include "ProcessPostfix" which is always the first event.
+ * Changed the event handling to include "ProcessPostfix" which is always the last event.
  * Added VMCATCHER_EVENT_UUID_SESSION with a UUID for all events from one vmcatcher session.
- * Dont reject imagelists with the same number only issue a warning.
+ * Dont reject imagelists with the same version number only issue a warning.
  * Better logging of certificate verify error.
  * Better logging of version number errors.
  * Endorser "identifier" now constrained in Database to be Unique
