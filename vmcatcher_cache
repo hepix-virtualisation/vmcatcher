@@ -343,7 +343,7 @@ class EventObj(object):
     def eventExpirePrefix(self, metadata):
         self.eventProcess("ExpirePrefix",metadata)
     def eventExpirePosfix(self, metadata):
-        self.eventProcess("ExpirePosfix",metadata)
+        self.eventProcess("ExpirePostfix",metadata)
     def eventProcessPrefix(self, metadata):
         self.eventProcess("ProcessPrefix",metadata)
     def eventProcessPostfix(self, metadata):
