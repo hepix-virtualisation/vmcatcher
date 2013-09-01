@@ -1,5 +1,8 @@
 Changelog
 
+vmcatcher-0.2.1
+
+ * Typo correction Event type now changed from "ExpirePosfix" to "ExpirePostfix".
 
 vmcatcher-0.2.0
 
