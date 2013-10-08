@@ -17,12 +17,15 @@ from sqlalchemy.ext.declarative import declarative_base
 import datetime
 Base = declarative_base()
 
-
+""" Things to change in data base.
+1) Images definitions need more status flags.
+2) 
+"""
 class Endorser(Base):
     """This table defines the Human Name for the Endorser."""
     __tablename__ = 'endorser'
     id = Column(Integer, primary_key=True)
-    identifier = Column(String(50))
+    identifier = Column(String(50),unique=True,nullable = False)
     princibles = relationship("EndorserPrincible", backref="Endorser",cascade='all, delete')
     subscriptionauth = relationship("SubscriptionAuth", backref="Endorser",cascade='all, delete')
     def __init__(self, metadata):

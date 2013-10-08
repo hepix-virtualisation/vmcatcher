@@ -1,5 +1,26 @@
 Changelog
 
+vmcatcher-0.2.1
+
+ * Typo correction Event type now changed from "ExpirePosfix" to "ExpirePostfix".
+
+vmcatcher-0.2.0
+
+ * Changed the event handling to include "ProcessPrefix" which is always the first event.
+ * Changed the event handling to include "ProcessPostfix" which is always the last event.
+ * Added VMCATCHER_EVENT_UUID_SESSION with a UUID for all events from one vmcatcher session.
+ * Dont reject imagelists with the same version number only issue a warning.
+ * Better logging of certificate verify error.
+ * Better logging of version number errors.
+ * Endorser "identifier" now constrained in Database to be Unique
+ * Random Endorser "identifier" created when Endorser is automatically added from subscription.
+ * Catch exceptions parsing structure of image list and reject image list.
+
+vmcatcher-0.1.31
+
+ * New commands for managing images bound to an imagelist.
+ * Added -v and -q short options for --verbose and --quiet.
+
 vmcatcher-0.1.30
 
  * Many changes in the README.md which now benefits from the updated docbook.

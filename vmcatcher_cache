@@ -41,6 +41,7 @@ from hepixvmitrust.vmitrustlib import file_extract_metadata as file_extract_meta
 import os, statvfs
 import shutil
 import commands
+import uuid
 from M2Crypto import  BIO, SMIME, X509
 try:
     import simplejson as json
@@ -265,8 +266,11 @@ class EventObj(object):
     def __init__(self,eventExecutionString):
         self.eventExecutionString = eventExecutionString
         self.env = os.environ
+        self.env['VMCATCHER_EVENT_UUID_SESSION'] = str(uuid.uuid1())
         self.log = logging.getLogger("Events")
     def launch(self,env):
+        if self.eventExecutionString == None:
+            return 0,"",""
         process = subprocess.Popen([self.eventExecutionString], shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,env=env)
         processRc = None
         handleprocess = True
@@ -330,7 +334,8 @@ class EventObj(object):
             self.log.info("stdout=%s" % (stdout))
             self.log.info("stderr=%s" % (stderr))
         return
-
+    def eventAvailablePrefix(self,metadata):
+        self.eventProcess("AvailablePrefix",metadata)
     def eventAvailablePrefix(self,metadata):
         self.eventProcess("AvailablePrefix",metadata)
     def eventAvailablePostfix(self,metadata):
@@ -338,8 +343,12 @@ class EventObj(object):
     def eventExpirePrefix(self, metadata):
         self.eventProcess("ExpirePrefix",metadata)
     def eventExpirePosfix(self, metadata):
-        self.eventProcess("ExpirePosfix",metadata)
-
+        self.eventProcess("ExpirePostfix",metadata)
+    def eventProcessPrefix(self, metadata):
+        self.eventProcess("ProcessPrefix",metadata)
+    def eventProcessPostfix(self, metadata):
+        self.eventProcess("ProcessPostfix",metadata)
+        
 class CacheMan(object):
     def __init__(self,database,dblog ,dir_cache, dir_partial, dir_expired):
         self.log = logging.getLogger("CacheMan")
@@ -554,8 +563,8 @@ def main():
     p.add_option('-D', '--download', action ='store_true',help='Download subscribed images to cache directory.')
     p.add_option('-s', '--sha512', action ='store_true',help='Check cache directory images Sha512.')
     p.add_option('-E', '--expire', action ='store_true',help='Remove expired images from cache directory.')
-    p.add_option('--verbose', action ='count',help='Change global log level, increasing log output.', metavar='LOGFILE')
-    p.add_option('--quiet', action ='count',help='Change global log level, decreasing log output.', metavar='LOGFILE')
+    p.add_option('-v', '--verbose', action ='count',help='Change global log level, increasing log output.', metavar='LOGFILE')
+    p.add_option('-q', '--quiet', action ='count',help='Change global log level, decreasing log output.', metavar='LOGFILE')
     p.add_option('--log-config', action ='store',help='Logfile configuration file, (overrides command line).', metavar='LOGFILE')
     p.add_option('--log-sql-info', action ='store_true',help='Echo all SQL commands.', metavar='LOGFILE')
     
@@ -687,17 +696,18 @@ def main():
 
 
     ThisCacheManager = CacheMan(databaseConnectionString,debugSqlEcho,dir_cache, dir_partial, dir_expired)
-    if eventExecutionString != None:
-        EventInstance = EventObj(eventExecutionString)
-        EventInstance.env['VMCATCHER_CACHE_DIR_CACHE'] = dir_cache
-        EventInstance.env['VMCATCHER_CACHE_DIR_DOWNLOAD'] = dir_partial
-        EventInstance.env['VMCATCHER_CACHE_DIR_EXPIRE'] = dir_expired
-        
-        ThisCacheManager.callbackEventAvailablePrefix = EventInstance.eventAvailablePrefix
-        ThisCacheManager.callbackEventAvailablePostfix = EventInstance.eventAvailablePostfix
-        ThisCacheManager.callbackEventExpirePrefix = EventInstance.eventExpirePrefix
-        ThisCacheManager.callbackEventExpirePostfix = EventInstance.eventExpirePosfix
+    EventInstance = None
+    EventInstance = EventObj(eventExecutionString)
+    EventInstance.env['VMCATCHER_CACHE_DIR_CACHE'] = dir_cache
+    EventInstance.env['VMCATCHER_CACHE_DIR_DOWNLOAD'] = dir_partial
+    EventInstance.env['VMCATCHER_CACHE_DIR_EXPIRE'] = dir_expired
+
+    ThisCacheManager.callbackEventAvailablePrefix = EventInstance.eventAvailablePrefix
+    ThisCacheManager.callbackEventAvailablePostfix = EventInstance.eventAvailablePostfix
+    ThisCacheManager.callbackEventExpirePrefix = EventInstance.eventExpirePrefix
+    ThisCacheManager.callbackEventExpirePostfix = EventInstance.eventExpirePosfix
     ThisCacheManager.load()
+    EventInstance.eventProcessPrefix({})
     if "expire" in actions:
         if not ThisCacheManager.expire():
             log.error("Failed to expire old images")
@@ -711,6 +721,6 @@ def main():
             log.error("Failed to download new images")
             sys.exit(1)
     ThisCacheManager.save()
-
+    EventInstance.eventProcessPostfix({})
 if __name__ == "__main__":
     main()

@@ -37,6 +37,7 @@ import urllib2
 import urllib
 import hashlib
 import datetime
+import uuid
 from hepixvmitrust.vmitrustlib import VMimageListDecoder as VMimageListDecoder
 from hepixvmitrust.vmitrustlib import time_format_definition as time_format_definition
 try:
@@ -279,7 +280,6 @@ class db_actions(object):
 
     def ImageDefinition_get(self,subscriptionKey,metadata):
         subscriptionlist = self.session.query(model.ImageDefinition).\
-                filter(model.ImageDefinition.subscription==subscriptionKey).\
                 filter(model.ImageDefinition.identifier == metadata[u'dc:identifier'])
         return subscriptionlist
 
@@ -352,6 +352,8 @@ class output_driver_base(object):
         pass
     def subscriptions_lister(self):
         pass
+    def display_image_def(self,subscription):
+        pass
 
 class output_driver_smime(output_driver_base):
     def display_subscription(self,subscription):
@@ -402,7 +404,9 @@ class output_driver_lines(output_driver_base):
         subauthq = self.session.query(model.Subscription).all()
         for item in subauthq:
             self.file_pointer.write ("%s\t%s\t%s\n" % (item.identifier,item.authorised,item.uri))
-
+    def display_image_def(self,imagedef):
+        self.file_pointer.write ('subscription.image.dc:identifier=%s\n' % (imagedef.identifier))
+           
 class fileView(object):
     def __init__(self,anchor,fileRaw,MatchMetadata):
         self.log = logging.getLogger("fileView")
@@ -423,7 +427,7 @@ class fileView(object):
         try:
             smimeProcessor.Process(str(self.data))
         except smimeX509ValidationError,E:
-            self.log.error("Failed to process validate text for produced error" )
+            self.log.error(E)
             # Error code - failed to validate image list.
             self.errorNo =  11
             return
@@ -439,7 +443,12 @@ class fileView(object):
             self.log.error("Downlaoded metadata from '%s' was not valid JSON." % (subscriptionKey))
             self.errorNo =  37
             return
-        vmilist = VMimageListDecoder(jsonData)
+        try:
+            vmilist = VMimageListDecoder(jsonData)
+        except E:
+            self.log.error("Exception passing '%s' was not a valid imagelist: %s." % (subscriptionKey,E))
+            self.errorNo =  39
+            return
         if vmilist == None:
             self.log.error("Downlaoded metadata from '%s' was not valid image list Object." % (subscriptionKey))
             self.errorNo =  38
@@ -486,7 +495,9 @@ class fileView(object):
         self.vmilist = vmilist
         self.errorNo = 0
         self.Json = jsonData
-        return 
+        return
+
+ 
 class db_controler(object):
     def __init__(self,dboptions,dblog = False):
         self.log = logging.getLogger("db_controler")
@@ -637,7 +648,9 @@ class db_controler(object):
                 return False
             else:
                 # We can create an endorser.
-                endorser_list = db.endorser_create(metadata)
+                newmetadata = dict(metadata)
+                newmetadata[u'dc:identifier'] = unicode(uuid.uuid4())
+                endorser_list = db.endorser_create(newmetadata)
                 self.log.warning("Endorser '%s':'%s' added to database." % (metadata[u'hv:dn'],metadata[u'hv:ca']))
                 
                 if endorser_list.count() == 0:
@@ -678,7 +691,7 @@ class db_controler(object):
             if self.callbackEventImageNew != None:
                 self.callbackEventImageNew(imageObj.metadata)
             # Triggor an event for new image.
-            self.log.error("ImageId '%s' not accepted for subscription '%s'" %
+            self.log.info("ImageId '%s' refused by subscription '%s'" %
                 (imageObj.metadata[u'dc:identifier'],ProcessingSubscriptionUuid))
             # Error code - image dc:identifier invalid.
             return 32
@@ -749,6 +762,7 @@ class db_controler(object):
         #self.log.error("errr:%s" % (ProcessingSubscriptionUuid))
         checker = fileView(self.anchor,update_unprocessed,metadataFV)
         if checker.errorNo != 0:
+            self.log.error("Failed to verify subscription '%s' with URI '%s'" % (subscription.identifier,subscription.uri))
             return checker.errorNo
         if checker.Json == None:
             return 14
@@ -818,10 +832,10 @@ class db_controler(object):
             self.log.debug('Downloaded version:%s' % (messageVersion))
             VersionCompare = split_numeric_sort(imageList.version,messageVersion)
             if VersionCompare == 0:
-                self.log.error('Downloaded version "%s" has the same version number than the old version "%s".' % (messageVersion, imageList.version))                
-                return 16 #  16 New version number is same as old version number.
+                self.log.warning('Downloaded version "%s" version "%s" has the same version number than the old version "%s".' % (ProcessingSubscriptionUuid,messageVersion, imageList.version))                
+                #return 16 #  16 New version number is same as old version number.
             if VersionCompare < 0:
-                self.log.error('Downloaded version "%s" has lower version number than the old version "%s".' % (messageVersion, imageList.version))
+                self.log.error('Downloaded version "%s" version "%s" has lower version number than the old version "%s".' % (ProcessingSubscriptionUuid,messageVersion, imageList.version))
                 return 17 #  17 New version number is less than old version number.
         
         
@@ -870,8 +884,111 @@ class db_controler(object):
             if thisRc != 0:
                 rc = thisRc
         return rc
-         
+    def subscriptions_image_list(self,subscriptions_selected,outputfiles):
+        if not self.check_factories():
+            return False
+        pairs, extra_selectors ,extra_paths = pairsNnot(subscriptions_selected,outputfiles)
 
+        for item in extra_selectors:
+            pairs.append([item,None])
+
+        errorhappened = False
+        Session = self.SessionFactory()
+        selector = self.factory_selector(Session)
+        for pair in pairs:
+            selector_filter = pair[0]
+            output_file_name = pair[1]
+            output_fileptr = sys.stdout
+            if output_file_name != None:
+                output_fileptr = open(output_file_name,'w+')
+                output_fileptr.flush()
+            query_subscription = selector.subscription_get(selector_filter)
+            if query_subscription.count() == 0:
+                self.log.warning("Selections '%s' does not match any known subscriptions." % (selector_filter))
+                continue
+            view = self.factory_view(output_fileptr,Session,self.anchor)
+            for item in query_subscription:
+                view.display_subscription(item)
+                query_image_def = Session.query(model.ImageDefinition).\
+                    filter(model.ImageDefinition.subscription==item.id)
+                for imagedef in query_image_def:
+                    view.display_image_def(imagedef)
+            if output_file_name != None:
+                output_fileptr.close()
+    def subscriptions_image_accept(self,subscriptions,images):
+        pairs, extra_subscriptions ,extra_images = pairsNnot(subscriptions,images)
+        if len(extra_subscriptions) > 0:
+            self.log.error('Not enough images selected')
+            return False
+        if len(extra_images) > 0:
+            self.log.error('Not enough subscriptions selected')
+            return False
+        Session = self.SessionFactory()
+        errors = 0
+        for sub_uuid, image_uuid in pairs:
+            
+            image_known = Session.query(model.ImageDefinition.identifier,model.Subscription.identifier).\
+                filter(model.ImageDefinition.identifier == image_uuid).\
+                filter(model.ImageDefinition.subscription == model.Subscription.id)
+            if image_known.count() > 0:
+                iident, sident = image_known.one()
+                self.log.error("Subscription '%s' has image '%s' already." % (sident,iident))
+                errors = errors + 1
+                continue
+            sub_known = Session.query(model.Subscription).\
+                filter(model.Subscription.identifier == sub_uuid)
+            if sub_known.count() == 0:
+                self.log.error("Subscription '%s' is unknown." % (sub_uuid))
+                errors = errors + 1
+                return False
+            subscription = sub_known.one()
+            subscription.imagelist_latest = None
+            key = subscription.id
+            
+            metadata = { 'dc:identifier' : image_uuid,
+                'cache' : 0}
+            newlist = model.ImageDefinition(key,metadata)
+            Session.add(newlist)
+            Session.add(subscription)
+            Session.commit()
+            #self.log.info("Subscription '%s' include image '%s'." % (sub_uuid,image_uuid))
+        if errors != 0:
+            return False
+        return True
+
+
+    def subscriptions_image_refuse(self,subscriptions,images):
+        pairs, extra_subscriptions ,extra_images = pairsNnot(subscriptions,images)
+        if len(extra_subscriptions) > 0:
+            self.log.error('Not enough images selected')
+            return False
+        if len(extra_images) > 0:
+            self.log.error('Not enough subscriptions selected')
+            return False
+        Session = self.SessionFactory()
+        errors = 0
+        for sub_uuid, image_uuid in pairs:
+            image_known = Session.query(model.Subscription,model.ImageDefinition).\
+                filter(model.ImageDefinition.identifier == image_uuid).\
+                filter(model.ImageDefinition.subscription == model.Subscription.id).\
+                filter(model.Subscription.identifier == sub_uuid)
+            if image_known.count() == 0:
+                self.log.error("Subscription '%s' already refuses image '%s'." % (sub_uuid,image_uuid))
+                errors = errors + 1
+                continue
+            subscription ,imageDef = image_known.one()
+            imageInstance_known = Session.query(model.ImageInstance).\
+                filter(model.ImageInstance.fkIdentifier == imageDef.id)
+            for instance in imageInstance_known:
+                Session.delete(instance)
+            subscription.imagelist_latest = None
+            Session.delete(imageDef)
+            Session.add(subscription)
+            Session.commit()
+        if errors != 0:
+            return False
+        return True
+    
 # User interface
 
 def pairsNnot(list_a,list_b):
@@ -906,16 +1023,18 @@ def main():
     p.add_option('-e', '--auto-endorse', action ='store_true',help='Add endorser in your subscribe to imagelist action.')
     p.add_option('-c', '--cert-dir', action ='store',help='Certificate directory.', metavar='INPUTDIR')
     p.add_option('-U', '--update', action ='store_true',help='update image metadata')
+    p.add_option('--image-list', action ='store_true',help='list accepted image UUID for a subscription.', metavar='image UUID')
+    p.add_option('--image-accept', action ='append',help='accept image UUID in subscription.', metavar='image UUID')
+    p.add_option('--image-refuse', action ='append',help='refuse image UUID in subscription.', metavar='image UUID')
     p.add_option('-u', '--uuid', action ='append',help='Select subscription', metavar='UUID')
     p.add_option('-r', '--uri', action ='append',help='Select subscription', metavar='URL')
     p.add_option('-f', '--format', action ='store',help='Sets the output format')
     p.add_option('-D', '--delete', action ='store_true',help='Delete subscription')
     p.add_option('-i', '--info', action ='store_true',help='Information on subscription')
     p.add_option('-o', '--output', action ='append',help='Export File.', metavar='OUTPUTFILE')
-    p.add_option('-L', '--logfile', action ='store',help='Logfile configuration file.', metavar='LOGFILE')
     p.add_option('-x', '--execute', action ='store',help='Event application to launch.', metavar='EVENT')
-    p.add_option('--verbose', action ='count',help='Change global log level, increasing log output.', metavar='LOGFILE')
-    p.add_option('--quiet', action ='count',help='Change global log level, decreasing log output.', metavar='LOGFILE')
+    p.add_option('-v', '--verbose', action ='count',help='Change global log level, increasing log output.', metavar='LOGFILE')
+    p.add_option('-q', '--quiet', action ='count',help='Change global log level, decreasing log output.', metavar='LOGFILE')
     p.add_option('--log-config', action ='store',help='Logfile configuration file, (overrides command line).', metavar='LOGFILE')
     p.add_option('--log-sql-info', action ='store_true',help='Echo all SQL commands.', metavar='LOGFILE')
     
@@ -926,12 +1045,20 @@ def main():
     actions = set([])
     subscriptions_selected = []
     subscription_url_list = []
-    actionsrequiring_selections = set(['message','json','delete','info'])
+    actionsrequiring_selections = set(['message',
+        'json',
+        'delete',
+        'info',
+        'image_accept',
+        'image_list',
+        'image_refuse'])
     outputformats = set(['SMIME','message','lines'])
     output_format_selected = set([])
     inputformats = set(['uuid','url'])
     input_format_selected = set([])
     outputfiles = []
+    images_aproved = []
+    images_refused = []
     databaseConnectionString = None
     eventCmd = None
     logFile = None
@@ -996,6 +1123,15 @@ def main():
         actions.add('update')
         anchor_needed = True
         output_format_selected.add('lines')
+    if options.image_list:
+        actions.add('image_list')
+    if options.image_accept:
+        actions.add('image_accept')
+        images_aproved = options.image_accept
+    if options.image_refuse:
+        actions.add('image_refuse')
+        images_refused = options.image_refuse
+        
     if options.subscribe:
         anchor_needed = True
         actions.add('subscribe')
@@ -1063,7 +1199,7 @@ def main():
     actions_req_sel_len = len(actions_req_sel)
     if actions_req_sel_len == 1:
         if len(subscriptions_selected) == 0:
-            log.error('No selections made.')
+            log.error('No subscription selections made.')
             sys.exit(1)
     if actions_req_sel_len > 1:
         log.error('Conflicting functions.')
@@ -1126,6 +1262,13 @@ def main():
         database.dumpfiles(subscriptions_selected,outputfiles)
     if 'info' in actions:
         database.subscriptions_info(subscriptions_selected,outputfiles)
+    if 'image_list' in actions:
+        database.subscriptions_image_list(subscriptions_selected,outputfiles)
+    if 'image_accept' in actions:
+        database.subscriptions_image_accept(subscriptions_selected,images_aproved)
+    if 'image_refuse' in actions:
+        database.subscriptions_image_refuse(subscriptions_selected,images_refused)
+    
     sys.exit(rc)
 if __name__ == "__main__":
     main()
