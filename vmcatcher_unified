@@ -1,59 +1,92 @@
+import argparse
 import sys
-import logging
-import optparse
-import os
-version = '0.0.1'
 
 def endorser(args):
-    print 'here' , args
+    print 'endorser'
+    print dir(args)
 
 def subscribe(args):
-    log = logging.getLogger("main")
-    """Runs program and handles command line options"""
-    p = optparse.OptionParser(prog = os.path.basename(sys.argv[0]) + " subscribe",
-        version = "%prog " + version)
-    p.add_option('-l', '--list', action ='store_true',help='list subscriptions')
-    p.add_option('-d', '--database', action ='store', help='Database Initiation string')
-    p.add_option('-s', '--subscribe', action ='append',help='Subscribe to imagelist available at URI', metavar='INPUTURL')
-    p.add_option('-e', '--auto-endorse', action ='store_true',help='Add endorser in your subscribe to imagelist action.')
-    p.add_option('-c', '--cert-dir', action ='store',help='Certificate directory.', metavar='INPUTDIR')
-    p.add_option('-U', '--update', action ='store_true',help='update image metadata')
-    p.add_option('-u', '--uuid', action ='append',help='Select subscription', metavar='UUID')
-    p.add_option('-r', '--uri', action ='append',help='Select subscription', metavar='URL')
-    p.add_option('-f', '--format', action ='store',help='Sets the output format')
-    p.add_option('-D', '--delete', action ='store_true',help='Delete subscription')
-    p.add_option('-i', '--info', action ='store_true',help='Information on subscription')
-    p.add_option('-o', '--output', action ='append',help='Export File.', metavar='OUTPUTFILE')
-    p.add_option('-L', '--logfile', action ='store',help='Logfile configuration file.', metavar='LOGFILE')
-    p.add_option('-x', '--execute', action ='store',help='Event application to launch.', metavar='EVENT')
-    p.add_option('--verbose', action ='count',help='Change global log level, increasing log output.', metavar='LOGFILE')
-    p.add_option('--quiet', action ='count',help='Change global log level, decreasing log output.', metavar='LOGFILE')
-    p.add_option('--log-config', action ='store',help='Logfile configuration file, (overrides command line).', metavar='LOGFILE')
-    p.add_option('--log-sql-info', action ='store_true',help='Echo all SQL commands.', metavar='LOGFILE')
-    
-    options, arguments = p.parse_args(args)
-    print options
+    print 'subscribe'
+    print dir(args)
 
-def main():
-    LoggingLevel= logging.WARNING
-    modules = { 'endorser' : endorser,
-        'subscribe' : subscribe}
-    print sys.argv
-    if len(sys.argv) < 2 :
-        logging.basicConfig(level=LoggingLevel)
-        log = logging.getLogger("main")
-        log.error("Not enough arguments.")
-        sys.exit(1)
-    if sys.argv[1] in modules.keys():
-        modules[sys.argv[1]](sys.argv[1:])
-    else:
-        logging.basicConfig(level=LoggingLevel)
-        log = logging.getLogger("main")
-        log.error("Invalid Method.")
-        output =  modules.keys()
-            
-        sys.exit(1)
-    
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.WARNING)
-    main()
+def image(args):
+    print 'image'
+    print dir(args)
+
+def cache(args):
+    print 'image'
+    print dir(args)
+
+
+# create the top-level parser
+parser = argparse.ArgumentParser(prog='PROG')
+parser.add_argument('-d','--database', action='store_true', help='foo help')
+parser.add_argument('-v','--verbose', action='count', help='foo help')
+parser.add_argument('-q','--quiet', action='count', help='foo help')
+parser.add_argument('--log-config', action='store_true', help='foo help')
+parser.add_argument('--log-sql-info', action='store_true', help='foo help')
+parser.add_argument('-c', '--cert-dir', action ='store',help='Certificate directory.', metavar='INPUTDIR',
+        default='/etc/grid-security/certificates/')
+subparsers = parser.add_subparsers(help='sub-command help')
+
+# create the parser for the "a" command
+parser_a = subparsers.add_parser('subscribe', help='manage subscriptions')
+parser_a.add_argument('--list', action='store_true', help='list subscriptions')
+parser_a.add_argument('--subscribe', choices='XYZ', help='baz help')
+parser_a.add_argument('--image-list', choices='XYZ', help='baz help')
+parser_a.add_argument('--image-accept', choices='XYZ', help='baz help')
+parser_a.add_argument('--image-refuse', choices='XYZ', help='baz help')
+parser_a.add_argument('--uuid', choices='XYZ', help='baz help')
+parser_a.add_argument('--uri', choices='XYZ', help='baz help')
+parser_a.add_argument('--delete', choices='XYZ', help='baz help')
+parser_a.add_argument('--information', choices='XYZ', help='baz help')
+parser_a.add_argument('--output', choices='XYZ', help='baz help')
+parser_a.add_argument('--event', choices='XYZ', help='baz help')
+
+parser_a.set_defaults(func=subscribe)
+
+# create the parser for the "b" command
+parser_endorser = subparsers.add_parser('endorser', help='manage image list endorsers')
+parser_endorser.add_argument('-l', '--list', action ='store_true',help='List endorsers.')
+parser_endorser.add_argument('-s', '--subscription_uuid', action ='append',help='Select subscription by uuid.', metavar='UUID')
+parser_endorser.add_argument('-e', '--endorser_uuid', action ='append',help='Select endorser by uuid.', metavar='UUID')
+parser_endorser.add_argument('-C', '--create', action ='store_true',help='Create an endorser.')
+parser_endorser.add_argument('-n', '--dn',action ='append',help='Endorsers certificate distinguished name.', metavar='DN')
+parser_endorser.add_argument('-I', '--issuer',action ='append',help="Endorsers certificate issuer's distinguished name.", metavar='ISSUER') 
+parser_endorser.add_argument('-D', '--delete', action ='store_true',help='Delete an endorser.')
+parser_endorser.add_argument('-K', '--links', action ='store_true',help='List endorser subscription links.')
+parser_endorser.add_argument('-k', '--link', action ='store_true',help='Add endorser to subscription.')
+parser_endorser.add_argument('-u', '--unlink', action ='store_true',help='Remove endorser from Subscription.')
+parser_endorser.add_argument('-i', '--info', action ='store_true',help='Information on endoser.')
+parser_endorser.add_argument('-S', '--subject',action ='append',help='Depricated version of --dn.', metavar='DN')
+parser_endorser.set_defaults(func=endorser)
+
+parser_image = subparsers.add_parser('image', help='manage subscibed images')
+parser_image.add_argument('-a', '--add', action ='store_true',help='Add image to Cache.')
+parser_image.add_argument('-r', '--remove', action ='store_true',help='Remove image from Cache.')
+parser_image.add_argument('-s', '--sha512', action ='append',help='Select images by sha512.', metavar='SHA512')
+parser_image.add_argument('-u', '--uuid', action ='append',help='Select images by uuid.', metavar='UUID')
+parser_image.add_argument('-i', '--info', action ='store_true',help='Info on selected images')
+parser_image.add_argument('-f', '--format', action ='store',help='Sets the output format')
+parser_image.add_argument('-o', '--output', action ='append',help='Export File.', metavar='OUTPUTFILE')
+parser_image.set_defaults(func=image)
+
+
+parser_cache = subparsers.add_parser('image', help='manage cache of images')
+parser_cache.add_argument('-d', '--database', action ='store', help='Database conection string')
+parser_cache.add_argument('-x', '--execute', action ='store',help='Event application to launch.', metavar='EVENT')
+parser_cache.add_argument('-C', '--cache-dir', action ='store',help='Set the cache directory.',metavar='DIR_CACHE')
+parser_cache.add_argument('-p', '--partial-dir', action ='store',help='Set the cache download directory.',metavar='DIR_PARTIAL')
+parser_cache.add_argument('-e', '--expired-dir', action ='store',help='Set the cache expired directory.',metavar='DIR_EXPIRE')
+parser_cache.add_argument('-D', '--download', action ='store_true',help='Download subscribed images to cache directory.')
+parser_cache.add_argument('-s', '--sha512', action ='store_true',help='Check cache directory images Sha512.')
+parser_cache.add_argument('-E', '--expire', action ='store_true',help='Remove expired images from cache directory.')
+parser_cache.add_argument('-v', '--verbose', action ='count',help='Change global log level, increasing log output.', metavar='LOGFILE')
+parser_cache.add_argument('-q', '--quiet', action ='count',help='Change global log level, decreasing log output.', metavar='LOGFILE')
+parser_cache.add_argument('--log-config', action ='store',help='Logfile configuration file, (overrides command line).', metavar='LOGFILE')
+parser_cache.add_argument('--log-sql-info', action ='store_true',help='Echo all SQL commands.', metavar='LOGFILE')
+parser_image.set_defaults(func=cache)
+
+# parse some argument lists
+args = parser.parse_args()
+args.func(args)
