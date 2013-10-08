@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 import argparse
 import sys
+import logging
+import os
+import vmcatcher_image
 
 def endorser(args):
     print 'endorser'
@@ -10,83 +13,299 @@ def subscribe(args):
     print 'subscribe'
     print dir(args)
 
-def image(args):
-    print 'image'
-    print dir(args)
+def image(options):
+    log = logging.getLogger("main")
+    outputformats = set(['SMIME','message','lines'])
+    output_format_selected = set([])
+    anchor_needed = False
+    format_needed = False
+    anchor =  None
+    actions = set([])
+    images_selected = []
+    messages_path = []
+    subscription_url_list = []
+    outputfiles = []
+    input_format_selected = set([])
+    actionsrequiring_selections = set(['output','delete','info','add','remove'])
+    inputformats = set(['uuid','sha512'])
+    input_format_selected = set([])
+    databaseConnectionString = None
+    certDir = None
+    logFile = None
+    debugSqlEcho = False
+    if 'VMCATCHER_RDBMS' in os.environ:
+        databaseConnectionString = os.environ['VMCATCHER_RDBMS']
+    if 'VMCATCHER_LOG_CONF' in os.environ:
+        logFile = os.environ['VMCATCHER_LOG_CONF']
+    if 'VMCATCHER_DIR_CERT' in os.environ:
+        certDir = os.environ['VMCATCHER_DIR_CERT']
+    
+    
+    # Now logging is set up process other options
+    if options.log_sql_info:
+        debugSqlEcho = True
+    if options.cert_dir:
+        certDir = options.cert_dir
+    if options.list:
+        actions.add('list')
+    if options.sha512:
+        images_selected = options.sha512
+        input_format_selected.add('sha512')
+    if options.uuid:
+        images_selected = options.uuid
+        input_format_selected.add('uuid')
+    if options.info:
+        actions.add('info')
+        anchor_needed = True
+    if options.output:
+        format_needed = True
+        outputfiles = options.output
+    if options.add:
+        actions.add('add')
+    if options.remove:
+        actions.add('remove')
+    if options.database:
+        databaseConnectionString = options.database
+    # 1 So we have some command line validation
+
+    if databaseConnectionString == None:
+        databaseConnectionString = 'sqlite:///vmcatcher.db'
+        log.info("Defaulting DB connection to '%s'" % (databaseConnectionString))
+    if len(actions) == 0:
+        log.error("No actions selected")
+        sys.exit(1)
+    if len(actions) > 1:
+        log.error("More than one action selected.")
+        sys.exit(1)
+    if actions.issubset(actionsrequiring_selections) and len(images_selected) == 0:
+        action_askedfor = actions.pop()
+        log.error("Action '%s' requires an image to be selected." % action_askedfor)
+        sys.exit(1)
+    if format_needed and len(output_format_selected) == 0:
+        log.error("No output format selected")
+        sys.exit(1)
+
+    if options.format:
+        if options.format in outputformats:
+            output_format_selected.add(options.format)
+            anchor_needed = True
+        else:
+            log.error("Invalid format '%s' allowed formats are '%s'" % (options.format,outputformats))
+            sys.exit(1)
+    # 1 So we have some actions to process
+
+    # 1.1 Initate DB
+    database = vmcatcher_image.db_controler(databaseConnectionString,debugSqlEcho)
+    # 2 Initate CA's to manage files
+    if anchor_needed:
+        if certDir == None:
+            certDir = "/etc/grid-security/certificates/"
+            log.info("Defaulting Certificate directory to '%s'" % (certDir))
+        database.setup_trust_anchor(certDir)
+    # Handle conflicting identifiers
+    selectors_types = inputformats.intersection(input_format_selected)
+    selectors_types_len = len(selectors_types)
+    if selectors_types_len > 1:
+        log.error('Conflicting selectors.')
+        sys.exit(1)
+    selector_str = 'uuid'
+    if selectors_types_len == 1:
+        selector_str = selectors_types.pop()
+
+    mapper = {'uuid' : vmcatcher_image.queryby_uuid,
+            'sha512' : vmcatcher_image.queryby_sha512,
+        }
+    database.setup_selector_factory(mapper[selector_str])
+    # Handle the output_view
+
+    outputformats_selections = outputformats.intersection(output_format_selected)
+    outputformats_selections_len = len(outputformats_selections)
+    if outputformats_selections_len > 1:
+        log.error('Conflicting output formats.')
+        sys.exit(1)
+    selector_str = 'lines'
+    if outputformats_selections_len == 1:
+        selector_str = outputformats_selections.pop()
+    mapper = {'lines' : vmcatcher_image.output_driver_lines,
+        'SMIME' : vmcatcher_image.output_driver_smime,
+        'message' : vmcatcher_image.output_driver_message,
+    }
+    database.setup_view_factory(mapper[selector_str])
+    # Handle actions
+    if 'subscribe' in actions:
+        Session = SessionFactory()
+        db = db_actions(Session)
+        for uri in subscription_url_list:
+            db.subscribe_file(anchor,uri)
+    if 'list' in actions:
+        database.image_list()
+    if 'update' in actions:
+        Session = SessionFactory()
+        db = db_actions(Session)
+        db.subscriptions_update(anchor)
+    if 'dump' in actions:
+        if not 'select' in actions:
+            log.error('No subscriptions selected.')
+        if 'json' in actions:
+            pairs, extra_uuid ,extra_paths = pairsNnot(images_selected,messages_path)
+            if len(extra_paths) > 0:
+                log.warning('Extra paths will be ignored.')
+                for path in extra_paths:
+                    log.info('ignoring path %s' % (path))
+            if len(extra_uuid) > 0:
+                log.warning('sha512 ignored.')
+                for path in extra_uuid:
+                    log.info('ignoring sha512 %s' % (path))
+            Session = SessionFactory()
+            db = db_actions(Session)
+            for item in pairs:
+                db.image_by_sha512_writefile_json(anchor,item[0],item[1])
+        if 'message' in actions:
+            pairs, extra_uuid ,extra_paths = pairsNnot(images_selected,messages_path)
+            if len(extra_paths) > 0:
+                log.warning('Extra paths will be ignored.')
+                for path in extra_paths:
+                    log.info('ignoring path %s' % (path))
+            if len(extra_uuid) > 0:
+                log.warning('sha512 ignored.')
+                for path in extra_uuid:
+                    log.info('Ignoring sha512 %s' % (path))
+
+            Session = SessionFactory()
+            db = db_actions(Session)
+            for item in pairs:
+                db.image_by_sha512_writefile_imagelist(anchor,item[0],item[1])
+    if 'info' in actions:
+        if not database.images_info(images_selected,outputfiles):
+            sys.exit(1)
+
+    if 'add' in actions:
+        database.images_subscribe(images_selected,1)
+    if 'remove' in actions:
+        database.images_subscribe(images_selected,0)
 
 def cache(args):
-    print 'image'
+    print 'cache'
     print dir(args)
 
+def main():
+    # create the top-level parser
+    parser = argparse.ArgumentParser(prog='vmcatcher')
+    parser.add_argument('-d','--database', action='store_true', help='foo help')
+    parser.add_argument('-v','--verbose', action='count', help='foo help')
+    parser.add_argument('-q','--quiet', action='count', help='foo help')
+    parser.add_argument('--log-config', action='store_true', help='foo help')
+    parser.add_argument('--log-sql-info', action='store_true', help='foo help')
+    parser.add_argument('-c', '--cert-dir', action ='store',help='Certificate directory.', metavar='INPUTDIR',
+            default='/etc/grid-security/certificates/')
+    parser.add_argument('-x', '--execute', action ='store',help='Event application to launch.', metavar='EVENT')
+    subparsers = parser.add_subparsers(help='sub-command help')
 
-# create the top-level parser
-parser = argparse.ArgumentParser(prog='vmcatcher')
-parser.add_argument('-d','--database', action='store_true', help='foo help')
-parser.add_argument('-v','--verbose', action='count', help='foo help')
-parser.add_argument('-q','--quiet', action='count', help='foo help')
-parser.add_argument('--log-config', action='store_true', help='foo help')
-parser.add_argument('--log-sql-info', action='store_true', help='foo help')
-parser.add_argument('-c', '--cert-dir', action ='store',help='Certificate directory.', metavar='INPUTDIR',
-        default='/etc/grid-security/certificates/')
-parser.add_argument('-x', '--execute', action ='store',help='Event application to launch.', metavar='EVENT')
-subparsers = parser.add_subparsers(help='sub-command help')
+    # create the parser for the "subscribe" command
+    parser_subscribe = subparsers.add_parser('subscribe', help='manage subscriptions')
+    parser_subscribe.add_argument('-l', '--list', action ='store_true',help='list subscriptions')
+    parser_subscribe.add_argument('-d', '--database', action ='store', help='Database Initiation string')
+    parser_subscribe.add_argument('-s', '--subscribe', action ='append',help='Subscribe to imagelist available at URI', metavar='INPUTURL')
+    parser_subscribe.add_argument('-e', '--auto-endorse', action ='store_true',help='Add endorser in your subscribe to imagelist action.')
+    parser_subscribe.add_argument('-c', '--cert-dir', action ='store',help='Certificate directory.', metavar='INPUTDIR')
+    parser_subscribe.add_argument('-U', '--update', action ='store_true',help='update image metadata')
+    parser_subscribe.add_argument('--image-list', action ='store_true',help='list accepted image UUID for a subscription.')
+    parser_subscribe.add_argument('--image-accept', action ='append',help='accept image UUID in subscription.')
+    parser_subscribe.add_argument('--image-refuse', action ='append',help='refuse image UUID in subscription.')
+    parser_subscribe.add_argument('-u', '--uuid', action ='append',help='Select subscription', metavar='UUID')
+    parser_subscribe.add_argument('-r', '--uri', action ='append',help='Select subscription', metavar='URL')
+    parser_subscribe.add_argument('-f', '--format', action ='store',help='Sets the output format')
+    parser_subscribe.add_argument('-D', '--delete', action ='store_true',help='Delete subscription')
+    parser_subscribe.add_argument('-i', '--info', action ='store_true',help='Information on subscription')
+    parser_subscribe.add_argument('-o', '--output', action ='append',help='Export File.', metavar='OUTPUTFILE')
+    parser_subscribe.set_defaults(func=subscribe)
 
-# create the parser for the "a" command
-parser_subscribe = subparsers.add_parser('subscribe', help='manage subscriptions')
-parser_subscribe.add_argument('-l', '--list', action ='store_true',help='list subscriptions')
-parser_subscribe.add_argument('-d', '--database', action ='store', help='Database Initiation string')
-parser_subscribe.add_argument('-s', '--subscribe', action ='append',help='Subscribe to imagelist available at URI', metavar='INPUTURL')
-parser_subscribe.add_argument('-e', '--auto-endorse', action ='store_true',help='Add endorser in your subscribe to imagelist action.')
-parser_subscribe.add_argument('-c', '--cert-dir', action ='store',help='Certificate directory.', metavar='INPUTDIR')
-parser_subscribe.add_argument('-U', '--update', action ='store_true',help='update image metadata')
-parser_subscribe.add_argument('--image-list', action ='store_true',help='list accepted image UUID for a subscription.')
-parser_subscribe.add_argument('--image-accept', action ='append',help='accept image UUID in subscription.')
-parser_subscribe.add_argument('--image-refuse', action ='append',help='refuse image UUID in subscription.')
-parser_subscribe.add_argument('-u', '--uuid', action ='append',help='Select subscription', metavar='UUID')
-parser_subscribe.add_argument('-r', '--uri', action ='append',help='Select subscription', metavar='URL')
-parser_subscribe.add_argument('-f', '--format', action ='store',help='Sets the output format')
-parser_subscribe.add_argument('-D', '--delete', action ='store_true',help='Delete subscription')
-parser_subscribe.add_argument('-i', '--info', action ='store_true',help='Information on subscription')
-parser_subscribe.add_argument('-o', '--output', action ='append',help='Export File.', metavar='OUTPUTFILE')
-parser_subscribe.set_defaults(func=subscribe)
+    # create the parser for the "endorser" command
+    parser_endorser = subparsers.add_parser('endorser', help='manage image list endorsers')
+    parser_endorser.add_argument('-l', '--list', action ='store_true',help='List endorsers.')
+    parser_endorser.add_argument('-s', '--subscription_uuid', action ='append',help='Select subscription by uuid.', metavar='UUID')
+    parser_endorser.add_argument('-e', '--endorser_uuid', action ='append',help='Select endorser by uuid.', metavar='UUID')
+    parser_endorser.add_argument('-C', '--create', action ='store_true',help='Create an endorser.')
+    parser_endorser.add_argument('-n', '--dn',action ='append',help='Endorsers certificate distinguished name.', metavar='DN')
+    parser_endorser.add_argument('-I', '--issuer',action ='append',help="Endorsers certificate issuer's distinguished name.", metavar='ISSUER') 
+    parser_endorser.add_argument('-D', '--delete', action ='store_true',help='Delete an endorser.')
+    parser_endorser.add_argument('-K', '--links', action ='store_true',help='List endorser subscription links.')
+    parser_endorser.add_argument('-k', '--link', action ='store_true',help='Add endorser to subscription.')
+    parser_endorser.add_argument('-u', '--unlink', action ='store_true',help='Remove endorser from Subscription.')
+    parser_endorser.add_argument('-i', '--info', action ='store_true',help='Information on endoser.')
+    parser_endorser.add_argument('-S', '--subject',action ='append',help='Depricated version of --dn.', metavar='DN')
+    parser_endorser.set_defaults(func=endorser)
 
-# create the parser for the "b" command
-parser_endorser = subparsers.add_parser('endorser', help='manage image list endorsers')
-parser_endorser.add_argument('-l', '--list', action ='store_true',help='List endorsers.')
-parser_endorser.add_argument('-s', '--subscription_uuid', action ='append',help='Select subscription by uuid.', metavar='UUID')
-parser_endorser.add_argument('-e', '--endorser_uuid', action ='append',help='Select endorser by uuid.', metavar='UUID')
-parser_endorser.add_argument('-C', '--create', action ='store_true',help='Create an endorser.')
-parser_endorser.add_argument('-n', '--dn',action ='append',help='Endorsers certificate distinguished name.', metavar='DN')
-parser_endorser.add_argument('-I', '--issuer',action ='append',help="Endorsers certificate issuer's distinguished name.", metavar='ISSUER') 
-parser_endorser.add_argument('-D', '--delete', action ='store_true',help='Delete an endorser.')
-parser_endorser.add_argument('-K', '--links', action ='store_true',help='List endorser subscription links.')
-parser_endorser.add_argument('-k', '--link', action ='store_true',help='Add endorser to subscription.')
-parser_endorser.add_argument('-u', '--unlink', action ='store_true',help='Remove endorser from Subscription.')
-parser_endorser.add_argument('-i', '--info', action ='store_true',help='Information on endoser.')
-parser_endorser.add_argument('-S', '--subject',action ='append',help='Depricated version of --dn.', metavar='DN')
-parser_endorser.set_defaults(func=endorser)
+    # create the parser for the "image" command
+    parser_image = subparsers.add_parser('image', help='manage subscibed images')
+    parser_image.add_argument('-l', '--list', action ='store_true',help='list all images.')
+    parser_image.add_argument('-a', '--add', action ='store_true',help='Add image to Cache.')
+    parser_image.add_argument('-r', '--remove', action ='store_true',help='Remove image from Cache.')
+    parser_image.add_argument('-s', '--sha512', action ='append',help='Select images by sha512.', metavar='SHA512')
+    parser_image.add_argument('-u', '--uuid', action ='append',help='Select images by uuid.', metavar='UUID')
+    parser_image.add_argument('-i', '--info', action ='store_true',help='Info on selected images')
+    parser_image.add_argument('-f', '--format', choices=['SMIME', 'message', 'lines'],help='Sets the output format')
+    parser_image.add_argument('-o', '--output', action ='append',help='Export File.', metavar='OUTPUTFILE')
+    parser_image.set_defaults(func=image)
 
-parser_image = subparsers.add_parser('image', help='manage subscibed images')
-parser_image.add_argument('-a', '--add', action ='store_true',help='Add image to Cache.')
-parser_image.add_argument('-r', '--remove', action ='store_true',help='Remove image from Cache.')
-parser_image.add_argument('-s', '--sha512', action ='append',help='Select images by sha512.', metavar='SHA512')
-parser_image.add_argument('-u', '--uuid', action ='append',help='Select images by uuid.', metavar='UUID')
-parser_image.add_argument('-i', '--info', action ='store_true',help='Info on selected images')
-parser_image.add_argument('-f', '--format', action ='store',help='Sets the output format')
-parser_image.add_argument('-o', '--output', action ='append',help='Export File.', metavar='OUTPUTFILE')
-parser_image.set_defaults(func=image)
+    # create the parser for the "cache" command
+    parser_cache = subparsers.add_parser('cache', help='manage cache of images')
+    parser_cache.add_argument('-d', '--database', action ='store', help='Database conection string')
+    parser_cache.add_argument('-C', '--cache-dir', action ='store',help='Set the cache directory.',metavar='DIR_CACHE')
+    parser_cache.add_argument('-p', '--partial-dir', action ='store',help='Set the cache download directory.',metavar='DIR_PARTIAL')
+    parser_cache.add_argument('-e', '--expired-dir', action ='store',help='Set the cache expired directory.',metavar='DIR_EXPIRE')
+    parser_cache.add_argument('-D', '--download', action ='store_true',help='Download subscribed images to cache directory.')
+    parser_cache.add_argument('-s', '--sha512', action ='store_true',help='Check cache directory images Sha512.')
+    parser_cache.add_argument('-E', '--expire', action ='store_true',help='Remove expired images from cache directory.')
+    parser_cache.set_defaults(func=cache)
 
+    # parse some argument lists
+    options = parser.parse_args()
+    
+    # Set up defaults
+    logFile = None
+    
+    # Set up log file
+    LoggingLevel = logging.WARNING
+    LoggingLevelCounter = 2
+    if options.verbose:
+        LoggingLevelCounter = LoggingLevelCounter - options.verbose
+        if options.verbose == 1:
+            LoggingLevel = logging.INFO
+        if options.verbose == 2:
+            LoggingLevel = logging.DEBUG
+    if options.quiet:
+        LoggingLevelCounter = LoggingLevelCounter + options.quiet
+    if LoggingLevelCounter <= 0:
+        LoggingLevel = logging.DEBUG
+    if LoggingLevelCounter == 1:
+        LoggingLevel = logging.INFO
+    if LoggingLevelCounter == 2:
+        LoggingLevel = logging.WARNING
+    if LoggingLevelCounter == 3:
+        LoggingLevel = logging.ERROR
+    if LoggingLevelCounter == 4:
+        LoggingLevel = logging.FATAL
+    if LoggingLevelCounter >= 5:
+        LoggingLevel = logging.CRITICAL
+    
+    if options.log_config:
+        logFile = options.log_config
+    if logFile != None:
+        if os.path.isfile(str(options.log_config)):
+            logging.config.fileConfig(options.log_config)
+        else:
+            logging.basicConfig(level=LoggingLevel)
+            log = logging.getLogger("main")
+            log.error("Logfile configuration file '%s' was not found." % (options.log_config))
+            sys.exit(1)
+    else:
+        
+        logging.basicConfig(level=LoggingLevel)
+    log = logging.getLogger("main")
+    
+    
+    options.func(options)
 
-parser_cache = subparsers.add_parser('cache', help='manage cache of images')
-parser_cache.add_argument('-d', '--database', action ='store', help='Database conection string')
-parser_cache.add_argument('-C', '--cache-dir', action ='store',help='Set the cache directory.',metavar='DIR_CACHE')
-parser_cache.add_argument('-p', '--partial-dir', action ='store',help='Set the cache download directory.',metavar='DIR_PARTIAL')
-parser_cache.add_argument('-e', '--expired-dir', action ='store',help='Set the cache expired directory.',metavar='DIR_EXPIRE')
-parser_cache.add_argument('-D', '--download', action ='store_true',help='Download subscribed images to cache directory.')
-parser_cache.add_argument('-s', '--sha512', action ='store_true',help='Check cache directory images Sha512.')
-parser_cache.add_argument('-E', '--expire', action ='store_true',help='Remove expired images from cache directory.')
-parser_image.set_defaults(func=cache)
-
-# parse some argument lists
-args = parser.parse_args()
-args.func(args)
+if __name__ == "__main__":
+    main()
