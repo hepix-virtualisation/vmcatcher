@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import argparse
 import sys
 
@@ -19,7 +20,7 @@ def cache(args):
 
 
 # create the top-level parser
-parser = argparse.ArgumentParser(prog='PROG')
+parser = argparse.ArgumentParser(prog='vmcatcher')
 parser.add_argument('-d','--database', action='store_true', help='foo help')
 parser.add_argument('-v','--verbose', action='count', help='foo help')
 parser.add_argument('-q','--quiet', action='count', help='foo help')
@@ -27,23 +28,27 @@ parser.add_argument('--log-config', action='store_true', help='foo help')
 parser.add_argument('--log-sql-info', action='store_true', help='foo help')
 parser.add_argument('-c', '--cert-dir', action ='store',help='Certificate directory.', metavar='INPUTDIR',
         default='/etc/grid-security/certificates/')
+parser.add_argument('-x', '--execute', action ='store',help='Event application to launch.', metavar='EVENT')
 subparsers = parser.add_subparsers(help='sub-command help')
 
 # create the parser for the "a" command
-parser_a = subparsers.add_parser('subscribe', help='manage subscriptions')
-parser_a.add_argument('--list', action='store_true', help='list subscriptions')
-parser_a.add_argument('--subscribe', choices='XYZ', help='baz help')
-parser_a.add_argument('--image-list', choices='XYZ', help='baz help')
-parser_a.add_argument('--image-accept', choices='XYZ', help='baz help')
-parser_a.add_argument('--image-refuse', choices='XYZ', help='baz help')
-parser_a.add_argument('--uuid', choices='XYZ', help='baz help')
-parser_a.add_argument('--uri', choices='XYZ', help='baz help')
-parser_a.add_argument('--delete', choices='XYZ', help='baz help')
-parser_a.add_argument('--information', choices='XYZ', help='baz help')
-parser_a.add_argument('--output', choices='XYZ', help='baz help')
-parser_a.add_argument('--event', choices='XYZ', help='baz help')
-
-parser_a.set_defaults(func=subscribe)
+parser_subscribe = subparsers.add_parser('subscribe', help='manage subscriptions')
+parser_subscribe.add_argument('-l', '--list', action ='store_true',help='list subscriptions')
+parser_subscribe.add_argument('-d', '--database', action ='store', help='Database Initiation string')
+parser_subscribe.add_argument('-s', '--subscribe', action ='append',help='Subscribe to imagelist available at URI', metavar='INPUTURL')
+parser_subscribe.add_argument('-e', '--auto-endorse', action ='store_true',help='Add endorser in your subscribe to imagelist action.')
+parser_subscribe.add_argument('-c', '--cert-dir', action ='store',help='Certificate directory.', metavar='INPUTDIR')
+parser_subscribe.add_argument('-U', '--update', action ='store_true',help='update image metadata')
+parser_subscribe.add_argument('--image-list', action ='store_true',help='list accepted image UUID for a subscription.')
+parser_subscribe.add_argument('--image-accept', action ='append',help='accept image UUID in subscription.')
+parser_subscribe.add_argument('--image-refuse', action ='append',help='refuse image UUID in subscription.')
+parser_subscribe.add_argument('-u', '--uuid', action ='append',help='Select subscription', metavar='UUID')
+parser_subscribe.add_argument('-r', '--uri', action ='append',help='Select subscription', metavar='URL')
+parser_subscribe.add_argument('-f', '--format', action ='store',help='Sets the output format')
+parser_subscribe.add_argument('-D', '--delete', action ='store_true',help='Delete subscription')
+parser_subscribe.add_argument('-i', '--info', action ='store_true',help='Information on subscription')
+parser_subscribe.add_argument('-o', '--output', action ='append',help='Export File.', metavar='OUTPUTFILE')
+parser_subscribe.set_defaults(func=subscribe)
 
 # create the parser for the "b" command
 parser_endorser = subparsers.add_parser('endorser', help='manage image list endorsers')
@@ -72,19 +77,14 @@ parser_image.add_argument('-o', '--output', action ='append',help='Export File.'
 parser_image.set_defaults(func=image)
 
 
-parser_cache = subparsers.add_parser('image', help='manage cache of images')
+parser_cache = subparsers.add_parser('cache', help='manage cache of images')
 parser_cache.add_argument('-d', '--database', action ='store', help='Database conection string')
-parser_cache.add_argument('-x', '--execute', action ='store',help='Event application to launch.', metavar='EVENT')
 parser_cache.add_argument('-C', '--cache-dir', action ='store',help='Set the cache directory.',metavar='DIR_CACHE')
 parser_cache.add_argument('-p', '--partial-dir', action ='store',help='Set the cache download directory.',metavar='DIR_PARTIAL')
 parser_cache.add_argument('-e', '--expired-dir', action ='store',help='Set the cache expired directory.',metavar='DIR_EXPIRE')
 parser_cache.add_argument('-D', '--download', action ='store_true',help='Download subscribed images to cache directory.')
 parser_cache.add_argument('-s', '--sha512', action ='store_true',help='Check cache directory images Sha512.')
 parser_cache.add_argument('-E', '--expire', action ='store_true',help='Remove expired images from cache directory.')
-parser_cache.add_argument('-v', '--verbose', action ='count',help='Change global log level, increasing log output.', metavar='LOGFILE')
-parser_cache.add_argument('-q', '--quiet', action ='count',help='Change global log level, decreasing log output.', metavar='LOGFILE')
-parser_cache.add_argument('--log-config', action ='store',help='Logfile configuration file, (overrides command line).', metavar='LOGFILE')
-parser_cache.add_argument('--log-sql-info', action ='store_true',help='Echo all SQL commands.', metavar='LOGFILE')
 parser_image.set_defaults(func=cache)
 
 # parse some argument lists
