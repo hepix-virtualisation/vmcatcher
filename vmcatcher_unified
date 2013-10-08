@@ -8,604 +8,607 @@ import vmcatcher_subscribe
 import vmcatcher_endorser
 import vmcatcher_cache
 
-def endorser(options):
-    anchor_needed = False
+class ProcessCmds(object):
 
-    actions = set([])
-    endorsers_selected = []
-    subscriptions_selected = []
-    subjects_selected = []
-    issuers_selected = []
-    actionsrequiring_endorser = set(['create','delete','link','unlink','info'])
-    actionsrequiring_subscription = set(['link','unlink'])
-    actionsrequiring_subject = set(['create'])
-    actionsrequiring_issuer = set(['create'])
-    databaseConnectionString = None
-    logFile = None
-    debugSqlEcho = False
-    if 'VMCATCHER_RDBMS' in os.environ:
-        databaseConnectionString = os.environ['VMCATCHER_RDBMS']
-    
-    log = logging.getLogger("main")
-    # Now logging is set up process other options
-    if options.log_sql_info:
-        debugSqlEcho = True
-    if options.list:
-        actions.add('list')
-    if options.links:
-        actions.add('links')
+    def endorser(options):
+        anchor_needed = False
 
+        actions = set([])
+        endorsers_selected = []
+        subscriptions_selected = []
+        subjects_selected = []
+        issuers_selected = []
+        actionsrequiring_endorser = set(['create','delete','link','unlink','info'])
+        actionsrequiring_subscription = set(['link','unlink'])
+        actionsrequiring_subject = set(['create'])
+        actionsrequiring_issuer = set(['create'])
+        databaseConnectionString = None
+        logFile = None
+        debugSqlEcho = False
+        if 'VMCATCHER_RDBMS' in os.environ:
+            databaseConnectionString = os.environ['VMCATCHER_RDBMS']
 
-    if options.endorser_uuid:
-        endorsers_selected = options.endorser_uuid
-    if options.subscription_uuid:
-        subscriptions_selected = options.subscription_uuid
-    if options.create:
-        actions.add('create')
-    if options.delete:
-        actions.add('delete')
-    if options.link:
-        actions.add('link')
-    if options.unlink:
-        actions.add('unlink')
-    if options.info:
-        actions.add('info')
-
-    if options.database:
-        databaseConnectionString = options.database
-    if options.subject:
-        log.info("Option '--subject' and '-S' are depricated in favour of '--dn'.")
-        subjects_selected = options.subject
-    if options.dn:
-        subjects_selected = options.dn
-    if options.issuer:
-        issuers_selected = options.issuer
-        
-    # 1 So we have some command line validation
-    if databaseConnectionString == None:
-        databaseConnectionString = 'sqlite:///vmcatcher.db'
-        log.info("Defaulting DB connection to '%s'" % (databaseConnectionString))
-    if len(actions) == 0:
-        log.error("No actions selected")
-        sys.exit(1)
-    if len(actions) > 1:
-        log.error("More than one action selected.")
-        sys.exit(1)
-    # 1.1 Initate DB
-    database = vmcatcher_endorser.db_controler(databaseConnectionString,debugSqlEcho)
+        log = logging.getLogger("main")
+        # Now logging is set up process other options
+        if options.log_sql_info:
+            debugSqlEcho = True
+        if options.list:
+            actions.add('list')
+        if options.links:
+            actions.add('links')
 
 
-    # Handle actions selections beign required.
+        if options.endorser_uuid:
+            endorsers_selected = options.endorser_uuid
+        if options.subscription_uuid:
+            subscriptions_selected = options.subscription_uuid
+        if options.create:
+            actions.add('create')
+        if options.delete:
+            actions.add('delete')
+        if options.link:
+            actions.add('link')
+        if options.unlink:
+            actions.add('unlink')
+        if options.info:
+            actions.add('info')
 
-    # Check endorser selected
-    actions_req_endorser = actionsrequiring_endorser.intersection(actions)
-    actions_req_endorser_len = len(actions_req_endorser)
-    if actions_req_endorser_len == 1:
-        if len(endorsers_selected) == 0:
-            log.error('No endorsers selected.')
+        if options.database:
+            databaseConnectionString = options.database
+        if options.subject:
+            log.info("Option '--subject' and '-S' are depricated in favour of '--dn'.")
+            subjects_selected = options.subject
+        if options.dn:
+            subjects_selected = options.dn
+        if options.issuer:
+            issuers_selected = options.issuer
+
+        # 1 So we have some command line validation
+        if databaseConnectionString == None:
+            databaseConnectionString = 'sqlite:///vmcatcher.db'
+            log.info("Defaulting DB connection to '%s'" % (databaseConnectionString))
+        if len(actions) == 0:
+            log.error("No actions selected")
             sys.exit(1)
-
-    # Check subscription selected
-    actions_req_subscription = actionsrequiring_subscription.intersection(actions)
-    actions_req_subscription_len = len(actions_req_subscription)
-    if actions_req_subscription_len == 1:
-        if len(subscriptions_selected) == 0:
-            log.error('No subscriptions selected.')
+        if len(actions) > 1:
+            log.error("More than one action selected.")
             sys.exit(1)
-
-    
-    # Check subject selected
-    actions_req_subject = actionsrequiring_subject.intersection(actions)
-    actions_req_subject_len = len(actions_req_subject)
-    if actions_req_subject_len == 1:
-        if len(subjects_selected) == 0:
-            log.error('No subjects selected.')
-            sys.exit(1) 
-    
-    # Check issuer selected
-    actions_req_issuer = actionsrequiring_issuer.intersection(actions)
-    actions_req_issuer_len = len(actions_req_issuer)
-    if actions_req_issuer_len == 1:
-        if len(issuers_selected) == 0:
-            log.error('No issuers selected.')
-            sys.exit(1)
-    # Handle conflicting identifiers
+        # 1.1 Initate DB
+        database = vmcatcher_endorser.db_controler(databaseConnectionString,debugSqlEcho)
 
 
-    database.setup_selector_factory(vmcatcher_endorser.queryby_uuid)
-    if 'create' in actions:
-        if len(endorsers_selected) > 1:
-            log.error("More than one endorser cannot be created at a time.")
-            sys.exit(1)
-        if not database.endorser_create(endorsers_selected[0],subjects_selected,issuers_selected):
-            sys.exit(12)
-    if 'list' in actions:
-        database.endosers_list()
-    if 'links' in actions:
-        database.links_list()
-    
-    if 'link' in actions:
-        database.link(endorsers_selected,subscriptions_selected)
-    if 'unlink' in actions:
-        database.unlink(endorsers_selected,subscriptions_selected)
-    if 'delete' in actions:
-        database.endorser_delete(endorsers_selected)
-    
+        # Handle actions selections beign required.
 
-    if 'info' in actions:
-        database.endorsers_info(endorsers_selected)
+        # Check endorser selected
+        actions_req_endorser = actionsrequiring_endorser.intersection(actions)
+        actions_req_endorser_len = len(actions_req_endorser)
+        if actions_req_endorser_len == 1:
+            if len(endorsers_selected) == 0:
+                log.error('No endorsers selected.')
+                sys.exit(1)
 
-def subscribe(options):
-    autoEndorse = False
-    anchor_needed = False
-    format_needed = False
-    actions = set([])
-    subscriptions_selected = []
-    subscription_url_list = []
-    actionsrequiring_selections = set(['message',
-        'json',
-        'delete',
-        'info',
-        'image_accept',
-        'image_list',
-        'image_refuse'])
-    outputformats = set(['SMIME','message','lines'])
-    output_format_selected = set([])
-    inputformats = set(['uuid','url'])
-    input_format_selected = set([])
-    outputfiles = []
-    images_aproved = []
-    images_refused = []
-    databaseConnectionString = None
-    eventCmd = None
-    logFile = None
-    certDir = None
-    eventExecutionString = None
-    debugSqlEcho = False    
-    log = logging.getLogger("main")
-    # Now logging is set up process other options    
-    if options.log_sql_info:
-        debugSqlEcho = True
-    if options.cert_dir:
-        certDir = options.cert_dir
-    if options.list:
-        actions.add('list')
-        output_format_selected.add('lines')
-    if options.update:
-        actions.add('update')
-        anchor_needed = True
-        output_format_selected.add('lines')
-    if options.image_list:
-        actions.add('image_list')
-    if options.image_accept:
-        actions.add('image_accept')
-        images_aproved = options.image_accept
-    if options.image_refuse:
-        actions.add('image_refuse')
-        images_refused = options.image_refuse
-        
-    if options.subscribe:
-        anchor_needed = True
-        actions.add('subscribe')
-        subscription_url_list = options.subscribe
-    if options.uuid:
-        subscriptions_selected = options.uuid
-        input_format_selected.add('uuid')
-    if options.uri:
-        subscriptions_selected = options.uri
-        input_format_selected.add('url')
-    if options.format:
-        if options.format in outputformats:
-            output_format_selected.add(options.format)
+        # Check subscription selected
+        actions_req_subscription = actionsrequiring_subscription.intersection(actions)
+        actions_req_subscription_len = len(actions_req_subscription)
+        if actions_req_subscription_len == 1:
+            if len(subscriptions_selected) == 0:
+                log.error('No subscriptions selected.')
+                sys.exit(1)
+
+
+        # Check subject selected
+        actions_req_subject = actionsrequiring_subject.intersection(actions)
+        actions_req_subject_len = len(actions_req_subject)
+        if actions_req_subject_len == 1:
+            if len(subjects_selected) == 0:
+                log.error('No subjects selected.')
+                sys.exit(1) 
+
+        # Check issuer selected
+        actions_req_issuer = actionsrequiring_issuer.intersection(actions)
+        actions_req_issuer_len = len(actions_req_issuer)
+        if actions_req_issuer_len == 1:
+            if len(issuers_selected) == 0:
+                log.error('No issuers selected.')
+                sys.exit(1)
+        # Handle conflicting identifiers
+
+
+        database.setup_selector_factory(vmcatcher_endorser.queryby_uuid)
+        if 'create' in actions:
+            if len(endorsers_selected) > 1:
+                log.error("More than one endorser cannot be created at a time.")
+                sys.exit(1)
+            if not database.endorser_create(endorsers_selected[0],subjects_selected,issuers_selected):
+                sys.exit(12)
+        if 'list' in actions:
+            database.endosers_list()
+        if 'links' in actions:
+            database.links_list()
+
+        if 'link' in actions:
+            database.link(endorsers_selected,subscriptions_selected)
+        if 'unlink' in actions:
+            database.unlink(endorsers_selected,subscriptions_selected)
+        if 'delete' in actions:
+            database.endorser_delete(endorsers_selected)
+
+
+        if 'info' in actions:
+            database.endorsers_info(endorsers_selected)
+
+    def subscribe(options):
+        autoEndorse = False
+        anchor_needed = False
+        format_needed = False
+        actions = set([])
+        subscriptions_selected = []
+        subscription_url_list = []
+        actionsrequiring_selections = set(['message',
+            'json',
+            'delete',
+            'info',
+            'image_accept',
+            'image_list',
+            'image_refuse'])
+        outputformats = set(['SMIME','message','lines'])
+        output_format_selected = set([])
+        inputformats = set(['uuid','url'])
+        input_format_selected = set([])
+        outputfiles = []
+        images_aproved = []
+        images_refused = []
+        databaseConnectionString = None
+        eventCmd = None
+        logFile = None
+        certDir = None
+        eventExecutionString = None
+        debugSqlEcho = False    
+        log = logging.getLogger("main")
+        # Now logging is set up process other options    
+        if options.log_sql_info:
+            debugSqlEcho = True
+        if options.cert_dir:
+            certDir = options.cert_dir
+        if options.list:
+            actions.add('list')
+            output_format_selected.add('lines')
+        if options.update:
+            actions.add('update')
             anchor_needed = True
-        else:
-            log.error("Invalid format '%s' allowed formats are '%s'" % (options.format,outputformats))
-            sys.exit(1)
-    if options.delete:
-        actions.add('delete')
-    if options.info:
-        format_needed = True
-        actions.add('info')
-    if options.output:
-        format_needed = True
-        outputfiles = options.output
-    if options.database:
-        databaseConnectionString = options.database
-    if options.auto_endorse:
-        autoEndorse = True
-    if options.execute:
-        eventExecutionString = options.execute
+            output_format_selected.add('lines')
+        if options.image_list:
+            actions.add('image_list')
+        if options.image_accept:
+            actions.add('image_accept')
+            images_aproved = options.image_accept
+        if options.image_refuse:
+            actions.add('image_refuse')
+            images_refused = options.image_refuse
 
-    # 1 So we have some command line validation
-
-    if databaseConnectionString == None:
-        databaseConnectionString = 'sqlite:///vmcatcher.db'
-        log.info("Defaulting DB connection to '%s'" % (databaseConnectionString))
-    if len(actions) == 0:
-        log.error("No actions selected")
-        sys.exit(1)
-    if len(actions) > 1:
-        log.error("More than one action selected.")
-        sys.exit(1)
-    if format_needed and len(output_format_selected) == 0:
-        log.error("No output format selected")
-        sys.exit(1)
-
-    # 1.1 Initate DB
-    database = vmcatcher_subscribe.db_controler(databaseConnectionString,debugSqlEcho)
-    # 1.2 Set up callbacks
-    if eventExecutionString != None:
-        EventInstance = EventObj(eventExecutionString)
-        database.callbackEventImageNew = EventInstance.eventImageNew
-    
-    # 2 Initate CA's to manage files
-    if anchor_needed:
-        if certDir == None:
-            certDir = "/etc/grid-security/certificates/"
-            log.info("Defaulting Certificate directory to '%s'" % (certDir))
-        database.setup_trust_anchor(certDir)
-
-    # Handle conflicting actions
-    actions_req_sel = actionsrequiring_selections.intersection(actions)
-
-    actions_req_sel_len = len(actions_req_sel)
-    if actions_req_sel_len == 1:
-        if len(subscriptions_selected) == 0:
-            log.error('No subscription selections made.')
-            sys.exit(1)
-    if actions_req_sel_len > 1:
-        log.error('Conflicting functions.')
-        sys.exit(1)
-    # Handle conflicting identifiers
-
-    selectors_types = inputformats.intersection(input_format_selected)
-    selectors_types_len = len(selectors_types)
-    if selectors_types_len > 1:
-        log.error('Conflicting selectors.')
-        sys.exit(1)
-
-    selector_str = 'uuid'
-
-    if selectors_types_len == 1:
-        selector_str = input_format_selected.pop()
-    
-    mapper = {'uuid' : vmcatcher_subscribe.queryby_uuid,
-            'url' : vmcatcher_subscribe.queryby_uri,
-        }
-    database.setup_selector_factory(mapper[selector_str])
-
-    # Handle the output_view
-
-    outputformats_selections = outputformats.intersection(output_format_selected)
-    outputformats_selections_len = len(outputformats_selections)
-    if outputformats_selections_len > 1:
-        log.error('Conflicting output formats.')
-        sys.exit(1)
-    selector_str = 'lines'
-    if outputformats_selections_len == 1:
-        selector_str = outputformats_selections.pop()
-    mapper = {'lines' : vmcatcher_subscribe.output_driver_lines,
-        'SMIME' : vmcatcher_subscribe.output_driver_smime,
-        'message' : vmcatcher_subscribe.output_driver_message,
-    }
-    database.setup_view_factory(mapper[selector_str])
-    
-    
-    # set default return code
-    rc = 0
-    
-    if 'subscribe' in actions:
-        if not database.subscriptions_subscribe(subscription_url_list,autoEndorse):
-            log.error("Failed to subscribe to '%s'" % (subscription_url_list))
-            sys.exit(1)
-    if 'list' in actions:
-        database.sessions_list()
-    if 'update' in actions:
-        rc = database.subscriptions_update()
-    if 'delete' in actions:
-        if not database.subscriptions_delete(subscriptions_selected):
-            log.error("Failed to remove a subscription from '%s'" % (subscriptions_selected))
-            rc = 1
-    if 'dump' in actions:
-        if not 'select' in actions:
-            log.error('No subscriptions selected.')
-        database.message_files(subscriptions_selected,outputfiles)
-    if 'json' in actions:
-        database.dumpfiles(subscriptions_selected,outputfiles)
-    if 'info' in actions:
-        database.subscriptions_info(subscriptions_selected,outputfiles)
-    if 'image_list' in actions:
-        database.subscriptions_image_list(subscriptions_selected,outputfiles)
-    if 'image_accept' in actions:
-        database.subscriptions_image_accept(subscriptions_selected,images_aproved)
-    if 'image_refuse' in actions:
-        database.subscriptions_image_refuse(subscriptions_selected,images_refused)
-    
-    sys.exit(rc)
-
-def image(options):
-    log = logging.getLogger("main")
-    outputformats = set(['SMIME','message','lines'])
-    output_format_selected = set([])
-    anchor_needed = False
-    format_needed = False
-    anchor =  None
-    actions = set([])
-    images_selected = []
-    messages_path = []
-    subscription_url_list = []
-    outputfiles = []
-    input_format_selected = set([])
-    actionsrequiring_selections = set(['output','delete','info','add','remove'])
-    inputformats = set(['uuid','sha512'])
-    input_format_selected = set([])
-    databaseConnectionString = None
-    certDir = None
-    logFile = None
-    debugSqlEcho = False
-    if 'VMCATCHER_RDBMS' in os.environ:
-        databaseConnectionString = os.environ['VMCATCHER_RDBMS']
-    if 'VMCATCHER_DIR_CERT' in os.environ:
-        certDir = os.environ['VMCATCHER_DIR_CERT']
-    
-    
-    # Now logging is set up process other options
-    if options.log_sql_info:
-        debugSqlEcho = True
-    if options.cert_dir:
-        certDir = options.cert_dir
-    if options.list:
-        actions.add('list')
-    if options.sha512:
-        images_selected = options.sha512
-        input_format_selected.add('sha512')
-    if options.uuid:
-        images_selected = options.uuid
-        input_format_selected.add('uuid')
-    if options.info:
-        actions.add('info')
-        anchor_needed = True
-    if options.output:
-        format_needed = True
-        outputfiles = options.output
-    if options.add:
-        actions.add('add')
-    if options.remove:
-        actions.add('remove')
-    if options.database:
-        databaseConnectionString = options.database
-    # 1 So we have some command line validation
-
-    if databaseConnectionString == None:
-        databaseConnectionString = 'sqlite:///vmcatcher.db'
-        log.info("Defaulting DB connection to '%s'" % (databaseConnectionString))
-    if len(actions) == 0:
-        log.error("No actions selected")
-        sys.exit(1)
-    if len(actions) > 1:
-        log.error("More than one action selected.")
-        sys.exit(1)
-    if actions.issubset(actionsrequiring_selections) and len(images_selected) == 0:
-        action_askedfor = actions.pop()
-        log.error("Action '%s' requires an image to be selected." % action_askedfor)
-        sys.exit(1)
-    if format_needed and len(output_format_selected) == 0:
-        log.error("No output format selected")
-        sys.exit(1)
-
-    if options.format:
-        if options.format in outputformats:
-            output_format_selected.add(options.format)
+        if options.subscribe:
             anchor_needed = True
-        else:
-            log.error("Invalid format '%s' allowed formats are '%s'" % (options.format,outputformats))
+            actions.add('subscribe')
+            subscription_url_list = options.subscribe
+        if options.uuid:
+            subscriptions_selected = options.uuid
+            input_format_selected.add('uuid')
+        if options.uri:
+            subscriptions_selected = options.uri
+            input_format_selected.add('url')
+        if options.format:
+            if options.format in outputformats:
+                output_format_selected.add(options.format)
+                anchor_needed = True
+            else:
+                log.error("Invalid format '%s' allowed formats are '%s'" % (options.format,outputformats))
+                sys.exit(1)
+        if options.delete:
+            actions.add('delete')
+        if options.info:
+            format_needed = True
+            actions.add('info')
+        if options.output:
+            format_needed = True
+            outputfiles = options.output
+        if options.database:
+            databaseConnectionString = options.database
+        if options.auto_endorse:
+            autoEndorse = True
+        if options.execute:
+            eventExecutionString = options.execute
+
+        # 1 So we have some command line validation
+
+        if databaseConnectionString == None:
+            databaseConnectionString = 'sqlite:///vmcatcher.db'
+            log.info("Defaulting DB connection to '%s'" % (databaseConnectionString))
+        if len(actions) == 0:
+            log.error("No actions selected")
             sys.exit(1)
-    # 1 So we have some actions to process
+        if len(actions) > 1:
+            log.error("More than one action selected.")
+            sys.exit(1)
+        if format_needed and len(output_format_selected) == 0:
+            log.error("No output format selected")
+            sys.exit(1)
 
-    # 1.1 Initate DB
-    database = vmcatcher_image.db_controler(databaseConnectionString,debugSqlEcho)
-    # 2 Initate CA's to manage files
-    if anchor_needed:
-        if certDir == None:
-            certDir = "/etc/grid-security/certificates/"
-            log.info("Defaulting Certificate directory to '%s'" % (certDir))
-        database.setup_trust_anchor(certDir)
-    # Handle conflicting identifiers
-    selectors_types = inputformats.intersection(input_format_selected)
-    selectors_types_len = len(selectors_types)
-    if selectors_types_len > 1:
-        log.error('Conflicting selectors.')
-        sys.exit(1)
-    selector_str = 'uuid'
-    if selectors_types_len == 1:
-        selector_str = selectors_types.pop()
+        # 1.1 Initate DB
+        database = vmcatcher_subscribe.db_controler(databaseConnectionString,debugSqlEcho)
+        # 1.2 Set up callbacks
+        if eventExecutionString != None:
+            EventInstance = EventObj(eventExecutionString)
+            database.callbackEventImageNew = EventInstance.eventImageNew
 
-    mapper = {'uuid' : vmcatcher_image.queryby_uuid,
-            'sha512' : vmcatcher_image.queryby_sha512,
+        # 2 Initate CA's to manage files
+        if anchor_needed:
+            if certDir == None:
+                certDir = "/etc/grid-security/certificates/"
+                log.info("Defaulting Certificate directory to '%s'" % (certDir))
+            database.setup_trust_anchor(certDir)
+
+        # Handle conflicting actions
+        actions_req_sel = actionsrequiring_selections.intersection(actions)
+
+        actions_req_sel_len = len(actions_req_sel)
+        if actions_req_sel_len == 1:
+            if len(subscriptions_selected) == 0:
+                log.error('No subscription selections made.')
+                sys.exit(1)
+        if actions_req_sel_len > 1:
+            log.error('Conflicting functions.')
+            sys.exit(1)
+        # Handle conflicting identifiers
+
+        selectors_types = inputformats.intersection(input_format_selected)
+        selectors_types_len = len(selectors_types)
+        if selectors_types_len > 1:
+            log.error('Conflicting selectors.')
+            sys.exit(1)
+
+        selector_str = 'uuid'
+
+        if selectors_types_len == 1:
+            selector_str = input_format_selected.pop()
+
+        mapper = {'uuid' : vmcatcher_subscribe.queryby_uuid,
+                'url' : vmcatcher_subscribe.queryby_uri,
+            }
+        database.setup_selector_factory(mapper[selector_str])
+
+        # Handle the output_view
+
+        outputformats_selections = outputformats.intersection(output_format_selected)
+        outputformats_selections_len = len(outputformats_selections)
+        if outputformats_selections_len > 1:
+            log.error('Conflicting output formats.')
+            sys.exit(1)
+        selector_str = 'lines'
+        if outputformats_selections_len == 1:
+            selector_str = outputformats_selections.pop()
+        mapper = {'lines' : vmcatcher_subscribe.output_driver_lines,
+            'SMIME' : vmcatcher_subscribe.output_driver_smime,
+            'message' : vmcatcher_subscribe.output_driver_message,
         }
-    database.setup_selector_factory(mapper[selector_str])
-    # Handle the output_view
+        database.setup_view_factory(mapper[selector_str])
 
-    outputformats_selections = outputformats.intersection(output_format_selected)
-    outputformats_selections_len = len(outputformats_selections)
-    if outputformats_selections_len > 1:
-        log.error('Conflicting output formats.')
-        sys.exit(1)
-    selector_str = 'lines'
-    if outputformats_selections_len == 1:
-        selector_str = outputformats_selections.pop()
-    mapper = {'lines' : vmcatcher_image.output_driver_lines,
-        'SMIME' : vmcatcher_image.output_driver_smime,
-        'message' : vmcatcher_image.output_driver_message,
-    }
-    database.setup_view_factory(mapper[selector_str])
-    # Handle actions
-    if 'subscribe' in actions:
-        Session = SessionFactory()
-        db = db_actions(Session)
-        for uri in subscription_url_list:
-            db.subscribe_file(anchor,uri)
-    if 'list' in actions:
-        database.image_list()
-    if 'update' in actions:
-        Session = SessionFactory()
-        db = db_actions(Session)
-        db.subscriptions_update(anchor)
-    if 'dump' in actions:
-        if not 'select' in actions:
-            log.error('No subscriptions selected.')
+
+        # set default return code
+        rc = 0
+
+        if 'subscribe' in actions:
+            if not database.subscriptions_subscribe(subscription_url_list,autoEndorse):
+                log.error("Failed to subscribe to '%s'" % (subscription_url_list))
+                sys.exit(1)
+        if 'list' in actions:
+            database.sessions_list()
+        if 'update' in actions:
+            rc = database.subscriptions_update()
+        if 'delete' in actions:
+            if not database.subscriptions_delete(subscriptions_selected):
+                log.error("Failed to remove a subscription from '%s'" % (subscriptions_selected))
+                rc = 1
+        if 'dump' in actions:
+            if not 'select' in actions:
+                log.error('No subscriptions selected.')
+            database.message_files(subscriptions_selected,outputfiles)
         if 'json' in actions:
-            pairs, extra_uuid ,extra_paths = pairsNnot(images_selected,messages_path)
-            if len(extra_paths) > 0:
-                log.warning('Extra paths will be ignored.')
-                for path in extra_paths:
-                    log.info('ignoring path %s' % (path))
-            if len(extra_uuid) > 0:
-                log.warning('sha512 ignored.')
-                for path in extra_uuid:
-                    log.info('ignoring sha512 %s' % (path))
-            Session = SessionFactory()
-            db = db_actions(Session)
-            for item in pairs:
-                db.image_by_sha512_writefile_json(anchor,item[0],item[1])
-        if 'message' in actions:
-            pairs, extra_uuid ,extra_paths = pairsNnot(images_selected,messages_path)
-            if len(extra_paths) > 0:
-                log.warning('Extra paths will be ignored.')
-                for path in extra_paths:
-                    log.info('ignoring path %s' % (path))
-            if len(extra_uuid) > 0:
-                log.warning('sha512 ignored.')
-                for path in extra_uuid:
-                    log.info('Ignoring sha512 %s' % (path))
+            database.dumpfiles(subscriptions_selected,outputfiles)
+        if 'info' in actions:
+            database.subscriptions_info(subscriptions_selected,outputfiles)
+        if 'image_list' in actions:
+            database.subscriptions_image_list(subscriptions_selected,outputfiles)
+        if 'image_accept' in actions:
+            database.subscriptions_image_accept(subscriptions_selected,images_aproved)
+        if 'image_refuse' in actions:
+            database.subscriptions_image_refuse(subscriptions_selected,images_refused)
 
-            Session = SessionFactory()
-            db = db_actions(Session)
-            for item in pairs:
-                db.image_by_sha512_writefile_imagelist(anchor,item[0],item[1])
-    if 'info' in actions:
-        if not database.images_info(images_selected,outputfiles):
+        sys.exit(rc)
+
+    def image(options):
+        log = logging.getLogger("main")
+        outputformats = set(['SMIME','message','lines'])
+        output_format_selected = set([])
+        anchor_needed = False
+        format_needed = False
+        anchor =  None
+        actions = set([])
+        images_selected = []
+        messages_path = []
+        subscription_url_list = []
+        outputfiles = []
+        input_format_selected = set([])
+        actionsrequiring_selections = set(['output','delete','info','add','remove'])
+        inputformats = set(['uuid','sha512'])
+        input_format_selected = set([])
+        databaseConnectionString = None
+        certDir = None
+        logFile = None
+        debugSqlEcho = False
+        if 'VMCATCHER_RDBMS' in os.environ:
+            databaseConnectionString = os.environ['VMCATCHER_RDBMS']
+        if 'VMCATCHER_DIR_CERT' in os.environ:
+            certDir = os.environ['VMCATCHER_DIR_CERT']
+
+
+        # Now logging is set up process other options
+        if options.log_sql_info:
+            debugSqlEcho = True
+        if options.cert_dir:
+            certDir = options.cert_dir
+        if options.list:
+            actions.add('list')
+        if options.sha512:
+            images_selected = options.sha512
+            input_format_selected.add('sha512')
+        if options.uuid:
+            images_selected = options.uuid
+            input_format_selected.add('uuid')
+        if options.info:
+            actions.add('info')
+            anchor_needed = True
+        if options.output:
+            format_needed = True
+            outputfiles = options.output
+        if options.add:
+            actions.add('add')
+        if options.remove:
+            actions.add('remove')
+        if options.database:
+            databaseConnectionString = options.database
+        # 1 So we have some command line validation
+
+        if databaseConnectionString == None:
+            databaseConnectionString = 'sqlite:///vmcatcher.db'
+            log.info("Defaulting DB connection to '%s'" % (databaseConnectionString))
+        if len(actions) == 0:
+            log.error("No actions selected")
+            sys.exit(1)
+        if len(actions) > 1:
+            log.error("More than one action selected.")
+            sys.exit(1)
+        if actions.issubset(actionsrequiring_selections) and len(images_selected) == 0:
+            action_askedfor = actions.pop()
+            log.error("Action '%s' requires an image to be selected." % action_askedfor)
+            sys.exit(1)
+        if format_needed and len(output_format_selected) == 0:
+            log.error("No output format selected")
             sys.exit(1)
 
-    if 'add' in actions:
-        database.images_subscribe(images_selected,1)
-    if 'remove' in actions:
-        database.images_subscribe(images_selected,0)
+        if options.format:
+            if options.format in outputformats:
+                output_format_selected.add(options.format)
+                anchor_needed = True
+            else:
+                log.error("Invalid format '%s' allowed formats are '%s'" % (options.format,outputformats))
+                sys.exit(1)
+        # 1 So we have some actions to process
 
-def cache(options):
-    dir_cache = None
-    dir_partial = None
-    dir_expired = None
-    actions = set()
-    databaseConnectionString = None
-    eventExecutionString = None
-    logFile = None
-    debugSqlEcho = False
-    if 'VMCATCHER_RDBMS' in os.environ:
-        databaseConnectionString = os.environ['VMCATCHER_RDBMS']
-    if 'VMCATCHER_CACHE_DIR_CACHE' in os.environ:
-        dir_cache = os.environ['VMCATCHER_CACHE_DIR_CACHE']
-    if 'VMCATCHER_CACHE_DIR_DOWNLOAD' in os.environ:
-        dir_partial = os.environ['VMCATCHER_CACHE_DIR_DOWNLOAD']
-    if 'VMCATCHER_CACHE_DIR_EXPIRE' in os.environ:
-        dir_expired = os.environ['VMCATCHER_CACHE_DIR_EXPIRE']
-    if 'VMCATCHER_CACHE_EVENT' in os.environ:
-        eventExecutionString = os.environ['VMCATCHER_CACHE_EVENT']
-    
-    if 'VMCATCHER_CACHE_ACTION_DOWNLOAD' in os.environ:
-        if os.environ['VMCATCHER_CACHE_ACTION_DOWNLOAD'] == "1":
-            actions.add("download")
-    if 'VMCATCHER_CACHE_ACTION_CHECK' in os.environ:
-        if os.environ['VMCATCHER_CACHE_ACTION_CHECK'] == "1":
-            actions.add("sha512")
-    if 'VMCATCHER_CACHE_ACTION_EXPIRE' in os.environ:
-        if os.environ['VMCATCHER_CACHE_ACTION_EXPIRE'] == "1":
+        # 1.1 Initate DB
+        database = vmcatcher_image.db_controler(databaseConnectionString,debugSqlEcho)
+        # 2 Initate CA's to manage files
+        if anchor_needed:
+            if certDir == None:
+                certDir = "/etc/grid-security/certificates/"
+                log.info("Defaulting Certificate directory to '%s'" % (certDir))
+            database.setup_trust_anchor(certDir)
+        # Handle conflicting identifiers
+        selectors_types = inputformats.intersection(input_format_selected)
+        selectors_types_len = len(selectors_types)
+        if selectors_types_len > 1:
+            log.error('Conflicting selectors.')
+            sys.exit(1)
+        selector_str = 'uuid'
+        if selectors_types_len == 1:
+            selector_str = selectors_types.pop()
+
+        mapper = {'uuid' : vmcatcher_image.queryby_uuid,
+                'sha512' : vmcatcher_image.queryby_sha512,
+            }
+        database.setup_selector_factory(mapper[selector_str])
+        # Handle the output_view
+
+        outputformats_selections = outputformats.intersection(output_format_selected)
+        outputformats_selections_len = len(outputformats_selections)
+        if outputformats_selections_len > 1:
+            log.error('Conflicting output formats.')
+            sys.exit(1)
+        selector_str = 'lines'
+        if outputformats_selections_len == 1:
+            selector_str = outputformats_selections.pop()
+        mapper = {'lines' : vmcatcher_image.output_driver_lines,
+            'SMIME' : vmcatcher_image.output_driver_smime,
+            'message' : vmcatcher_image.output_driver_message,
+        }
+        database.setup_view_factory(mapper[selector_str])
+        # Handle actions
+        if 'subscribe' in actions:
+            Session = SessionFactory()
+            db = db_actions(Session)
+            for uri in subscription_url_list:
+                db.subscribe_file(anchor,uri)
+        if 'list' in actions:
+            database.image_list()
+        if 'update' in actions:
+            Session = SessionFactory()
+            db = db_actions(Session)
+            db.subscriptions_update(anchor)
+        if 'dump' in actions:
+            if not 'select' in actions:
+                log.error('No subscriptions selected.')
+            if 'json' in actions:
+                pairs, extra_uuid ,extra_paths = pairsNnot(images_selected,messages_path)
+                if len(extra_paths) > 0:
+                    log.warning('Extra paths will be ignored.')
+                    for path in extra_paths:
+                        log.info('ignoring path %s' % (path))
+                if len(extra_uuid) > 0:
+                    log.warning('sha512 ignored.')
+                    for path in extra_uuid:
+                        log.info('ignoring sha512 %s' % (path))
+                Session = SessionFactory()
+                db = db_actions(Session)
+                for item in pairs:
+                    db.image_by_sha512_writefile_json(anchor,item[0],item[1])
+            if 'message' in actions:
+                pairs, extra_uuid ,extra_paths = pairsNnot(images_selected,messages_path)
+                if len(extra_paths) > 0:
+                    log.warning('Extra paths will be ignored.')
+                    for path in extra_paths:
+                        log.info('ignoring path %s' % (path))
+                if len(extra_uuid) > 0:
+                    log.warning('sha512 ignored.')
+                    for path in extra_uuid:
+                        log.info('Ignoring sha512 %s' % (path))
+
+                Session = SessionFactory()
+                db = db_actions(Session)
+                for item in pairs:
+                    db.image_by_sha512_writefile_imagelist(anchor,item[0],item[1])
+        if 'info' in actions:
+            if not database.images_info(images_selected,outputfiles):
+                sys.exit(1)
+
+        if 'add' in actions:
+            database.images_subscribe(images_selected,1)
+        if 'remove' in actions:
+            database.images_subscribe(images_selected,0)
+
+    def cache(options):
+        dir_cache = None
+        dir_partial = None
+        dir_expired = None
+        actions = set()
+        databaseConnectionString = None
+        eventExecutionString = None
+        logFile = None
+        debugSqlEcho = False
+        if 'VMCATCHER_RDBMS' in os.environ:
+            databaseConnectionString = os.environ['VMCATCHER_RDBMS']
+        if 'VMCATCHER_CACHE_DIR_CACHE' in os.environ:
+            dir_cache = os.environ['VMCATCHER_CACHE_DIR_CACHE']
+        if 'VMCATCHER_CACHE_DIR_DOWNLOAD' in os.environ:
+            dir_partial = os.environ['VMCATCHER_CACHE_DIR_DOWNLOAD']
+        if 'VMCATCHER_CACHE_DIR_EXPIRE' in os.environ:
+            dir_expired = os.environ['VMCATCHER_CACHE_DIR_EXPIRE']
+        if 'VMCATCHER_CACHE_EVENT' in os.environ:
+            eventExecutionString = os.environ['VMCATCHER_CACHE_EVENT']
+
+        if 'VMCATCHER_CACHE_ACTION_DOWNLOAD' in os.environ:
+            if os.environ['VMCATCHER_CACHE_ACTION_DOWNLOAD'] == "1":
+                actions.add("download")
+        if 'VMCATCHER_CACHE_ACTION_CHECK' in os.environ:
+            if os.environ['VMCATCHER_CACHE_ACTION_CHECK'] == "1":
+                actions.add("sha512")
+        if 'VMCATCHER_CACHE_ACTION_EXPIRE' in os.environ:
+            if os.environ['VMCATCHER_CACHE_ACTION_EXPIRE'] == "1":
+                actions.add("expire")
+        log = logging.getLogger("main")
+        # Now logging is set up process other options
+        if options.log_sql_info:
+            debugSqlEcho = True
+        if options.cache_dir:
+            dir_cache = options.cache_dir
+        if options.partial_dir:
+            dir_partial = options.partial_dir
+        if options.expired_dir:
+            dir_expired = options.expired_dir
+        if options.expire:
             actions.add("expire")
-    log = logging.getLogger("main")
-    # Now logging is set up process other options
-    if options.log_sql_info:
-        debugSqlEcho = True
-    if options.cache_dir:
-        dir_cache = options.cache_dir
-    if options.partial_dir:
-        dir_partial = options.partial_dir
-    if options.expired_dir:
-        dir_expired = options.expired_dir
-    if options.expire:
-        actions.add("expire")
-    if options.sha512:
-        actions.add("sha512")
-    if options.download:
-        actions.add("download")
-    if options.database:
-        databaseConnectionString = options.database
-    if options.execute:
-        eventExecutionString = options.execute
-    # 1 So we have some command line validation
+        if options.sha512:
+            actions.add("sha512")
+        if options.download:
+            actions.add("download")
+        if options.database:
+            databaseConnectionString = options.database
+        if options.execute:
+            eventExecutionString = options.execute
+        # 1 So we have some command line validation
 
-    if databaseConnectionString == None:
-        databaseConnectionString = 'sqlite:///vmcatcher.db'
-        log.info("Defaulting DB connection to '%s'" % (databaseConnectionString))
-    if len(actions) == 0:
-        actions.add("download")
-        actions.add("expire")
-        log.info("Defaulting actions as 'expire', and 'download'.")
-    if ("download" in actions) and (not "expire" in actions):
-        log.info("Defaulting action 'expire', as 'download' is requested.")
-        actions.add("expire")
+        if databaseConnectionString == None:
+            databaseConnectionString = 'sqlite:///vmcatcher.db'
+            log.info("Defaulting DB connection to '%s'" % (databaseConnectionString))
+        if len(actions) == 0:
+            actions.add("download")
+            actions.add("expire")
+            log.info("Defaulting actions as 'expire', and 'download'.")
+        if ("download" in actions) and (not "expire" in actions):
+            log.info("Defaulting action 'expire', as 'download' is requested.")
+            actions.add("expire")
 
-    if dir_cache == None:
-        dir_cache = "cache"
-        log.info("Defaulting cache-dir to '%s'." % (dir_cache))
+        if dir_cache == None:
+            dir_cache = "cache"
+            log.info("Defaulting cache-dir to '%s'." % (dir_cache))
 
-    if dir_partial == None:
-        dir_partial = os.path.join(dir_cache,"partial")
-        log.info("Defaulting partial-dir to '%s'." % (dir_partial))
-    if dir_expired == None:
-        dir_expired = os.path.join(dir_cache,"expired")
-        log.info("Defaulting expired-dir to '%s'." % (dir_expired))
-    directories_good = True
-    if not os.path.isdir(dir_cache):
-        log.error("Cache directory '%s' does not exist." % (dir_cache))
-        directories_good = False
-    if not os.path.isdir(dir_partial):
-        log.error("Download directory '%s' does not exist." % (dir_partial))
-        directories_good = False
-    if not os.path.isdir(dir_expired):
-        log.error("Expired directory '%s' does not exist." % (dir_expired))
-        directories_good = False
-    if not directories_good:
-        sys.exit(1)
-
-
-    ThisCacheManager = vmcatcher_cache.CacheMan(databaseConnectionString,debugSqlEcho,dir_cache, dir_partial, dir_expired)
-    EventInstance = None
-    EventInstance = vmcatcher_cache.EventObj(eventExecutionString)
-    EventInstance.env['VMCATCHER_CACHE_DIR_CACHE'] = dir_cache
-    EventInstance.env['VMCATCHER_CACHE_DIR_DOWNLOAD'] = dir_partial
-    EventInstance.env['VMCATCHER_CACHE_DIR_EXPIRE'] = dir_expired
-
-    ThisCacheManager.callbackEventAvailablePrefix = EventInstance.eventAvailablePrefix
-    ThisCacheManager.callbackEventAvailablePostfix = EventInstance.eventAvailablePostfix
-    ThisCacheManager.callbackEventExpirePrefix = EventInstance.eventExpirePrefix
-    ThisCacheManager.callbackEventExpirePostfix = EventInstance.eventExpirePosfix
-    ThisCacheManager.load()
-    EventInstance.eventProcessPrefix({})
-    if "expire" in actions:
-        if not ThisCacheManager.expire():
-            log.error("Failed to expire old images")
+        if dir_partial == None:
+            dir_partial = os.path.join(dir_cache,"partial")
+            log.info("Defaulting partial-dir to '%s'." % (dir_partial))
+        if dir_expired == None:
+            dir_expired = os.path.join(dir_cache,"expired")
+            log.info("Defaulting expired-dir to '%s'." % (dir_expired))
+        directories_good = True
+        if not os.path.isdir(dir_cache):
+            log.error("Cache directory '%s' does not exist." % (dir_cache))
+            directories_good = False
+        if not os.path.isdir(dir_partial):
+            log.error("Download directory '%s' does not exist." % (dir_partial))
+            directories_good = False
+        if not os.path.isdir(dir_expired):
+            log.error("Expired directory '%s' does not exist." % (dir_expired))
+            directories_good = False
+        if not directories_good:
             sys.exit(1)
-    if "sha512" in actions:
-        if not ThisCacheManager.checkSumCache():
-            log.error("Failed to checksum old images")
-            sys.exit(1)
-    if "download" in actions:
-        if not ThisCacheManager.download():
-            log.error("Failed to download new images")
-            sys.exit(1)
-    ThisCacheManager.save()
-    EventInstance.eventProcessPostfix({})    
+
+
+        ThisCacheManager = vmcatcher_cache.CacheMan(databaseConnectionString,debugSqlEcho,dir_cache, dir_partial, dir_expired)
+        EventInstance = None
+        EventInstance = vmcatcher_cache.EventObj(eventExecutionString)
+        EventInstance.env['VMCATCHER_CACHE_DIR_CACHE'] = dir_cache
+        EventInstance.env['VMCATCHER_CACHE_DIR_DOWNLOAD'] = dir_partial
+        EventInstance.env['VMCATCHER_CACHE_DIR_EXPIRE'] = dir_expired
+
+        ThisCacheManager.callbackEventAvailablePrefix = EventInstance.eventAvailablePrefix
+        ThisCacheManager.callbackEventAvailablePostfix = EventInstance.eventAvailablePostfix
+        ThisCacheManager.callbackEventExpirePrefix = EventInstance.eventExpirePrefix
+        ThisCacheManager.callbackEventExpirePostfix = EventInstance.eventExpirePosfix
+        ThisCacheManager.load()
+        EventInstance.eventProcessPrefix({})
+        if "expire" in actions:
+            if not ThisCacheManager.expire():
+                log.error("Failed to expire old images")
+                sys.exit(1)
+        if "sha512" in actions:
+            if not ThisCacheManager.checkSumCache():
+                log.error("Failed to checksum old images")
+                sys.exit(1)
+        if "download" in actions:
+            if not ThisCacheManager.download():
+                log.error("Failed to download new images")
+                sys.exit(1)
+        ThisCacheManager.save()
+        EventInstance.eventProcessPostfix({})    
 def main():
+    proccessor = ProcessCmds()
     # create the top-level parser
     parser = argparse.ArgumentParser(prog='vmcatcher')
     parser.add_argument('-d','--database', action='store_true', help='foo help')
@@ -634,7 +637,7 @@ def main():
     parser_subscribe.add_argument('-D', '--delete', action ='store_true',help='Delete subscription')
     parser_subscribe.add_argument('-i', '--info', action ='store_true',help='Information on subscription')
     parser_subscribe.add_argument('-o', '--output', action ='append',help='Export File.', metavar='OUTPUTFILE')
-    parser_subscribe.set_defaults(func=subscribe)
+    parser_subscribe.set_defaults(func=proccessor.subscribe)
 
     # create the parser for the "endorser" command
     parser_endorser = subparsers.add_parser('endorser', help='manage image list endorsers')
@@ -650,7 +653,7 @@ def main():
     parser_endorser.add_argument('-u', '--unlink', action ='store_true',help='Remove endorser from Subscription.')
     parser_endorser.add_argument('-i', '--info', action ='store_true',help='Information on endoser.')
     parser_endorser.add_argument('-S', '--subject',action ='append',help='Depricated version of --dn.', metavar='DN')
-    parser_endorser.set_defaults(func=endorser)
+    parser_endorser.set_defaults(func=proccessor.endorser)
 
     # create the parser for the "image" command
     parser_image = subparsers.add_parser('image', help='manage subscibed images')
@@ -662,7 +665,7 @@ def main():
     parser_image.add_argument('-i', '--info', action ='store_true',help='Info on selected images')
     parser_image.add_argument('-f', '--format', choices=['SMIME', 'message', 'lines'],help='Sets the output format')
     parser_image.add_argument('-o', '--output', action ='append',help='Export File.', metavar='OUTPUTFILE')
-    parser_image.set_defaults(func=image)
+    parser_image.set_defaults(func=proccessor.image)
 
     # create the parser for the "cache" command
     parser_cache = subparsers.add_parser('cache', help='manage cache of images')
@@ -673,7 +676,7 @@ def main():
     parser_cache.add_argument('-D', '--download', action ='store_true',help='Download subscribed images to cache directory.')
     parser_cache.add_argument('-s', '--sha512', action ='store_true',help='Check cache directory images Sha512.')
     parser_cache.add_argument('-E', '--expire', action ='store_true',help='Remove expired images from cache directory.')
-    parser_cache.set_defaults(func=cache)
+    parser_cache.set_defaults(func=proccessor.cache)
 
     # parse some argument lists
     options = parser.parse_args()
