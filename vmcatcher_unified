@@ -13,8 +13,11 @@ class ProcessCmds(object):
         self.databaseConnectionString = None
         if 'VMCATCHER_RDBMS' in os.environ:
            self.databaseConnectionString = os.environ['VMCATCHER_RDBMS']
-
+    def endorser_list(self,options):
+        print dir(options)
     def endorser(self,options):
+        print 'endorser'
+        return
         anchor_needed = False
 
         actions = set([])
@@ -635,7 +638,7 @@ def main():
 
     # create the parser for the "endorser" command
     parser_endorser = subparsers.add_parser('endorser', help='manage image list endorsers')
-    parser_endorser.add_argument('-l', '--list', action ='store_true',help='List endorsers.')
+    #parser_endorser.add_argument('-l', '--list', action ='store_true',help='List endorsers.')
     parser_endorser.add_argument('-s', '--subscription_uuid', action ='append',help='Select subscription by uuid.', metavar='UUID')
     parser_endorser.add_argument('-e', '--endorser_uuid', action ='append',help='Select endorser by uuid.', metavar='UUID')
     parser_endorser.add_argument('-C', '--create', action ='store_true',help='Create an endorser.')
@@ -647,7 +650,10 @@ def main():
     parser_endorser.add_argument('-u', '--unlink', action ='store_true',help='Remove endorser from Subscription.')
     parser_endorser.add_argument('-i', '--info', action ='store_true',help='Information on endoser.')
     parser_endorser.add_argument('-S', '--subject',action ='append',help='Depricated version of --dn.', metavar='DN')
-    parser_endorser.set_defaults(func=proccessor.endorser)
+    subEndorserParsers = parser_endorser.add_subparsers(help='sub-endorser help')
+    parser_endorser_list = subEndorserParsers.add_parser('list', help='list endorsers')
+    parser_endorser_list.set_defaults(func=proccessor.endorser_list)
+    
 
     # create the parser for the "image" command
     parser_image = subparsers.add_parser('image', help='manage subscibed images')
@@ -719,6 +725,7 @@ def main():
     log = logging.getLogger("main")
     
     proccessor.InitialiseDefaults()
+    print options.func
     options.func(options)
 
 if __name__ == "__main__":
