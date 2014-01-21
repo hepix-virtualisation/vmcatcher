@@ -7,7 +7,7 @@ import os
 import re
 import logging
 import optparse
-from smimeX509validation import TrustStore, LoadDirChainOfTrust,smimeX509validation, smimeX509ValidationError
+import  smimeX509validation 
 from vmcatcher.__version__ import version
 import vmcatcher
 import urllib2
@@ -142,7 +142,7 @@ class db_controler(object):
         self.callbackEventImageNew = None
 
     def setup_trust_anchor(self,directory):
-        self.anchor = LoadDirChainOfTrust(directory)
+        self.anchor = smimeX509validation.LoadDirChainOfTrust(directory)
     def setup_selector_factory(self,factory):
         self.factory_selector = factory
     def setup_view_factory(self,factory):
@@ -239,10 +239,13 @@ class db_controler(object):
     def subscribe_file(self,Session,anchor,filename,autoEndorse):
         req = urllib2.Request(url=filename)
         f = urllib2.urlopen(req)
-        smimeProcessor = smimeX509validation(anchor)
+        smimeProcessor = smimeX509validation.smimeX509validation(anchor)
         try:
             smimeProcessor.Process(f.read())
-        except smimeX509ValidationError,E:
+        except smimeX509validation.truststore.TrustStoreError,E:
+            self.log.error("Validate text '%s' produced error '%s'" % (filename,E))
+            return False
+        except smimeX509validation.smimeX509ValidationError,E:
             self.log.error("Validate text '%s' produced error '%s'" % (filename,E))
             return False
         if not smimeProcessor.verified:

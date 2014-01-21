@@ -3,6 +3,8 @@ import datetime
 #from smimeX509validation import TrustStore, LoadDirChainOfTrust,smimeX509validation, smimeX509ValidationError
 import smimeX509validation
 import smimeX509validation.truststore
+import json
+from hepixvmitrust.vmitrustlib import VMimageListDecoder as VMimageListDecoder
 
 class fileView(object):
     def __init__(self,anchor,fileRaw,MatchMetadata):
@@ -45,12 +47,7 @@ class fileView(object):
             self.log.error("Downlaoded metadata from '%s' was not valid JSON." % (subscriptionKey))
             self.errorNo =  37
             return
-        try:
-            vmilist = VMimageListDecoder(jsonData)
-        except E:
-            self.log.error("Exception passing '%s' was not a valid imagelist: %s." % (subscriptionKey,E))
-            self.errorNo =  39
-            return
+        vmilist = VMimageListDecoder(jsonData)
         if vmilist == None:
             self.log.error("Downlaoded metadata from '%s' was not valid image list Object." % (subscriptionKey))
             self.errorNo =  38
