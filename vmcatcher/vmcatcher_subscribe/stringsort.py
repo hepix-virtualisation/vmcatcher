@@ -1,3 +1,5 @@
+import re
+
 regdelexp = re.compile('[-,.\/]')
 regnumeric = re.compile('[0-9]+')
 
