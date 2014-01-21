@@ -19,7 +19,7 @@ from hepixvmitrust.vmitrustlib import VMimageListDecoder as VMimageListDecoder
 from hepixvmitrust.vmitrustlib import time_format_definition as time_format_definition
 
 from vmcatcher.vmcatcher_subscribe.stringsort import split_numeric_sort
-from vmcatcher.vmcatcher_subscribe.launch import EventObj
+from vmcatcher.launch import EventObj
 from vmcatcher.vmcatcher_subscribe.msgcheck import fileView
 
 

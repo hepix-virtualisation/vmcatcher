@@ -86,4 +86,5 @@ class EventObj(object):
         self.eventProcess("ProcessPrefix",metadata)
     def eventProcessPostfix(self, metadata):
         self.eventProcess("ProcessPostfix",metadata)
-        
+    def eventImageNew(self,metadata):
+        self.eventProcess("ImageNew",metadata)
