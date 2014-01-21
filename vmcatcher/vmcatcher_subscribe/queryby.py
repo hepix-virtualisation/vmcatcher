@@ -1,4 +1,4 @@
-
+import vmcatcher.databaseDefinition as model
 
 class queryby_base(object):
     """"Base class for querying subscriptions"""
