@@ -29,7 +29,7 @@ import urlparse
 import subprocess
 import time
 from vmcatcher.vmcatcher_cache.manged_directory import BaseDir, DownloadDir, CacheDir, ExpireDir
-from vmcatcher.handler_events import EventObj
+from vmcatcher.launch import EventObj
 
 
 

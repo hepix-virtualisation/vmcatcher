@@ -42,13 +42,13 @@ from hepixvmitrust.vmitrustlib import VMimageListDecoder as VMimageListDecoder
 from hepixvmitrust.vmitrustlib import time_format_definition as time_format_definition
 
 from vmcatcher.vmcatcher_subscribe.stringsort import split_numeric_sort
-from vmcatcher.vmcatcher_subscribe.launch import EventObj
+from vmcatcher.launch import EventObj
 from vmcatcher.vmcatcher_subscribe.msgcheck import fileView
 
 from vmcatcher.vmcatcher_subscribe.fatcontroler import db_controler
 
 from vmcatcher.driveroutput import output_driver_lines,output_driver_smime,output_driver_message
-from vmcatcher.vmcatcher_subscribe.queryby import queryby_uuid, queryby_uri
+from vmcatcher.queryby import queryby_uuid, queryby_uri
 # User interface
 
 from vmcatcher.listutils import pairsNnot

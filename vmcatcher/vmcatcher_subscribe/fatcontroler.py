@@ -223,13 +223,14 @@ class db_controler(object):
             if query_subscription.count() == 0:
                 self.log.warning("Selections '%s' does not match any known subscriptions." % (selector_filter))
                 continue
+            firstSubscription = query_subscription.first()
             view = self.factory_view(output_fileptr,Session,self.anchor)
-
+            
             for item in query_subscription:
                 view.display_subscription(item)
-                query_imagelist = selector.imagelist_by_id(item.imagelist_latest)
-                for imagelist in query_imagelist:
-                    view.display_imagelist(imagelist)
+                query_imagelistInstance = selector.imagelistInstance_by_id(item.imagelist_latest)
+                for imagelistInstance in query_imagelistInstance:
+                    view.display_imagelistImage(firstSubscription,item,imagelistInstance)
 
             if output_file_name != None:
                 output_fileptr.close()

@@ -23,7 +23,7 @@ except:
 from vmcatcher.listutils import pairsNnot
 
 # User interface
-from vmcatcher.vmcatcher_endorser.queryby import queryby_uri, queryby_uuid
+from vmcatcher.queryby import queryby_uri, queryby_uuid
 from vmcatcher.driveroutput import output_driver_lines
 
 
