@@ -24,7 +24,7 @@ from vmcatcher.listutils import pairsNnot
 
 # User interface
 from vmcatcher.vmcatcher_endorser.queryby import queryby_uri, queryby_uuid
-from vmcatcher.vmcatcher_endorser.driveroutput import output_driver_lines
+from vmcatcher.driveroutput import output_driver_lines
 
 
 
