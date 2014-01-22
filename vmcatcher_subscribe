@@ -48,7 +48,7 @@ from vmcatcher.vmcatcher_subscribe.msgcheck import fileView
 from vmcatcher.vmcatcher_subscribe.fatcontroler import db_controler
 
 from vmcatcher.driveroutput import output_driver_lines,output_driver_smime,output_driver_message
-from vmcatcher.queryby import queryby_uuid, queryby_uri
+
 # User interface
 
 from vmcatcher.listutils import pairsNnot

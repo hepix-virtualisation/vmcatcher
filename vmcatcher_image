@@ -38,7 +38,6 @@ import datetime
 from hepixvmitrust.vmitrustlib import VMimageListDecoder as VMimageListDecoder
 from hepixvmitrust.vmitrustlib import time_format_definition as time_format_definition
 from vmcatcher.driveroutput import output_driver_lines,output_driver_smime,output_driver_message
-from vmcatcher.queryby import queryby_uuid, queryby_sha512
 from vmcatcher.vmcatcher_image.controler import db_controler
 from vmcatcher.listutils import pairsNnot
 
@@ -198,10 +197,14 @@ def main():
     if selectors_types_len == 1:
         selector_str = selectors_types.pop()
 
-    mapper = {'uuid' : queryby_uuid,
-            'sha512' : queryby_sha512,
+    selectorMapper = {'uuid' : 'image_uuid',
+            'sha512' : 'image_sha512',
         }
-    database.setup_selector_factory(mapper[selector_str])
+    if not selector_str in selectorMapper.keys():
+        log.error('Invalid selector.')
+        sys.exit(1)
+    
+    rc = database.set_selector(selectorMapper[selector_str])
     # Handle the output_view
 
     outputformats_selections = outputformats.intersection(output_format_selected)

@@ -16,7 +16,7 @@ from hepixvmitrust.vmitrustlib import time_format_definition as time_format_defi
 from vmcatcher.driveroutput import output_driver_lines,output_driver_smime,output_driver_message
 from vmcatcher.queryby import queryby_uuid, queryby_sha512
 from vmcatcher.listutils import pairsNnot
-
+import vmcatcher.queryby
 from M2Crypto import SMIME, X509, BIO
 try:
     import simplejson as json
@@ -135,10 +135,22 @@ class db_controler:
         model.init(self.engine)
         self.SessionFactory = sessionmaker(bind=self.engine)
         self.anchor = None
+        self.selector_curent = None
+        self.selectors_available = ['image_uuid','image_sha512']
     def setup_trust_anchor(self,directory):
         self.anchor = LoadDirChainOfTrust(directory)
-    def setup_selector_factory(self,factory):
-        self.factory_selector = factory
+
+    def set_selector(self,selector_string):
+        self.selector_curent = None
+        if not selector_string in self.selectors_available:
+            self.log.warning("Invalid selector string set:%s" % (selector_string))
+            return False
+        if selector_string == 'image_uuid':
+            self.selector_curent = vmcatcher.queryby.query_imageDef_by_identifier
+        elif selector_string == 'image_sha512':
+            self.selector_curent = vmcatcher.queryby.query_imageDef_by_sha512
+        return True
+        
     def setup_view_factory(self,factory):
         self.factory_view = factory
     def images_info(self,images_selected,outputfiles):
@@ -149,7 +161,7 @@ class db_controler:
 
         NoErrorHappened = True
         Session = self.SessionFactory()
-        selector = self.factory_selector(Session)
+        
         for pair in pairs:
             selector_filter = pair[0]
             output_file_name = pair[1]
@@ -158,7 +170,7 @@ class db_controler:
                 output_fileptr = open(output_file_name,'w+')
                 output_fileptr.flush()
 
-            queryImageDef = selector.imageDefinition_get(selector_filter)
+            queryImageDef = self.selector_curent(Session, selector_filter)
             if queryImageDef.count() == 0:
                 self.log.warning("Selections '%s' does not match any known images." % (selector_filter))
                 continue
@@ -187,9 +199,9 @@ class db_controler:
         print db.image_lister()
     def images_subscribe(self,images_selected,subscribe):
         Session = self.SessionFactory()
-        selector = self.factory_selector(Session)
+        
         for image in images_selected:
-            queryImageDef = selector.imageDefinition_get(image)
+            queryImageDef = self.selector_curent(Session, image)
             for ImageDef in queryImageDef:
                 ImageDef.cache = subscribe
                 Session.add(ImageDef)

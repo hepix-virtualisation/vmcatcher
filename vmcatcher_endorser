@@ -40,7 +40,6 @@ except:
 from vmcatcher.listutils import pairsNnot
 
 # User interface
-from vmcatcher.queryby import queryby_uri, queryby_uuid
 from vmcatcher.driveroutput import output_driver_lines
 from vmcatcher.vmcatcher_endorser.controler import db_controler
 
