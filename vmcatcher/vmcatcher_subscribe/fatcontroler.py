@@ -22,6 +22,7 @@ from vmcatcher.vmcatcher_subscribe.stringsort import split_numeric_sort
 from vmcatcher.launch import EventObj
 from vmcatcher.vmcatcher_subscribe.msgcheck import fileView
 
+from vmcatcher.listutils import pairsNnot
 
 
 try:
@@ -230,7 +231,7 @@ class db_controler(object):
                 view.display_subscription(item)
                 query_imagelistInstance = selector.imagelistInstance_by_id(item.imagelist_latest)
                 for imagelistInstance in query_imagelistInstance:
-                    view.display_imagelistImage(firstSubscription,item,imagelistInstance)
+                    view.display_subscriptionInfo(firstSubscription,item,imagelistInstance)
 
             if output_file_name != None:
                 output_fileptr.close()

@@ -64,7 +64,12 @@ class output_driver_message(output_driver_base):
 
 
 class output_driver_lines(output_driver_base):
+    def __init__(self,file_pointer,session,anchor):
+        output_driver_base.__init__(self,file_pointer,session,anchor)
+        self.log = logging.getLogger("output_driver_lines")
+
     def display_subscription(self,subscription):
+        
         self.file_pointer.write ('subscription.dc:identifier=%s\n' % (subscription.identifier))
         self.file_pointer.write ('subscription.dc:description=%s\n' % (subscription.description))
         self.file_pointer.write ('subscription.sl:authorised=%s\n' % (subscription.authorised))
@@ -125,6 +130,7 @@ class output_driver_lines(output_driver_base):
 
     def display_imagelistImage(self,imagedef,imagelist,image):
         self.file_pointer.write ('imagelist.dc:identifier=%s\n' % (imagedef.identifier))
+        
         self.file_pointer.write ('imagelist.dc:date:imported=%s\n' % (imagelist.imported.strftime(time_format_definition)))
         self.file_pointer.write ('imagelist.dc:date:created=%s\n' % (imagelist.created.strftime(time_format_definition)))
         self.file_pointer.write ('imagelist.dc:date:expires=%s\n' % (imagelist.expires.strftime(time_format_definition)))
@@ -141,4 +147,28 @@ class output_driver_lines(output_driver_base):
         self.file_pointer.write ('image.sl:comments=%s\n' % (image.comments))
         self.file_pointer.write ('image.sl:os=%s\n' % (image.os))
         self.file_pointer.write ('image.sl:osversion=%s\n' % (image.osversion))
+        return True
+        
+    def display_subscriptionInfo(self,imagedef,imagelist,image):
+        #self.log.info(type(imagedef))
+        #self.log.info(type(imagelist))
+        #self.log.info(type(image))
+        #self.log.info(dir(image))
+        msg = "expired=%s" % (image.expired)
+        self.file_pointer.write (msg)
+        self.log.info(msg)
+        msg = "imagelist.version=%s" % (image.version)
+        self.file_pointer.write (msg)
+        self.log.info(msg)
+        
+        
+        
+        self.file_pointer.write ('imagelist.dc:identifier=%s\n' % (image.id))
+        
+        self.file_pointer.write ('imagelist.dc:date:imported=%s\n' % (image.imported.strftime(time_format_definition)))
+        self.file_pointer.write ('imagelist.dc:date:created=%s\n' % (image.created.strftime(time_format_definition)))
+        self.file_pointer.write ('imagelist.dc:date:expires=%s\n' % (image.expires.strftime(time_format_definition)))
+        self.file_pointer.write ('imagedef.dc:identifier=%s\n' % (imagedef.identifier))
+        #self.file_pointer.write ('imagedef.cache=%s\n' % (imagedef.cache))
+        
         return True
