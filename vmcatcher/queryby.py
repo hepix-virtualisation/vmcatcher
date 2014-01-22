@@ -72,3 +72,16 @@ class queryby_sha512(queryby_base):
 class queryby_uuid(queryby_base):
     def imageDefinition_get(self,uuid):
         return self.imageDefinition_by_imageUuid(uuid)
+
+
+
+
+
+def query_subscriptions_by_identifier(session, identifier):
+    return session.query(model.Subscription).\
+                filter(model.Subscription.identifier == identifier)
+
+def query_subscriptions_by_uri(session, uri):
+    return session.query(model.Subscription).\
+                filter(model.Subscription.uri == uri)
+    

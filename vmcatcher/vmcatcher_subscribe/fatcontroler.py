@@ -24,7 +24,7 @@ from vmcatcher.vmcatcher_subscribe.msgcheck import fileView
 
 from vmcatcher.listutils import pairsNnot
 
-
+import vmcatcher.queryby
 try:
     import simplejson as json
 except:
@@ -141,11 +141,21 @@ class db_controler(object):
         self.factory_view = None
         # Set all callbacks to empty
         self.callbackEventImageNew = None
-
+        self.selectors_available = ['sub_uuid', 'sub_uri']
+        self.selector_curent = None
+    def set_selector(self,selector_string):
+        self.selector_curent = None
+        if not selector_string in self.selectors_available:
+            self.log.warning("Invalid selector string set:%s" % (selector_string))
+            return False
+        if selector_string == 'sub_uuid':
+            self.selector_curent = vmcatcher.queryby.query_subscriptions_by_identifier
+        elif selector_string == 'sub_uri':
+            self.selector_curent = vmcatcher.queryby.query_subscriptions_by_uri
+        return True
+        
     def setup_trust_anchor(self,directory):
         self.anchor = smimeX509validation.LoadDirChainOfTrust(directory)
-    def setup_selector_factory(self,factory):
-        self.factory_selector = factory
     def setup_view_factory(self,factory):
         self.factory_view = factory
 
@@ -153,9 +163,6 @@ class db_controler(object):
     def check_factories(self):
         if self.factory_view == None:
             self.log.warning("factory_view not available.")
-            return False
-        if self.factory_selector == None:
-            self.log.warning("selector not available.")
             return False
         return True
     def unsigned_message_by_identifier_tofilepath(self,instructions):
@@ -171,7 +178,7 @@ class db_controler(object):
         Session.commit()
     def sessions_list(self):
         Session = self.SessionFactory()
-        selector = self.factory_selector(Session)
+        
         view = self.factory_view(sys.stdout,Session,self.anchor)
         view.subscriptions_lister()
         return True
@@ -180,9 +187,8 @@ class db_controler(object):
         foundOne = False
         Session = self.SessionFactory()
         db = db_actions(Session)
-        selector = self.factory_selector(Session)
         for selection_item in subscriptions_selected:
-            query_subscription = selector.subscription_get(selection_item)
+            query_subscription = self.selector_curent(Session, selection_item)
             for a_sub in query_subscription:
                 # should not need thsi code but do maybe a bug in slqalchamy or more likely my db definition"
                 query_image_def_linked = db.ImageDefinition_list(a_sub.id)
@@ -212,7 +218,6 @@ class db_controler(object):
 
         errorhappened = False
         Session = self.SessionFactory()
-        selector = self.factory_selector(Session)
         for pair in pairs:
             selector_filter = pair[0]
             output_file_name = pair[1]
@@ -220,7 +225,7 @@ class db_controler(object):
             if output_file_name != None:
                 output_fileptr = open(output_file_name,'w+')
                 output_fileptr.flush()
-            query_subscription = selector.subscription_get(selector_filter)
+            query_subscription = self.selector_curent(Session,selector_filter)
             if query_subscription.count() == 0:
                 self.log.warning("Selections '%s' does not match any known subscriptions." % (selector_filter))
                 continue
@@ -229,7 +234,8 @@ class db_controler(object):
             
             for item in query_subscription:
                 view.display_subscription(item)
-                query_imagelistInstance = selector.imagelistInstance_by_id(item.imagelist_latest)
+                query_imagelistInstance = Session.query(model.ImageListInstance).\
+                    filter(model.ImageListInstance.id==item.imagelist_latest)
                 for imagelistInstance in query_imagelistInstance:
                     view.display_subscriptionInfo(firstSubscription,item,imagelistInstance)
 
@@ -530,7 +536,6 @@ class db_controler(object):
 
         errorhappened = False
         Session = self.SessionFactory()
-        selector = self.factory_selector(Session)
         for pair in pairs:
             selector_filter = pair[0]
             output_file_name = pair[1]
@@ -538,7 +543,7 @@ class db_controler(object):
             if output_file_name != None:
                 output_fileptr = open(output_file_name,'w+')
                 output_fileptr.flush()
-            query_subscription = selector.subscription_get(selector_filter)
+            query_subscription = self.selector_curent(Session,selector_filter)
             if query_subscription.count() == 0:
                 self.log.warning("Selections '%s' does not match any known subscriptions." % (selector_filter))
                 continue
