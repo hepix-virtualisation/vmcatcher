@@ -2,6 +2,7 @@ import urlparse
 import os
 import os.path
 import shutil
+import logging
 
 
 def uglyUriParser(uri):
