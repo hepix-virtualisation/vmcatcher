@@ -36,6 +36,8 @@ class output_driver_smime(output_driver_base):
         if not self.display_imagelist(imagelist):
             return False
         return True
+    def display_subscriptionInfo(self,imagedef,imagelist,image):
+        return self.display_imagelist(image)
 
 
 class output_driver_message(output_driver_base):
