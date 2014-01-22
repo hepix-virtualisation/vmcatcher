@@ -3,7 +3,7 @@ import os
 import os.path
 import shutil
 import logging
-
+import json
 
 def uglyUriParser(uri):
     parsedUri = urlparse.urlsplit(uri)
