@@ -42,5 +42,5 @@ back end, and caches available image lists.""",
         ],
 
     scripts=['vmcatcher_image','vmcatcher_subscribe','vmcatcher_cache','vmcatcher_endorser'],
-    data_files=[('/usr/share/doc/vmcatcher-%s' % (version),['README.md','LICENSE','logger.conf','ChangeLog','vmcatcher_eventHndlExpl'])]
+    data_files=[('share/doc/vmcatcher-%s' % (version),['README.md','LICENSE','logger.conf','ChangeLog','vmcatcher_eventHndlExpl'])]
     )
