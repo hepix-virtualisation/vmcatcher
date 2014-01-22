@@ -1,3 +1,9 @@
+import urlparse
+import os
+import os.path
+import shutil
+
+
 def uglyUriParser(uri):
     parsedUri = urlparse.urlsplit(uri)
     if isinstance(parsedUri, tuple):
