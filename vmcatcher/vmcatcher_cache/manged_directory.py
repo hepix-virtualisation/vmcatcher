@@ -6,7 +6,7 @@ import logging
 import json
 import statvfs
 from hepixvmitrust.vmitrustlib import file_extract_metadata as file_extract_metadata
-
+import datetime
 
 def uglyUriParser(uri):
     parsedUri = urlparse.urlsplit(uri)

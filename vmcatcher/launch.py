@@ -4,7 +4,6 @@ import logging
 import time
 import uuid
 
-
 class EventObj(object):
     def __init__(self,eventExecutionString):
         self.eventExecutionString = eventExecutionString
