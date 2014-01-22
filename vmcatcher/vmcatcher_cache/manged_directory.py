@@ -4,6 +4,8 @@ import os.path
 import shutil
 import logging
 import json
+import statvfs
+
 
 def uglyUriParser(uri):
     parsedUri = urlparse.urlsplit(uri)
