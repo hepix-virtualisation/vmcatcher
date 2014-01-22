@@ -2,6 +2,7 @@ import subprocess
 import os
 import logging
 import time
+import uuid
 
 
 class EventObj(object):
