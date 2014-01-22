@@ -5,6 +5,7 @@ import shutil
 import logging
 import json
 import statvfs
+from hepixvmitrust.vmitrustlib import file_extract_metadata as file_extract_metadata
 
 
 def uglyUriParser(uri):
