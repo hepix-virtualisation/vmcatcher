@@ -1,5 +1,9 @@
 Changelog
 
+vmcatcher-0.3.1
+
+ * vmcatcher_image: fix imagelist.dc:identifier output with lines format.
+
 vmcatcher-0.3.0
 
  * Large code structure changes removing duplicate code.
