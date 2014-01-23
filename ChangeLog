@@ -1,5 +1,11 @@
 Changelog
 
+vmcatcher-0.3.0
+
+ * Large code structure changes removing duplicate code.
+ * Added VMCATCHER_EVENT_UUID_SESSION with a UUID for vmcatcher_subscribe.
+ * Madfe the setup.py support virtual enviroments.
+
 vmcatcher-0.2.1
 
  * Typo correction Event type now changed from "ExpirePosfix" to "ExpirePostfix".
