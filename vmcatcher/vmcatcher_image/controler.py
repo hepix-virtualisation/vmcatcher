@@ -187,8 +187,8 @@ class db_controler:
                 for item in details:
                     subscription = item[0]
                     imagelistinstance = item[1]
-                    image = item[2]
-                    if not view.display_imagelistImage(subscription,imagedef,imagelistinstance,image):
+                    imageinstance = item[2]
+                    if not view.display_imagelistImage(subscription,imagedef,imagelistinstance,imageinstance):
                         NoErrorHappened = False
             if output_file_name != None:
                 output_fileptr.close()
