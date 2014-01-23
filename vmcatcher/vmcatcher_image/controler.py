@@ -176,7 +176,7 @@ class db_controler:
                 continue
             view = self.factory_view(output_fileptr,Session,self.anchor)
             for imagedef in queryImageDef:
-                details = Session.query(model.ImageListInstance,model.ImageInstance).\
+                details = Session.query(model.Subscription, model.ImageListInstance, model.ImageInstance).\
                     filter(model.ImageListInstance.id==model.ImageInstance.fkimagelistinstance).\
                     filter(model.ImageDefinition.id == imagedef.id).\
                     filter(model.ImageInstance.fkIdentifier == model.ImageDefinition.id).\
@@ -185,9 +185,10 @@ class db_controler:
                 if details.count() == 0:
                     self.log.warning("Image '%s' has expired." % (selector_filter))
                 for item in details:
-                    imagelist = item[0]
-                    image = item[1]
-                    if not view.display_imagelistImage(imagedef,imagelist,image):
+                    subscription = item[0]
+                    imagelistinstance = item[1]
+                    image = item[2]
+                    if not view.display_imagelistImage(subscription,imagedef,imagelistinstance,image):
                         NoErrorHappened = False
             if output_file_name != None:
                 output_fileptr.close()

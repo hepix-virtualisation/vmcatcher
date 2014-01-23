@@ -32,7 +32,7 @@ class output_driver_smime(output_driver_base):
     def display_imagelist(self,imagelist):
         self.file_pointer.write (imagelist.data)
         return True
-    def display_imagelistImage(self,imagedef,imagelist,image):
+    def display_imagelistImage(self,subscription,imagedef,imagelist,image):
         if not self.display_imagelist(imagelist):
             return False
         return True
@@ -59,7 +59,7 @@ class output_driver_message(output_driver_base):
         self.file_pointer.write (smimeProcessor.InputDaraStringIO.getvalue())
         return True
 
-    def display_imagelistImage(self,imagedef,imagelist,image):
+    def display_imagelistImage(self,subscription,imagedef,imagelist,image):
         if not self.display_imagelist(imagelist):
             return False
         return True
@@ -130,9 +130,8 @@ class output_driver_lines(output_driver_base):
                 self.display_subscription(subscription)
 
 
-    def display_imagelistImage(self,imagedef,imagelist,image):
-        self.file_pointer.write ('imagelist.dc:identifier=%s\n' % (imagedef.identifier))
-        
+    def display_imagelistImage(self,subscription,imagedef,imagelist,image):
+        self.file_pointer.write ('imagelist.dc:identifier=%s\n' % (subscription.identifier))
         self.file_pointer.write ('imagelist.dc:date:imported=%s\n' % (imagelist.imported.strftime(time_format_definition)))
         self.file_pointer.write ('imagelist.dc:date:created=%s\n' % (imagelist.created.strftime(time_format_definition)))
         self.file_pointer.write ('imagelist.dc:date:expires=%s\n' % (imagelist.expires.strftime(time_format_definition)))
