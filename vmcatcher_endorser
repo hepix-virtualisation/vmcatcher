@@ -208,7 +208,17 @@ def main():
     # Handle conflicting identifiers
 
 
-    database.setup_selector_factory(queryby_uuid)
+    #database.setup_selector_factory(queryby_uuid)
+    
+    selector_str = 'uuid'
+    selectorMapper = {'uuid' : 'endorser_uuid',
+        }
+    if not selector_str in selectorMapper.keys():
+        log.error('Invalid selector.')
+        sys.exit(1)
+    
+    rc = database.set_selector(selectorMapper[selector_str])
+    
     if 'create' in actions:
         if len(endorsers_selected) > 1:
             log.error("More than one endorser cannot be created at a time.")

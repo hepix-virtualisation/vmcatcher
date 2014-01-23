@@ -17,3 +17,7 @@ def query_imageDef_by_sha512(session, sha512):
                 filter(model.ImageListInstance.id==model.ImageInstance.fkimagelistinstance).\
                 filter(model.ImageInstance.sha512 == sha512).\
                 filter(model.ImageInstance.fkIdentifier == model.ImageDefinition.id)
+
+def query_endorser_by_identifier(session, identifier):
+    return session.query(model.Endorser).\
+                filter(model.Endorser.identifier == identifier)

@@ -23,10 +23,9 @@ except:
 from vmcatcher.listutils import pairsNnot
 
 # User interface
-from vmcatcher.queryby import queryby_uri, queryby_uuid
 from vmcatcher.driveroutput import output_driver_lines
 
-
+import vmcatcher.queryby
 
 class db_controler:
     def __init__(self,dboptions,dblog = False):
@@ -36,25 +35,35 @@ class db_controler:
         self.SessionFactory = sessionmaker(bind=self.engine)
         self.anchor = None
         self.factory_selector = None
-        
-
+        self.selectors_available = ["endorser_uuid"]
+        self.selector_curent = None
+    def set_selector(self,selector_string):
+        self.selector_curent = None
+        if not selector_string in self.selectors_available:
+            self.log.warning("Invalid selector string set:%s" % (selector_string))
+            return False
+        if selector_string == 'endorser_uuid':
+            self.selector_curent = vmcatcher.queryby.query_endorser_by_identifier
+        elif selector_string == 'sub_uri':
+            self.selector_curent = vmcatcher.queryby.query_subscriptions_by_uri
+        return True    
     def setup_trust_anchor(self,directory):
         self.anchor = LoadDirChainOfTrust(directory)
-    def setup_selector_factory(self,factory):
-        self.factory_selector = factory
+    
     
     # Utility functions
     def check_factories(self):
-        if self.factory_selector == None:
+        if self.selector_curent == None:
             self.log.warning("selector not available.")
             return False
         return True
     def endosers_list(self):
         Session = self.SessionFactory()
-        selector = self.factory_selector(Session)
+        #selector = self.selector_curent(Session)
+        allendorsers = Session.query(model.Endorser).all()
         view = output_driver_lines(sys.stdout,Session,self.anchor)
 
-        view.endorser_lister(selector.endorser_all())
+        view.endorser_lister(allendorsers)
         return True
     def links_list(self):
         Session = self.SessionFactory()
@@ -123,18 +132,18 @@ class db_controler:
             return False
         errorhappened = False
         Session = self.SessionFactory()
-        selector = self.factory_selector(Session)
         for selector_filter in selected:
             output_fileptr = sys.stdout
-            query_endorser = selector.endorser_by_uuid(selector_filter)
+            query_endorser = self.selector_curent(Session,selector_filter)
             if query_endorser.count() == 0:
                 self.log.error("endorser '%s' not found" % (selector_filter))
                 continue
             view = output_driver_lines(output_fileptr,Session,self.anchor)
-            view.query = selector
             for endorser in query_endorser:
                 view.display_endorser(endorser)
-                princible_query = selector.princible_by_endorserId(endorser.id)
+                princible_query = Session.query(model.EndorserPrincible).\
+                    filter(model.EndorserPrincible.endorser == endorser.id)
+                
                 if princible_query.count() == 0:
                     self.log.warning("endorser '%s' has no princibles" % (selector_filter))
                 else:

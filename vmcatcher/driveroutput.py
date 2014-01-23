@@ -116,17 +116,16 @@ class output_driver_lines(output_driver_base):
 
     def display_endorser(self,endorser):
         self.file_pointer.write ("endorser.dc:identifier=%s\n" % (endorser.identifier))
-        princible_query = self.query.princible_by_endorserId(endorser.id)
-        if princible_query.count() == 0:
+        if len(endorser.princibles) == 0:
             self.log.warning("endorser '%s' has no princibles" % (selector_filter))
             return False
-        for princible in princible_query:
+        for princible in endorser.princibles:
             self.file_pointer.write("endorser.hv:dn=%s\n" % (princible.hv_dn))
             self.file_pointer.write("endorser.hv:ca=%s\n" % (princible.hv_ca))
-        subauth_query = self.query.subscriptionAuth_by_endorserId(endorser.id)
-        for subauth in subauth_query:
+        for subauth in endorser.subscriptionauth:
             #self.file_pointer.write("subauth.authorised=%s\n" % (subauth.authorised))
-            subscription_query = self.query.subscription_by_id(subauth.subscription)
+            subscription_query = self.session.query(model.Subscription).\
+                filter(model.Subscription.id == subauth.subscription)
             for subscription in subscription_query:
                 self.display_subscription(subscription)
 
