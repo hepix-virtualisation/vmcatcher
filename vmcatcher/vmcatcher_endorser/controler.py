@@ -67,9 +67,11 @@ class db_controler:
         return True
     def links_list(self):
         Session = self.SessionFactory()
-        selector = self.factory_selector(Session)
         view = output_driver_lines(sys.stdout,Session,self.anchor)
-        view.links_lister(selector.links_all())
+        selected = Session.query(model.Subscription,model.Endorser,model.SubscriptionAuth).\
+            filter(model.Endorser.id==model.SubscriptionAuth.endorser).\
+            filter(model.Subscription.id==model.SubscriptionAuth.subscription)
+        view.links_lister(selected)
         return True
     def link(self,endorsers_selected,subscriptions_selected):
         if not self.check_factories():

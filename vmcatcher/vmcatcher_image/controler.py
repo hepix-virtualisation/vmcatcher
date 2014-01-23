@@ -14,7 +14,7 @@ import datetime
 from hepixvmitrust.vmitrustlib import VMimageListDecoder as VMimageListDecoder
 from hepixvmitrust.vmitrustlib import time_format_definition as time_format_definition
 from vmcatcher.driveroutput import output_driver_lines,output_driver_smime,output_driver_message
-from vmcatcher.queryby import queryby_uuid, queryby_sha512
+
 from vmcatcher.listutils import pairsNnot
 import vmcatcher.queryby
 from M2Crypto import SMIME, X509, BIO
