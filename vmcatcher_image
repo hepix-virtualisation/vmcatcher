@@ -85,8 +85,8 @@ def main():
         logFile = os.environ['VMCATCHER_LOG_CONF']
     if 'VMCATCHER_DIR_CERT' in os.environ:
         certDir = os.environ['VMCATCHER_DIR_CERT']
-    if 'VMCATCHER_FORMAT_OUT' in os.environ:
-        output_format_selected = os.environ['VMCATCHER_FORMAT_OUT']   
+    if 'VMCATCHER_OUTPUT_FORMAT' in os.environ:
+        output_format_selected = os.environ['VMCATCHER_OUTPUT_FORMAT']   
         
     # Set up log file
     LoggingLevel = logging.WARNING
@@ -168,11 +168,6 @@ def main():
         action_askedfor = actions.pop()
         log.error("Action '%s' requires an image to be selected." % action_askedfor)
         sys.exit(1)
-    
-    if format_needed and (output_format_selected == None):
-        log.error("No output format selected")
-        sys.exit(1)
-        
     if not output_format_selected in outputformats:
         log.error("Invalid format '%s' allowed formats are '%s'" % (output_format_selected,outputformats))
         sys.exit(1)

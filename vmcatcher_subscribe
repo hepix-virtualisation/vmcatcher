@@ -93,7 +93,8 @@ def main():
         'image_list',
         'image_refuse'])
     outputformats = set(['SMIME','message','lines','json'])
-    output_format_selected = set([])
+    output_format_selected = 'lines'
+    
     inputformats = set(['uuid','url'])
     input_format_selected = set([])
     outputfiles = []
@@ -113,6 +114,8 @@ def main():
         certDir = os.environ['VMCATCHER_DIR_CERT']
     if 'VMCATCHER_SUB_EVENT' in os.environ:
         eventExecutionString = os.environ['VMCATCHER_SUB_EVENT']
+    if 'VMCATCHER_OUTPUT_FORMAT' in os.environ:
+        output_format_selected = os.environ['VMCATCHER_OUTPUT_FORMAT']  
     # Set up log file
     LoggingLevel = logging.WARNING
     LoggingLevelCounter = 2
@@ -162,7 +165,6 @@ def main():
     if options.update:
         actions.add('update')
         anchor_needed = True
-        output_format_selected.add('lines')
     if options.image_list:
         actions.add('image_list')
     if options.image_accept:
@@ -184,7 +186,7 @@ def main():
         input_format_selected.add('url')
     if options.format:
         if options.format in outputformats:
-            output_format_selected.add(options.format)
+            output_format_selected = options.format
             anchor_needed = True
         else:
             log.error("Invalid format '%s' allowed formats are '%s'" % (options.format,outputformats))
@@ -215,7 +217,7 @@ def main():
     if len(actions) > 1:
         log.error("More than one action selected.")
         sys.exit(1)
-    if format_needed and len(output_format_selected) == 0:
+    if format_needed and output_format_selected == 0:
         log.error("No output format selected")
         sys.exit(1)
 
@@ -270,17 +272,11 @@ def main():
         sys.exit(1)
     # Handle the output_view
 
-    outputformats_selections = outputformats.intersection(output_format_selected)
-    outputformats_selections_len = len(outputformats_selections)
-    if outputformats_selections_len > 1:
-        log.error('Conflicting output formats.')
+        
+    if not output_format_selected in outputformats:
+        log.error("Invalid format '%s' allowed formats are '%s'" % (output_format_selected,outputformats))
         sys.exit(1)
-    selector_str = 'lines'
-    if outputformats_selections_len == 1:
-        selector_str = outputformats_selections.pop()
-    
-    
-    database.setup_view_format(selector_str)
+    database.setup_view_format(output_format_selected)
     
     # set default return code
     rc = 0

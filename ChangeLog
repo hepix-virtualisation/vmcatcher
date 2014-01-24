@@ -1,5 +1,11 @@
 Changelog
 
+vmcatcher-0.3.2
+
+ * Changed to new facard based output driver.
+ * Added json as a standard output format. (Json format is not yet finalised)
+ * Added VMCATCHER_OUTPUT_FORMAT as a output format selector.
+
 vmcatcher-0.3.1
 
  * vmcatcher_image: fix imagelist.dc:identifier output with lines format.

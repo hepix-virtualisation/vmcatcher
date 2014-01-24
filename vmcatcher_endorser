@@ -70,8 +70,7 @@ def main():
     options, arguments = p.parse_args()
     anchor_needed = False
     outputformats = set(['SMIME','message','lines','json'])
-    output_format_selected = None
-    format_default = "lines"
+    output_format_selected = "lines"
     actions = set([])
     endorsers_selected = []
     subscriptions_selected = []
@@ -88,8 +87,8 @@ def main():
         databaseConnectionString = os.environ['VMCATCHER_RDBMS']
     if 'VMCATCHER_LOG_CONF' in os.environ:
         logFile = os.environ['VMCATCHER_LOG_CONF']
-    if 'VMCATCHER_FORMAT_OUT' in os.environ:
-        output_format_selected = os.environ['VMCATCHER_FORMAT_OUT']
+    if 'VMCATCHER_OUTPUT_FORMAT' in os.environ:
+        output_format_selected = os.environ['VMCATCHER_OUTPUT_FORMAT']
     
     # Set up log file
     LoggingLevel = logging.WARNING
@@ -214,8 +213,6 @@ def main():
             log.error('No issuers selected.')
             sys.exit(1)
     # Handle conflicting identifiers
-    if output_format_selected == None:
-        output_format_selected = format_default
     if not output_format_selected in outputformats:
             log.error("Invalid format '%s' allowed formats are '%s'" % (options.format,outputformats))
             sys.exit(1)
