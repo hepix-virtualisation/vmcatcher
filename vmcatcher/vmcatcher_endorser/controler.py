@@ -69,8 +69,6 @@ class db_controler:
         self._outputter.list_vmcatcher_endorser_link()
         return True
     def link(self,endorsers_selected,subscriptions_selected):
-        if not self.check_factories():
-            return False
         pairs, extra_selectors ,extra_paths = pairsNnot(endorsers_selected,subscriptions_selected)
         Session = self.SessionFactory()
         for pair in pairs:
@@ -102,8 +100,6 @@ class db_controler:
                 
                 
     def unlink(self,endorsers_selected,subscriptions_selected):
-        if not self.check_factories():
-            return False
         Session = self.SessionFactory()
         pairs, extra_selectors ,extra_paths = pairsNnot(endorsers_selected,subscriptions_selected)
         for pair in pairs:
@@ -209,8 +205,6 @@ class db_controler:
         return True
     def endorser_delete(self,endorsers):
         # Check input parameters.
-        if not self.check_factories():
-            return False
         Session = self.SessionFactory()
         for endorser in endorsers:
             endorserQuery = Session.query(model.Endorser).\

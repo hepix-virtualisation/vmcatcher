@@ -532,8 +532,6 @@ class db_controler(object):
                 rc = thisRc
         return rc
     def subscriptions_image_list(self,subscriptions_selected,outputfiles):
-        if not self.check_factories():
-            return False
         pairs, extra_selectors ,extra_paths = pairsNnot(subscriptions_selected,outputfiles)
 
         for item in extra_selectors:
