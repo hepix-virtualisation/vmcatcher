@@ -85,7 +85,7 @@ def main():
         logFile = os.environ['VMCATCHER_LOG_CONF']
     if 'VMCATCHER_DIR_CERT' in os.environ:
         certDir = os.environ['VMCATCHER_DIR_CERT']
-     if 'VMCATCHER_FORMAT_OUT' in os.environ:
+    if 'VMCATCHER_FORMAT_OUT' in os.environ:
         output_format_selected = os.environ['VMCATCHER_FORMAT_OUT']   
         
     # Set up log file
