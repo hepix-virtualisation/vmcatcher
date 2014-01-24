@@ -21,9 +21,9 @@ try:
 except:
     import simplejson
 from vmcatcher.listutils import pairsNnot
+import vmcatcher.outputfacard
 
 # User interface
-from vmcatcher.driveroutput import output_driver_lines
 
 import vmcatcher.queryby
 
@@ -37,6 +37,7 @@ class db_controler:
         self.factory_selector = None
         self.selectors_available = ["endorser_uuid"]
         self.selector_curent = None
+        self._outputter = vmcatcher.outputfacard.outputFacade()
     def set_selector(self,selector_string):
         self.selector_curent = None
         if not selector_string in self.selectors_available:
@@ -50,28 +51,22 @@ class db_controler:
     def setup_trust_anchor(self,directory):
         self.anchor = LoadDirChainOfTrust(directory)
     
-    
-    # Utility functions
-    def check_factories(self):
-        if self.selector_curent == None:
-            self.log.warning("selector not available.")
-            return False
-        return True
+    def setup_view_format(self,format):
+        self._outputter.format = format
+           
     def endosers_list(self):
         Session = self.SessionFactory()
-        #selector = self.selector_curent(Session)
-        allendorsers = Session.query(model.Endorser).all()
-        view = output_driver_lines(sys.stdout,Session,self.anchor)
-
-        view.endorser_lister(allendorsers)
+        self._outputter.fpOutput = sys.stdout
+        self._outputter.saSession = Session
+        self._outputter.x509anchor = self.anchor
+        self._outputter.list_vmcatcher_endorser_cred()
         return True
     def links_list(self):
         Session = self.SessionFactory()
-        view = output_driver_lines(sys.stdout,Session,self.anchor)
-        selected = Session.query(model.Subscription,model.Endorser,model.SubscriptionAuth).\
-            filter(model.Endorser.id==model.SubscriptionAuth.endorser).\
-            filter(model.Subscription.id==model.SubscriptionAuth.subscription)
-        view.links_lister(selected)
+        self._outputter.fpOutput = sys.stdout
+        self._outputter.saSession = Session
+        self._outputter.x509anchor = self.anchor
+        self._outputter.list_vmcatcher_endorser_link()
         return True
     def link(self,endorsers_selected,subscriptions_selected):
         if not self.check_factories():
@@ -130,8 +125,6 @@ class db_controler:
                     Session.commit()
 
     def endorsers_info(self,selected):
-        if not self.check_factories():
-            return False
         errorhappened = False
         Session = self.SessionFactory()
         for selector_filter in selected:
@@ -140,9 +133,12 @@ class db_controler:
             if query_endorser.count() == 0:
                 self.log.error("endorser '%s' not found" % (selector_filter))
                 continue
-            view = output_driver_lines(output_fileptr,Session,self.anchor)
+            self._outputter.fpOutput = sys.stdout
+            self._outputter.saSession = Session
+            self._outputter.x509anchor = self.anchor
+            self._outputter.list_vmcatcher_endorser_link()
             for endorser in query_endorser:
-                view.display_endorser(endorser)
+                self._outputter.display_endorser(endorser)
                 princible_query = Session.query(model.EndorserPrincible).\
                     filter(model.EndorserPrincible.endorser == endorser.id)
                 
@@ -154,8 +150,6 @@ class db_controler:
     
     def endorser_create(self,endorser,subjects,issuers):
         # Check input parameters.
-        if not self.check_factories():
-            return False
         pairs, extra_subs ,extra_issuers = pairsNnot(subjects,issuers)
         if len(extra_subs) > 0:
             if len(issuers) > 1:

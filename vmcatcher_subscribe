@@ -47,7 +47,6 @@ from vmcatcher.vmcatcher_subscribe.msgcheck import fileView
 
 from vmcatcher.vmcatcher_subscribe.fatcontroler import db_controler
 
-from vmcatcher.driveroutput import output_driver_lines,output_driver_smime,output_driver_message
 
 # User interface
 
@@ -93,7 +92,7 @@ def main():
         'image_accept',
         'image_list',
         'image_refuse'])
-    outputformats = set(['SMIME','message','lines'])
+    outputformats = set(['SMIME','message','lines','json'])
     output_format_selected = set([])
     inputformats = set(['uuid','url'])
     input_format_selected = set([])
@@ -159,7 +158,7 @@ def main():
         certDir = options.cert_dir
     if options.list:
         actions.add('list')
-        output_format_selected.add('lines')
+        #output_format_selected.add('lines')
     if options.update:
         actions.add('update')
         anchor_needed = True
@@ -280,12 +279,8 @@ def main():
     if outputformats_selections_len == 1:
         selector_str = outputformats_selections.pop()
     
-    mapper = {'lines' : output_driver_lines,
-        'SMIME' : output_driver_smime,
-        'message' : output_driver_message,
-    }
-    database.setup_view_factory(mapper[selector_str])
     
+    database.setup_view_format(selector_str)
     
     # set default return code
     rc = 0

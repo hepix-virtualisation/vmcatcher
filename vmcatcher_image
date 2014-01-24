@@ -37,7 +37,6 @@ import hashlib
 import datetime
 from hepixvmitrust.vmitrustlib import VMimageListDecoder as VMimageListDecoder
 from hepixvmitrust.vmitrustlib import time_format_definition as time_format_definition
-from vmcatcher.driveroutput import output_driver_lines,output_driver_smime,output_driver_message
 from vmcatcher.vmcatcher_image.controler import db_controler
 from vmcatcher.listutils import pairsNnot
 
@@ -61,7 +60,7 @@ def main():
     p.add_option('-q', '--quiet', action ='count',help='Change global log level, decreasing log output.')
     p.add_option('--log-config', action ='store',help='Logfile configuration file, (overrides command line).', metavar='LOGFILE')
     p.add_option('--log-sql-info', action ='store_true',help='Echo all SQL commands.')
-    outputformats = set(['SMIME','message','lines'])
+    outputformats = set(['SMIME','message','lines','json'])
     output_format_selected = set([])
     options, arguments = p.parse_args()
     anchor_needed = False
@@ -215,11 +214,7 @@ def main():
     selector_str = 'lines'
     if outputformats_selections_len == 1:
         selector_str = outputformats_selections.pop()
-    mapper = {'lines' : output_driver_lines,
-        'SMIME' : output_driver_smime,
-        'message' : output_driver_message,
-    }
-    database.setup_view_factory(mapper[selector_str])
+    database.setup_view_format(selector_str)
     # Handle actions
     if 'subscribe' in actions:
         Session = SessionFactory()

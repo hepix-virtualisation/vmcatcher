@@ -23,6 +23,7 @@ from vmcatcher.launch import EventObj
 from vmcatcher.vmcatcher_subscribe.msgcheck import fileView
 
 from vmcatcher.listutils import pairsNnot
+import vmcatcher.outputfacard
 
 import vmcatcher.queryby
 try:
@@ -138,11 +139,14 @@ class db_controler(object):
         self.SessionFactory = sessionmaker(bind=self.engine)
         self.anchor = None
         self.factory_selector = None
-        self.factory_view = None
+        #self.factory_view = None
         # Set all callbacks to empty
         self.callbackEventImageNew = None
         self.selectors_available = ['sub_uuid', 'sub_uri']
         self.selector_curent = None
+        self._outputter = vmcatcher.outputfacard.outputFacade()
+        
+        
     def set_selector(self,selector_string):
         self.selector_curent = None
         if not selector_string in self.selectors_available:
@@ -156,15 +160,10 @@ class db_controler(object):
         
     def setup_trust_anchor(self,directory):
         self.anchor = smimeX509validation.LoadDirChainOfTrust(directory)
-    def setup_view_factory(self,factory):
-        self.factory_view = factory
 
-    # Utility functions
-    def check_factories(self):
-        if self.factory_view == None:
-            self.log.warning("factory_view not available.")
-            return False
-        return True
+
+    def setup_view_format(self,format):
+        self._outputter.format = format
     def unsigned_message_by_identifier_tofilepath(self,instructions):
 
 
@@ -179,8 +178,13 @@ class db_controler(object):
     def sessions_list(self):
         Session = self.SessionFactory()
         
-        view = self.factory_view(sys.stdout,Session,self.anchor)
-        view.subscriptions_lister()
+        self._outputter.fpOutput = sys.stdout
+        self._outputter.saSession = Session
+        self._outputter.x509anchor = self.anchor
+        
+        self._outputter.list_vmcatcher_subscribe()
+        #view = self.factory_view(sys.stdout,Session,self.anchor)
+        #view.subscriptions_lister()
         return True
     
     def subscriptions_delete(self,subscriptions_selected):
@@ -209,8 +213,7 @@ class db_controler(object):
 
 
     def subscriptions_info(self,subscriptions_selected,outputfiles):
-        if not self.check_factories():
-            return False
+        
         pairs, extra_selectors ,extra_paths = pairsNnot(subscriptions_selected,outputfiles)
 
         for item in extra_selectors:
@@ -230,14 +233,16 @@ class db_controler(object):
                 self.log.warning("Selections '%s' does not match any known subscriptions." % (selector_filter))
                 continue
             firstSubscription = query_subscription.first()
-            view = self.factory_view(output_fileptr,Session,self.anchor)
             
+            self._outputter.fpOutput = output_fileptr
+            self._outputter.saSession = Session
+            self._outputter.x509anchor = self.anchor
             for item in query_subscription:
-                view.display_subscription(item)
+                self._outputter.display_subscription(item)
                 query_imagelistInstance = Session.query(model.ImageListInstance).\
                     filter(model.ImageListInstance.id==item.imagelist_latest)
                 for imagelistInstance in query_imagelistInstance:
-                    view.display_subscriptionInfo(firstSubscription,item,imagelistInstance)
+                    self._outputter.display_subscriptionInfo(firstSubscription,item,imagelistInstance)
 
             if output_file_name != None:
                 output_fileptr.close()
@@ -547,13 +552,16 @@ class db_controler(object):
             if query_subscription.count() == 0:
                 self.log.warning("Selections '%s' does not match any known subscriptions." % (selector_filter))
                 continue
-            view = self.factory_view(output_fileptr,Session,self.anchor)
+            self._outputter.fpOutput = output_fileptr
+            self._outputter.saSession = Session
+            self._outputter.x509anchor = self.anchor
+            
             for item in query_subscription:
                 view.display_subscription(item)
                 query_image_def = Session.query(model.ImageDefinition).\
                     filter(model.ImageDefinition.subscription==item.id)
                 for imagedef in query_image_def:
-                    view.display_image_def(imagedef)
+                    self._outputter.display_image_def(imagedef)
             if output_file_name != None:
                 output_fileptr.close()
     def subscriptions_image_accept(self,subscriptions,images):

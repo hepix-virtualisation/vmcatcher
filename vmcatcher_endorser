@@ -40,7 +40,7 @@ except:
 from vmcatcher.listutils import pairsNnot
 
 # User interface
-from vmcatcher.driveroutput import output_driver_lines
+
 from vmcatcher.vmcatcher_endorser.controler import db_controler
 
 
@@ -60,6 +60,7 @@ def main():
     p.add_option('-k', '--link', action ='store_true',help='Add endorser to subscription.')
     p.add_option('-u', '--unlink', action ='store_true',help='Remove endorser from Subscription.')
     p.add_option('-i', '--info', action ='store_true',help='Information on endoser.')
+    p.add_option('-f', '--format', action ='store',help='Sets the output format')
     p.add_option('-S', '--subject',action ='append',help='Depricated version of --dn.', metavar='DN')
     p.add_option('-v', '--verbose', action ='count',help='Change global log level, increasing log output.', metavar='LOGFILE')
     p.add_option('-q', '--quiet', action ='count',help='Change global log level, decreasing log output.', metavar='LOGFILE')
@@ -68,7 +69,9 @@ def main():
     
     options, arguments = p.parse_args()
     anchor_needed = False
-
+    outputformats = set(['SMIME','message','lines','json'])
+    output_format_selected = None
+    format_default = "lines"
     actions = set([])
     endorsers_selected = []
     subscriptions_selected = []
@@ -85,6 +88,9 @@ def main():
         databaseConnectionString = os.environ['VMCATCHER_RDBMS']
     if 'VMCATCHER_LOG_CONF' in os.environ:
         logFile = os.environ['VMCATCHER_LOG_CONF']
+    if 'VMCATCHER_FORMAT_OUT' in os.environ:
+        output_format_selected = os.environ['VMCATCHER_FORMAT_OUT']
+    
     # Set up log file
     LoggingLevel = logging.WARNING
     LoggingLevelCounter = 2
@@ -146,7 +152,9 @@ def main():
         actions.add('unlink')
     if options.info:
         actions.add('info')
-
+    if options.format:
+        output_format_selected = options.format
+        
     if options.database:
         databaseConnectionString = options.database
     if options.subject:
@@ -206,8 +214,13 @@ def main():
             log.error('No issuers selected.')
             sys.exit(1)
     # Handle conflicting identifiers
-
-
+    if output_format_selected == None:
+        output_format_selected = format_default
+    if not output_format_selected in outputformats:
+            log.error("Invalid format '%s' allowed formats are '%s'" % (options.format,outputformats))
+            sys.exit(1)
+    database.setup_view_format(output_format_selected)
+    
     #database.setup_selector_factory(queryby_uuid)
     
     selector_str = 'uuid'

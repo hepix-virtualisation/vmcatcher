@@ -13,7 +13,6 @@ import hashlib
 import datetime
 from hepixvmitrust.vmitrustlib import VMimageListDecoder as VMimageListDecoder
 from hepixvmitrust.vmitrustlib import time_format_definition as time_format_definition
-from vmcatcher.driveroutput import output_driver_lines,output_driver_smime,output_driver_message
 
 from vmcatcher.listutils import pairsNnot
 import vmcatcher.queryby
@@ -23,6 +22,7 @@ try:
 except:
     import json
 import sys
+import vmcatcher.outputfacard
 
 class db_actions:
 
@@ -137,6 +137,8 @@ class db_controler:
         self.anchor = None
         self.selector_curent = None
         self.selectors_available = ['image_uuid','image_sha512']
+        self._outputter = vmcatcher.outputfacard.outputFacade()
+        
     def setup_trust_anchor(self,directory):
         self.anchor = LoadDirChainOfTrust(directory)
 
@@ -153,6 +155,11 @@ class db_controler:
         
     def setup_view_factory(self,factory):
         self.factory_view = factory
+    
+    def setup_view_format(self,format):
+        self._outputter.format = format
+    
+    
     def images_info(self,images_selected,outputfiles):
         pairs, extra_selectors ,extra_paths = pairsNnot(images_selected,outputfiles)
 
@@ -174,7 +181,10 @@ class db_controler:
             if queryImageDef.count() == 0:
                 self.log.warning("Selections '%s' does not match any known images." % (selector_filter))
                 continue
-            view = self.factory_view(output_fileptr,Session,self.anchor)
+            #view = self.factory_view(output_fileptr,Session,self.anchor)
+            self._outputter.fpOutput = output_fileptr
+            self._outputter.saSession = Session
+            self._outputter.x509anchor = self.anchor
             for imagedef in queryImageDef:
                 details = Session.query(model.Subscription, model.ImageListInstance, model.ImageInstance).\
                     filter(model.ImageListInstance.id==model.ImageInstance.fkimagelistinstance).\
@@ -188,16 +198,20 @@ class db_controler:
                     subscription = item[0]
                     imagelistinstance = item[1]
                     imageinstance = item[2]
-                    if not view.display_imagelistImage(subscription,imagedef,imagelistinstance,imageinstance):
+                    if not self._outputter.display_imagelistImage(subscription,imagedef,imagelistinstance,imageinstance):
                         NoErrorHappened = False
             if output_file_name != None:
                 output_fileptr.close()
         return NoErrorHappened
 
     def image_list(self):
+        
         Session = self.SessionFactory()
-        db = db_actions(Session)
-        print db.image_lister()
+        self._outputter.fpOutput = sys.stdout
+        self._outputter.saSession = Session
+        self._outputter.x509anchor = self.anchor
+        self._outputter.list_vmcatcher_image()
+        
     def images_subscribe(self,images_selected,subscribe):
         Session = self.SessionFactory()
         
