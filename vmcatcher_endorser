@@ -135,8 +135,6 @@ def main():
         actions.add('list')
     if options.links:
         actions.add('links')
-
-
     if options.endorser_uuid:
         endorsers_selected = options.endorser_uuid
     if options.subscription_uuid:
@@ -153,7 +151,6 @@ def main():
         actions.add('info')
     if options.format:
         output_format_selected = options.format
-        
     if options.database:
         databaseConnectionString = options.database
     if options.subject:
@@ -163,7 +160,6 @@ def main():
         subjects_selected = options.dn
     if options.issuer:
         issuers_selected = options.issuer
-        
     # 1 So we have some command line validation
     if databaseConnectionString == None:
         databaseConnectionString = 'sqlite:///vmcatcher.db'
@@ -217,18 +213,14 @@ def main():
             log.error("Invalid format '%s' allowed formats are '%s'" % (options.format,outputformats))
             sys.exit(1)
     database.setup_view_format(output_format_selected)
-    
     #database.setup_selector_factory(queryby_uuid)
-    
     selector_str = 'uuid'
     selectorMapper = {'uuid' : 'endorser_uuid',
         }
     if not selector_str in selectorMapper.keys():
         log.error('Invalid selector.')
         sys.exit(1)
-    
     rc = database.set_selector(selectorMapper[selector_str])
-    
     if 'create' in actions:
         if len(endorsers_selected) > 1:
             log.error("More than one endorser cannot be created at a time.")
@@ -239,15 +231,12 @@ def main():
         database.endosers_list()
     if 'links' in actions:
         database.links_list()
-    
     if 'link' in actions:
         database.link(endorsers_selected,subscriptions_selected)
     if 'unlink' in actions:
         database.unlink(endorsers_selected,subscriptions_selected)
     if 'delete' in actions:
         database.endorser_delete(endorsers_selected)
-    
-
     if 'info' in actions:
         database.endorsers_info(endorsers_selected)
     
