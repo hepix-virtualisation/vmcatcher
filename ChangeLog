@@ -1,5 +1,6 @@
 Changelog
 
+ * vmcatcher_image now shows imagelist even when image has expired.
  * With commmand "vmcatcher_image -l -f lines" added line output 'subscription.dc:date:updated', 
  * With commmand "vmcatcher_image -l -f lines" added line output 'subscription.dc:description', 
  * With commmand "vmcatcher_image -l -f lines" added line output 'subscription.dc:identifier', 
