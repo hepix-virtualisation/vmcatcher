@@ -1,5 +1,13 @@
 Changelog
 
+ * With commmand "vmcatcher_image -l -f lines" added line output 'subscription.dc:date:updated', 
+ * With commmand "vmcatcher_image -l -f lines" added line output 'subscription.dc:description', 
+ * With commmand "vmcatcher_image -l -f lines" added line output 'subscription.dc:identifier', 
+ * With commmand "vmcatcher_image -l -f lines" added line output 'subscription.hv:uri', 
+ * With commmand "vmcatcher_image -l -f lines" added line output 'subscription.sl:authorised'
+ * With commmand "vmcatcher_image -l -f lines" added line output 'imagelist.vmcatcher.dc:date:expired'
+    to replace the 'imagelist.expired' variable.
+
 vmcatcher-0.3.2
 
  * Changed to new facard based output driver.
