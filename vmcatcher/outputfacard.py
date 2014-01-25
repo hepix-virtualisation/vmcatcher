@@ -171,3 +171,11 @@ class outputFacade(object):
             error = outputFacadeInputError("Property 'format' has invalid value.")
             raise error
         return self._uploaderImp.display_endorser(endorser)
+    def info(self, *args, **kwargs):
+        #expected_keys = ["ImageDefinition","ImageInstance",""]
+        #self.env = kwargs.get('env', {})
+        if not hasattr(self, '_uploaderImp'):
+            error = outputFacadeInputError("Property 'format' has invalid value.")
+            raise error
+            
+        return self._uploaderImp.info(*args, **kwargs)

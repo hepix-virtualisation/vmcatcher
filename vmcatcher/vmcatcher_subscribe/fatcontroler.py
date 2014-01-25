@@ -213,12 +213,9 @@ class db_controler(object):
 
 
     def subscriptions_info(self,subscriptions_selected,outputfiles):
-        
         pairs, extra_selectors ,extra_paths = pairsNnot(subscriptions_selected,outputfiles)
-
         for item in extra_selectors:
             pairs.append([item,None])
-
         errorhappened = False
         Session = self.SessionFactory()
         for pair in pairs:
@@ -242,10 +239,11 @@ class db_controler(object):
                 query_imagelistInstance = Session.query(model.ImageListInstance).\
                     filter(model.ImageListInstance.id==item.imagelist_latest)
                 for imagelistInstance in query_imagelistInstance:
-                    self._outputter.display_subscriptionInfo(firstSubscription,item,imagelistInstance)
-
+                    #self._outputter.display_subscriptionInfo(firstSubscription,item,imagelistInstance)
+                    self._outputter.info(Subscription=firstSubscription,ImageListInstance=imagelistInstance)
             if output_file_name != None:
                 output_fileptr.close()
+            
     def setEventObj(self,obj):
         self.eventObj = obj
 

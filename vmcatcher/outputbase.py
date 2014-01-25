@@ -6,19 +6,45 @@ import vmcatcher.databaseDefinition as model
 import json
 
 class output_driver_base(object):
-
+    def __init__(self):
+        self.log = logging.getLogger("output_driver_base")
     def __init__(self):
         self.fpOutput = None
         self.saSession = None
         self.x509anchor = None
     
+    def info(self, *args, **kwargs):
+        self.log.debug("info")
+        outut = {}
+        argSubscription = kwargs.get('Subscription', None)
+        if argSubscription != None:
+            outut["Subscription"] =  self.info_Subscription(argSubscription)
+        
+        argImageListInstance = kwargs.get('ImageListInstance', None)
+        if argImageListInstance != None:
+            outut["ImageListInstance"] =  self.info_ImageListInstance(argImageListInstance)
+        
+        argImageInstance = kwargs.get('ImageInstance', None)
+        if argImageInstance != None:
+            outut["ImageInstance"] =  self.info_ImageInstance(argImageInstance)
+        
+        argImageDefinition = kwargs.get('ImageDefinition', None)
+        if argImageDefinition != None:
+            outut["ImageDefinition"] =  self.info_ImageDefinition(argImageDefinition)
+        
+        self.fpOutput.write(json.dumps(outut,sort_keys=True, indent=4))
+        #print dir(imagelistInstance)
+        #display_subscription
+    
     def query_imagedef_Identifier(self,imagelistIdentifier):
+        self.log.debug("query_imagedef_Identifier")
         imageDefs = self.saSession.query(model.ImageDefinition,model.Subscription).\
             filter(model.Subscription.id == model.ImageDefinition.subscription).\
             filter(model.ImageDefinition.identifier==imagelistIdentifier)
         return imageDefs
     
     def bitmap_vmcatcher_image(self,imagedef,subscription):
+        self.log.debug("bitmap_vmcatcher_image")
         subauthq = self.saSession.query(model.ImageInstance,model.ImageListInstance).\
                 filter(model.ImageDefinition.id == imagedef.id).\
                 filter(model.Subscription.id == subscription.id).\
@@ -39,12 +65,37 @@ class output_driver_base(object):
             bimappedOutput = imagedef.cache + (available << 1)
         return bimappedOutput
 
+    
+    
 class output_driver_lister(output_driver_base):
+    def __init__(self):
+        output_driver_base.__init__(self)
+        self.log = logging.getLogger("output_driver_lister")
     def list_vmcatcher_subscribe(self):
         subauthq = self.saSession.query(model.Subscription).all()
         for item in subauthq:
             self.fpOutput.write ("%s\t%s\t%s\n" % (item.identifier,item.authorised,item.uri))
+    
+    def info(self, *args, **kwargs):
+        self.log.debug("info")
+        argSubscription = kwargs.get('Subscription', None)
+        if argSubscription != None:
+            self.info_Subscription(argSubscription)
+        
+        argImageListInstance = kwargs.get('ImageListInstance', None)
+        if argImageListInstance != None:
+            self.info_ImageListInstance(argImageListInstance)
+        
+        argImageInstance = kwargs.get('ImageInstance', None)
+        if argImageInstance != None:
+            self.info_ImageInstance(argImageInstance)
+        
+        argImageDefinition = kwargs.get('ImageDefinition', None)
+        if argImageDefinition != None:
+            self.info_ImageDefinition(argImageDefinition)
+        
     def list_vmcatcher_image(self):
+        self.log.debug("list_vmcatcher_image")
         imageDefs = self.saSession.query(model.ImageDefinition,model.Subscription).\
             filter(model.Subscription.id == model.ImageDefinition.subscription)
         for q_result in imageDefs:
@@ -53,6 +104,7 @@ class output_driver_lister(output_driver_base):
             bimappedOutput = self.bitmap_vmcatcher_image(imagedef,subscription)
             self.fpOutput.write("%s\t%s\t%s\n" % (imagedef.identifier,bimappedOutput,subscription.identifier))
     def list_vmcatcher_endorser_cred(self):
+        self.log.debug("list_vmcatcher_endorser_cred")
         allendorsers = self.saSession.query(model.Endorser).all()
         for endorser in allendorsers:
             EndId = str(endorser.identifier)
@@ -64,60 +116,29 @@ class output_driver_lister(output_driver_base):
                 princible = item[1]
                 self.fpOutput.write ("'%s'\t'%s'\t'%s'\n" % (endorser.identifier,princible.hv_dn,princible.hv_ca))
     def list_vmcatcher_endorser_link(self):
+        self.log.debug("list_vmcatcher_endorser_link")
         allLinks = self.saSession.query(model.Subscription,model.Endorser,model.SubscriptionAuth).\
             filter(model.Endorser.id==model.SubscriptionAuth.endorser).\
             filter(model.Subscription.id==model.SubscriptionAuth.subscription)
         for sub,endorser,aubauth in allLinks:
             self.fpOutput.write ("'%s'\t'%s'\t'%s'\n" % (endorser.identifier,sub.identifier,aubauth.authorised))
     def display_imagelistImage(self,subscription,imagedef,imagelist,image):
-        self.fpOutput.write ('imagelist.dc:identifier=%s\n' % (subscription.identifier))
-        self.fpOutput.write ('imagelist.dc:date:imported=%s\n' % (imagelist.imported.strftime(time_format_definition)))
-        self.fpOutput.write ('imagelist.dc:date:created=%s\n' % (imagelist.created.strftime(time_format_definition)))
-        self.fpOutput.write ('imagelist.dc:date:expires=%s\n' % (imagelist.expires.strftime(time_format_definition)))
-        self.fpOutput.write ('imagedef.dc:identifier=%s\n' % (imagedef.identifier))
-        self.fpOutput.write ('imagedef.cache=%s\n' % (imagedef.cache))
-        self.fpOutput.write ('image.dc:description=%s\n' % (image.description))
-        self.fpOutput.write ('image.dc:title=%s\n' % (image.title))
-        self.fpOutput.write ('image.hv:hypervisor=%s\n' % (image.hypervisor))
-        self.fpOutput.write ('image.hv:size=%s\n' % (image.size))
-        self.fpOutput.write ('image.hv:uri=%s\n' % (image.uri))
-        self.fpOutput.write ('image.hv:version=%s\n' % (image.version))
-        self.fpOutput.write ('image.sl:arch=%s\n' % (image.hypervisor))
-        self.fpOutput.write ('image.sl:checksum:sha512=%s\n' % (image.sha512))
-        self.fpOutput.write ('image.sl:comments=%s\n' % (image.comments))
-        self.fpOutput.write ('image.sl:os=%s\n' % (image.os))
-        self.fpOutput.write ('image.sl:osversion=%s\n' % (image.osversion))
-        return True
-
-    def display_subscription(self,subscription):    
-        self.fpOutput.write ('subscription.dc:identifier=%s\n' % (subscription.identifier))
-        self.fpOutput.write ('subscription.dc:description=%s\n' % (subscription.description))
-        self.fpOutput.write ('subscription.sl:authorised=%s\n' % (subscription.authorised))
-        self.fpOutput.write ('subscription.hv:uri=%s\n' % (subscription.uri))
-        if subscription.updated:
-            self.fpOutput.write ('subscription.dc:date:updated=%s\n' % (subscription.updated.strftime(time_format_definition)))
-        else:
-            self.fpOutput.write ('subscription.dc:date:updated=%s\n'% (False))
-        return True
-    def display_subscriptionInfo(self,imagedef,imagelist,image):
-        #self.log.info(type(imagedef))
-        #self.log.info(type(imagelist))
-        #self.log.info(type(image))
-        #self.log.info(dir(image))
-        if image.expired == None:
-            msg = "imagelist.expired=False\n"
-            
-        else:
-            msg = "imagelist.expired=True\n"
-        self.fpOutput.write (msg)
-        self.fpOutput.write ('imagelist.dc:date:imported=%s\n' % (image.imported.strftime(time_format_definition)))
-        self.fpOutput.write ('imagelist.dc:date:created=%s\n' % (image.created.strftime(time_format_definition)))
-        self.fpOutput.write ('imagelist.dc:date:expires=%s\n' % (image.expires.strftime(time_format_definition)))
-        #self.fpOutput.write ('imagedef.dc:identifier=%s\n' % (imagedef.identifier))
-        #self.fpOutput.write ('imagedef.cache=%s\n' % (imagedef.cache))
+        self.log.debug("display_imagelistImage")
+        self.info(ImageInstance=image,Subscription=subscription,ImageListInstance=imagelist,ImageDefinition=imagedef)
+        
         
         return True
+
+    def display_subscription(self,subscription):   
+        return self.info_Subscription(subscription)
+
+    def display_subscriptionInfo(self,imagedef,imagelist,image):
+        self.log.debug("display_subscriptionInfo")
+        self.info(ImageDefinition=image)
+        return True    
+
     def display_endorser(self,endorser):
+        self.log.debug("display_endorser")
         self.fpOutput.write ("endorser.dc:identifier=%s\n" % (endorser.identifier))
         if len(endorser.princibles) == 0:
             self.log.warning("endorser '%s' has no princibles" % (selector_filter))
@@ -130,9 +151,69 @@ class output_driver_lister(output_driver_base):
             subscription_query = self.saSession.query(model.Subscription).\
                 filter(model.Subscription.id == subauth.subscription)
             for subscription in subscription_query:
-                self.display_subscription(subscription)    
+                self.display_subscription(subscription)
+
+    def info_ImageListInstance(self,argImageListInstance):
+        self.log.debug("info_ImageListInstance")
+        if argImageListInstance.expired == None:
+            msg = "imagelist.expired=False\n"
+        else:
+            msg = "imagelist.expired=True\n"
+        self.fpOutput.write (msg)
+        self.fpOutput.write ('imagelist.dc:date:imported=%s\n' % (argImageListInstance.imported.strftime(time_format_definition)))
+        self.fpOutput.write ('imagelist.dc:date:created=%s\n' % (argImageListInstance.created.strftime(time_format_definition)))
+        self.fpOutput.write ('imagelist.dc:date:expires=%s\n' % (argImageListInstance.expires.strftime(time_format_definition)))
+        return True
+    def info_Subscription(self,subscription):
+        self.log.debug("info_Subscription")
+        self.fpOutput.write ('subscription.dc:identifier=%s\n' % (subscription.identifier))
+        self.fpOutput.write ('subscription.dc:description=%s\n' % (subscription.description))
+        self.fpOutput.write ('subscription.sl:authorised=%s\n' % (subscription.authorised))
+        self.fpOutput.write ('subscription.hv:uri=%s\n' % (subscription.uri))
+        if subscription.updated:
+            self.fpOutput.write ('subscription.dc:date:updated=%s\n' % (subscription.updated.strftime(time_format_definition)))
+        else:
+            self.fpOutput.write ('subscription.dc:date:updated=%s\n'% (False))
+        return True
+    def info_ImageInstance(self,imageInstance):
+        self.fpOutput.write ('image.dc:description=%s\n' % (imageInstance.description))
+        self.fpOutput.write ('image.dc:title=%s\n' % (imageInstance.title))
+        self.fpOutput.write ('image.hv:hypervisor=%s\n' % (imageInstance.hypervisor))
+        self.fpOutput.write ('image.hv:size=%s\n' % (imageInstance.size))
+        self.fpOutput.write ('image.hv:uri=%s\n' % (imageInstance.uri))
+        self.fpOutput.write ('image.hv:version=%s\n' % (imageInstance.version))
+        self.fpOutput.write ('image.sl:arch=%s\n' % (imageInstance.hypervisor))
+        self.fpOutput.write ('image.sl:checksum:sha512=%s\n' % (imageInstance.sha512))
+        self.fpOutput.write ('image.sl:comments=%s\n' % (imageInstance.comments))
+        self.fpOutput.write ('image.sl:os=%s\n' % (imageInstance.os))
+        self.fpOutput.write ('image.sl:osversion=%s\n' % (imageInstance.osversion))
+    def info_ImageDefinition(self,imageDef):
+        self.fpOutput.write ('imagedef.dc:identifier=%s\n' % (imageDef.identifier))
+        self.fpOutput.write ('imagedef.cache=%s\n' % (imageDef.cache))
 class output_driver_lister_json(output_driver_lister):
+    def __init__(self):
+        output_driver_lister.__init__(self)
+        self.log = logging.getLogger("output_driver_lister_json")
+    def info(self, *args, **kwargs):
+        self.log.debug("info")
+        outut = {}
+        argSubscription = kwargs.get('Subscription', None)
+        if argSubscription != None:
+            outut["Subscription"] =  self.info_Subscription(argSubscription)
+        
+        argImageListInstance = kwargs.get('ImageListInstance', None)
+        if argImageListInstance != None:
+            outut["ImageListInstance"] =  self.info_ImageListInstance(argImageListInstance)
+        
+        argImageInstance = kwargs.get('ImageInstance', None)
+        if argImageInstance != None:
+            outut["ImageInstance"] =  self.info_ImageInstance(argImageInstance)
+        argImageDefinition = kwargs.get('ImageDefinition', None)
+        if argImageDefinition != None:
+            outut["ImageDefinition"] =  self.info_ImageDefinition(argImageDefinition)
+        self.fpOutput.write(json.dumps(outut,sort_keys=True, indent=4))    
     def list_vmcatcher_subscribe(self):
+        self.log.debug("list_vmcatcher_subscribe")
         output = []
         subauthq = self.saSession.query(model.Subscription).all()
         for item in subauthq:
@@ -141,6 +222,7 @@ class output_driver_lister_json(output_driver_lister):
                 "uri" : item.uri})
         self.fpOutput.write (json.dumps(output,sort_keys=True, indent=4))
     def list_vmcatcher_image(self):
+        self.log.debug("list_vmcatcher_image")
         imageDefs = self.saSession.query(model.ImageDefinition,model.Subscription).\
             filter(model.Subscription.id == model.ImageDefinition.subscription)
         output = []
@@ -153,6 +235,7 @@ class output_driver_lister_json(output_driver_lister):
                 "subscription" : subscription.identifier})
         self.fpOutput.write (json.dumps(output,sort_keys=True, indent=4))
     def list_vmcatcher_endorser_cred(self):
+        self.log.debug("list_vmcatcher_endorser_cred")
         output = []
         allendorsers = self.saSession.query(model.Endorser).all()
         for endorser in allendorsers:
@@ -172,6 +255,7 @@ class output_driver_lister_json(output_driver_lister):
             output.append(endorser_json)
         self.fpOutput.write (json.dumps(output,sort_keys=True, indent=4))
     def list_vmcatcher_endorser_link(self):
+        self.log.debug("list_vmcatcher_endorser_link")
         output = []
         allLinks = self.saSession.query(model.Subscription,model.Endorser,model.SubscriptionAuth).\
             filter(model.Endorser.id==model.SubscriptionAuth.endorser).\
@@ -183,6 +267,7 @@ class output_driver_lister_json(output_driver_lister):
             })
         self.fpOutput.write(json.dumps(output,sort_keys=True, indent=4))
     def display_endorser(self,endorser):
+        self.log.debug("display_endorser")
         self.fpOutput.write ("endorser.dc:identifier=%s\n" % (endorser.identifier))
         if len(endorser.princibles) == 0:
             self.log.warning("endorser '%s' has no princibles" % (selector_filter))
@@ -195,7 +280,108 @@ class output_driver_lister_json(output_driver_lister):
             subscription_query = self.saSession.query(model.Subscription).\
                 filter(model.Subscription.id == subauth.subscription)
             for subscription in subscription_query:
-                self.display_subscription(subscription)    
+                self.display_subscription(subscription)
+    def display_subscription(self,subscription):
+        self.log.debug("display_subscription")
+        output = {}
+        output["identifier"] = subscription.identifier
+        output["description"] = subscription.description
+        output["authorised"] = subscription.authorised
+        output["uri"] = subscription.uri
+        if subscription.updated:
+            output["updated"] = subscription.updated.strftime(time_format_definition)
+        
+        self.fpOutput.write (json.dumps(output,sort_keys=True, indent=4))
+        return True
+    
+    def display_subscriptionInfo(self,imagedef,imagelist,image):
+        self.log.debug("display_subscriptionInfo")
+        #self.log.info(type(imagedef))
+        #self.log.info(type(imagelist))
+        #self.log.info(type(image))
+        #self.log.info(dir(image))
+        
+        if image.expired == None:
+            msg = "imagelist.expired=False\n"
+            
+        else:
+            msg = "imagelist.expired=True\n"
+        self.fpOutput.write (msg)
+        self.fpOutput.write ('imagelist.dc:date:imported=%s\n' % (image.imported.strftime(time_format_definition)))
+        self.fpOutput.write ('imagelist.dc:date:created=%s\n' % (image.created.strftime(time_format_definition)))
+        self.fpOutput.write ('imagelist.dc:date:expires=%s\n' % (image.expires.strftime(time_format_definition)))
+        #self.fpOutput.write ('imagedef.dc:identifier=%s\n' % (imagedef.identifier))
+        #self.fpOutput.write ('imagedef.cache=%s\n' % (imagedef.cache))
+        
+        return True    
+    def display_subscriptionInfo(self,imagedef,imagelist,image):
+        #self.log.info(type(imagedef))
+        #self.log.info(type(imagelist))
+        #self.log.info(type(image))
+        #self.log.info(dir(image))
+        output = {}
+        if image.expired == None:
+            output["active"] =  True
+            
+            
+        else:
+            output["active"] =  False
+        output["imported"] = image.imported.strftime(time_format_definition)
+        output["created"] = image.created.strftime(time_format_definition)
+        output["expires"] = image.expires.strftime(time_format_definition)
+        
+        #self.fpOutput.write ('imagedef.dc:identifier=%s\n' % (imagedef.identifier))
+        #self.fpOutput.write ('imagedef.cache=%s\n' % (imagedef.cache))
+        
+        return True        
+    def info_Subscription(self,subscription):
+        upddated = False
+        if subscription.updated:
+            upddated = subscription.updated.strftime(time_format_definition)
+            
+        output = {"identifier" : subscription.identifier, 
+            "description" : subscription.description,
+            "authorised" : subscription.authorised,
+            "uri" : subscription.uri,
+            "updated" : upddated}
+        return output    
+    def info_ImageListInstance(self,argImageListInstance):
+        #self.fpOutput.write ('imagelist.dc:date:imported=%s\n' % (argImageListInstance.imported.strftime(time_format_definition)))
+        #self.fpOutput.write ('imagelist.dc:date:created=%s\n' % (argImageListInstance.created.strftime(time_format_definition)))
+        #self.fpOutput.write ('imagelist.dc:date:expires=%s\n' % (argImageListInstance.expires.strftime(time_format_definition)))
+        output = {"imported" : argImageListInstance.imported.strftime(time_format_definition),
+            "created" : argImageListInstance.created.strftime(time_format_definition),
+            "expires": argImageListInstance.expires.strftime(time_format_definition)}
+        return output
+    def info_Subscription(self,subscription):
+        upddated = False
+        if subscription.updated:
+            upddated = subscription.updated.strftime(time_format_definition)
+            
+        output = {"identifier" : subscription.identifier, 
+            "description" : subscription.description,
+            "authorised" : subscription.authorised,
+            "uri" : subscription.uri,
+            "updated" : upddated}
+        return output    
+    def info_ImageInstance(self,imageInstance):
+        output = {"description" : imageInstance.description,
+                    "title" : imageInstance.title,
+                    "hypervisor" : imageInstance.hypervisor,
+                    "size" :imageInstance.size,
+                    "uri" : imageInstance.uri,
+                    "version" : imageInstance.version,
+                    "arch" : imageInstance.hypervisor,
+                    "sha512" : imageInstance.sha512,
+                    "comments" : imageInstance.comments,
+                    "sl:os" : imageInstance.os,
+                    "sl:osversion" : imageInstance.osversion}
+        return output
+    def info_ImageDefinition(self,imageDef):
+        output = { "identifier" : imageDef.identifier,
+                "cache" : imageDef.cache}
+        return output
+
 class output_driver_smime(output_driver_lister,output_driver_base):
     def __init__(self):
         output_driver_base.__init__(self)
@@ -211,6 +397,26 @@ class output_driver_smime(output_driver_lister,output_driver_base):
         return True
     def display_subscriptionInfo(self,imagedef,imagelist,image):
         return self.display_imagelist(image)
+    def info(self, *args, **kwargs):
+        self.log.debug("info")
+        outut = {}
+        argSubscription = kwargs.get('Subscription', None)
+        if argSubscription != None:
+            pass
+        argImageListInstance = kwargs.get('ImageListInstance', None)
+        if argImageListInstance != None:
+            pass
+        argImageInstance = kwargs.get('ImageInstance', None)
+        if argImageInstance != None:
+            pass
+        argImageDefinition = kwargs.get('ImageDefinition', None)
+        if  argImageDefinition != None:
+            pass
+        
+        
+        
+        if argImageInstance != None:
+            self.display_imagelist(argImageInstance)
 
 
 class output_driver_message(output_driver_lister,output_driver_base):
@@ -251,11 +457,11 @@ class output_driver_json(output_driver_lister_json,output_driver_base):
     def __init__(self):
         output_driver_base.__init__(self)
         output_driver_lister_json.__init__(self)
-        self.log = logging.getLogger("output_driver_lines")
+        self.log = logging.getLogger("output_driver_json")
         
 
 class output_driver_lines(output_driver_lister,output_driver_base):
     def __init__(self):
         output_driver_base.__init__(self)
         output_driver_lister.__init__(self)
-        self.log = logging.getLogger("output_driver_json")
+        self.log = logging.getLogger("output_driver_lines")
