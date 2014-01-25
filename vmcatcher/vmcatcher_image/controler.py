@@ -197,11 +197,10 @@ class db_controler:
                         subscription = item[0]
                         imagelistinstance = item[1]
                         imageinstance = item[2]
-                        if not self._outputter.info(Subscription = subscription,
+                        self._outputter.info(Subscription = subscription,
                                 ImageDefinition = imagedef,
                                 ImageListInstance = imagelistinstance,
-                                ImageInstance = imageinstance):
-                            NoErrorHappened = False
+                                ImageInstance = imageinstance)
                     continue
                 self.log.warning("Image '%s' has expired." % (selector_filter)) 
                 details = Session.query(model.Subscription, model.ImageDefinition).\
@@ -211,10 +210,10 @@ class db_controler:
                     for item in details:
                         subscription = item[0]
                         imagedef = item[1]
-                        if not self._outputter.info(Subscription = subscription,
-                                ImageDefinition = imagedef):
-                            NoErrorHappened = False
+                        self._outputter.info(Subscription = subscription,
+                                ImageDefinition = imagedef)
                     continue
+                NoErrorHappened = False
             if output_file_name != None:
                 output_fileptr.close()
         return NoErrorHappened

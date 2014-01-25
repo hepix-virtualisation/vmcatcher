@@ -252,5 +252,7 @@ def main():
         database.images_subscribe(images_selected,1)
     if 'remove' in actions:
         database.images_subscribe(images_selected,0)
+    
 if __name__ == "__main__":
     main()
+    sys.exit(0)
