@@ -122,20 +122,11 @@ class output_driver_lister(output_driver_base):
             filter(model.Subscription.id==model.SubscriptionAuth.subscription)
         for sub,endorser,aubauth in allLinks:
             self.fpOutput.write ("'%s'\t'%s'\t'%s'\n" % (endorser.identifier,sub.identifier,aubauth.authorised))
-    def display_imagelistImage(self,subscription,imagedef,imagelist,image):
-        self.log.debug("display_imagelistImage")
-        self.info(ImageInstance=image,Subscription=subscription,ImageListInstance=imagelist,ImageDefinition=imagedef)
-        
-        
-        return True
+
 
     def display_subscription(self,subscription):   
         return self.info_Subscription(subscription)
 
-    def display_subscriptionInfo(self,imagedef,imagelist,image):
-        self.log.debug("display_subscriptionInfo")
-        self.info(ImageDefinition=image)
-        return True    
 
     def display_endorser(self,endorser):
         self.log.debug("display_endorser")
@@ -278,15 +269,23 @@ class output_driver_lister_json(output_driver_lister):
         if len(endorser.princibles) == 0:
             self.log.warning("endorser '%s' has no princibles" % (selector_filter))
             return False
+        output = {'Princables' : [] , 'Subscription' : []}
+        
         for princible in endorser.princibles:
-            self.fpOutput.write("endorser.hv:dn=%s\n" % (princible.hv_dn))
-            self.fpOutput.write("endorser.hv:ca=%s\n" % (princible.hv_ca))
+            tmp = { "hv:dn" : princible.hv_dn,
+                'hv:ca' : princible.hv_ca                
+            }
+            output['Princables'].append(tmp)
+            
+        
         for subauth in endorser.subscriptionauth:
             #self.fpOutput.write("subauth.authorised=%s\n" % (subauth.authorised))
             subscription_query = self.saSession.query(model.Subscription).\
                 filter(model.Subscription.id == subauth.subscription)
             for subscription in subscription_query:
-                self.display_subscription(subscription)
+                tmp = self.info_Subscription(subscription)
+                output['Subscription'].append(tmp)
+        self.fpOutput.write(json.dumps(output,sort_keys=True, indent=4))
     def display_subscription(self,subscription):
         self.log.debug("display_subscription")
         output = {}
@@ -300,27 +299,7 @@ class output_driver_lister_json(output_driver_lister):
         self.fpOutput.write (json.dumps(output,sort_keys=True, indent=4))
         return True
     
-    def display_subscriptionInfo(self,imagedef,imagelist,image):
-        self.log.debug("display_subscriptionInfo")
-        #self.log.info(type(imagedef))
-        #self.log.info(type(imagelist))
-        #self.log.info(type(image))
-        #self.log.info(dir(image))
-        output = {}
-        if image.expired == None:
-            output["active"] =  True
-            
-            
-        else:
-            output["active"] =  False
-        output["imported"] = image.imported.strftime(time_format_definition)
-        output["created"] = image.created.strftime(time_format_definition)
-        output["expires"] = image.expires.strftime(time_format_definition)
-        
-        #self.fpOutput.write ('imagedef.dc:identifier=%s\n' % (imagedef.identifier))
-        #self.fpOutput.write ('imagedef.cache=%s\n' % (imagedef.cache))
-        
-        return True        
+ 
     def info_Subscription(self,subscription):
         upddated = False
         if subscription.updated:
@@ -394,7 +373,6 @@ class output_driver_display_metadata(output_driver_base):
             filter(model.ImageListInstance.id==subscription.imagelist_latest)
         if query_imagelistInstance.count() > 0:
             for imagelistInstance in query_imagelistInstance:
-                #self._outputter.display_subscriptionInfo(firstSubscription,item,imagelistInstance)
                 self.info(Subscription=subscription,ImageListInstance=imagelistInstance)
             return
         self.info(Subscription=subscription)
@@ -412,12 +390,7 @@ class output_driver_smime(output_driver_display_message,output_driver_lister,out
     def display_imagelist(self,imagelist):
         self.fpOutput.write(imagelist.data)
         return True
-    def display_imagelistImage(self,subscription,imagedef,imagelist,image):
-        if not self.display_imagelist(imagelist):
-            return False
-        return True
-    def display_subscriptionInfo(self,imagedef,imagelist,image):
-        return self.display_imagelist(image)
+
     def info(self, *args, **kwargs):
         self.log.debug("info")
         outut = {}
@@ -459,12 +432,6 @@ class output_driver_message(output_driver_display_message,output_driver_lister,o
         return True
     
 
-    def display_imagelistImage(self,subscription,imagedef,imagelist,image):
-        if not self.display_imagelist(imagelist):
-            return False
-        return True
-    def display_subscriptionInfo(self,imagedef,imagelist,image):
-        return self.display_imagelist(image)
 
 class output_driver_json(output_driver_display_metadata, output_driver_lister_json,output_driver_base):
     def __init__(self):
