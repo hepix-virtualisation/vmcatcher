@@ -186,5 +186,4 @@ class outputFacade(object):
         if not hasattr(self, '_uploaderImp'):
             error = outputFacadeInputError("Property 'format' has invalid value.")
             raise error
-            
         return self._uploaderImp.info(*args, **kwargs)

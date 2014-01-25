@@ -155,10 +155,14 @@ class output_driver_lister(output_driver_base):
 
     def info_ImageListInstance(self,argImageListInstance):
         self.log.debug("info_ImageListInstance")
+        expired = False
         if argImageListInstance.expired == None:
             msg = "imagelist.expired=False\n"
+            expired = True
         else:
             msg = "imagelist.expired=True\n"
+        if not expired:
+            self.fpOutput.write ('imagelist.vmcatcher.dc:date:expired=%s\n' % (argImageListInstance.expired.strftime(time_format_definition)))
         self.fpOutput.write (msg)
         self.fpOutput.write ('imagelist.dc:date:imported=%s\n' % (argImageListInstance.imported.strftime(time_format_definition)))
         self.fpOutput.write ('imagelist.dc:date:created=%s\n' % (argImageListInstance.created.strftime(time_format_definition)))
@@ -166,6 +170,8 @@ class output_driver_lister(output_driver_base):
         return True
     def info_Subscription(self,subscription):
         self.log.debug("info_Subscription")
+        # imagelist.dc:identifier for backwards compatability for 0.2.X versions
+        self.fpOutput.write ('imagelist.dc:identifier=%s\n' % (subscription.identifier))
         self.fpOutput.write ('subscription.dc:identifier=%s\n' % (subscription.identifier))
         self.fpOutput.write ('subscription.dc:description=%s\n' % (subscription.description))
         self.fpOutput.write ('subscription.sl:authorised=%s\n' % (subscription.authorised))
