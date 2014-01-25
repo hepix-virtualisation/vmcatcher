@@ -192,14 +192,29 @@ class db_controler:
                     filter(model.ImageInstance.fkIdentifier == model.ImageDefinition.id).\
                     filter(model.Subscription.id == imagedef.subscription).\
                     filter(model.Subscription.imagelist_latest == model.ImageListInstance.id)
-                if details.count() == 0:
-                    self.log.warning("Image '%s' has expired." % (selector_filter))
-                for item in details:
-                    subscription = item[0]
-                    imagelistinstance = item[1]
-                    imageinstance = item[2]
-                    if not self._outputter.display_imagelistImage(subscription,imagedef,imagelistinstance,imageinstance):
-                        NoErrorHappened = False
+                if details.count() > 0:
+                    for item in details:
+                        subscription = item[0]
+                        imagelistinstance = item[1]
+                        imageinstance = item[2]
+                        if not self._outputter.info(Subscription = subscription,
+                                ImageDefinition = imagedef,
+                                ImageListInstance = imagelistinstance,
+                                ImageInstance = imageinstance):
+                            NoErrorHappened = False
+                    continue
+                self.log.warning("Image '%s' has expired." % (selector_filter)) 
+                details = Session.query(model.Subscription, model.ImageDefinition).\
+                    filter(model.ImageDefinition.id == imagedef.id).\
+                    filter(model.Subscription.id == imagedef.subscription)
+                if details.count() > 0:
+                    for item in details:
+                        subscription = item[0]
+                        imagedef = item[1]
+                        if not self._outputter.info(Subscription = subscription,
+                                ImageDefinition = imagedef):
+                            NoErrorHappened = False
+                    continue
             if output_file_name != None:
                 output_fileptr.close()
         return NoErrorHappened
