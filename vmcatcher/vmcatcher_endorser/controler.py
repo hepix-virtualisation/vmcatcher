@@ -132,7 +132,6 @@ class db_controler:
             self._outputter.fpOutput = sys.stdout
             self._outputter.saSession = Session
             self._outputter.x509anchor = self.anchor
-            self._outputter.list_vmcatcher_endorser_link()
             for endorser in query_endorser:
                 self._outputter.display_endorser(endorser)
                 princible_query = Session.query(model.EndorserPrincible).\

@@ -236,11 +236,6 @@ class db_controler(object):
             self._outputter.x509anchor = self.anchor
             for item in query_subscription:
                 self._outputter.display_subscription(item)
-                query_imagelistInstance = Session.query(model.ImageListInstance).\
-                    filter(model.ImageListInstance.id==item.imagelist_latest)
-                for imagelistInstance in query_imagelistInstance:
-                    #self._outputter.display_subscriptionInfo(firstSubscription,item,imagelistInstance)
-                    self._outputter.info(Subscription=firstSubscription,ImageListInstance=imagelistInstance)
             if output_file_name != None:
                 output_fileptr.close()
             
@@ -553,7 +548,7 @@ class db_controler(object):
             self._outputter.x509anchor = self.anchor
             
             for item in query_subscription:
-                view.display_subscription(item)
+                self._outputter.display_subscription(item)
                 query_image_def = Session.query(model.ImageDefinition).\
                     filter(model.ImageDefinition.subscription==item.id)
                 for imagedef in query_image_def:

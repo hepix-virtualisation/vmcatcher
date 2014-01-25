@@ -131,47 +131,56 @@ class outputFacade(object):
     
     
     def list_vmcatcher_subscribe(self):
+        self.log.debug("list_vmcatcher_subscribe")
         if not hasattr(self, '_uploaderImp'):
             error = outputFacadeInputError("Property 'format' has invalid value.")
             raise error
         return self._uploaderImp.list_vmcatcher_subscribe()
 
     def list_vmcatcher_endorser_cred(self):
+        self.log.debug("list_vmcatcher_endorser_cred")
         if not hasattr(self, '_uploaderImp'):
             error = outputFacadeInputError("Property 'format' has invalid value.")
             raise error
         return self._uploaderImp.list_vmcatcher_endorser_cred()
     def list_vmcatcher_endorser_link(self):
+        self.log.debug("list_vmcatcher_endorser_link")
         if not hasattr(self, '_uploaderImp'):
             error = outputFacadeInputError("Property 'format' has invalid value.")
             raise error
         return self._uploaderImp.list_vmcatcher_endorser_link()
     def list_vmcatcher_image(self):
+        self.log.debug("list_vmcatcher_image")
         if not hasattr(self, '_uploaderImp'):
             error = outputFacadeInputError("Property 'format' has invalid value.")
             raise error
         return self._uploaderImp.list_vmcatcher_image()
     def display_imagelistImage(self,subscription,imagedef,imagelistinstance,imageinstance):
+        self.log.debug("display_imagelistImage")
         if not hasattr(self, '_uploaderImp'):
             error = outputFacadeInputError("Property 'format' has invalid value.")
             raise error
         return self._uploaderImp.display_imagelistImage(subscription,imagedef,imagelistinstance,imageinstance)
     def display_subscription(self,item):
+        self.log.debug("display_subscription")
         if not hasattr(self, '_uploaderImp'):
             error = outputFacadeInputError("Property 'format' has invalid value.")
             raise error
         return self._uploaderImp.display_subscription(item)
-    def display_subscriptionInfo(self,imagedef,imagelist,image):
+    def display_subscriptionInfo(self,imagedef,imagelist,image):        
+        self.log.debug("display_subscriptionInfo")
         if not hasattr(self, '_uploaderImp'):
             error = outputFacadeInputError("Property 'format' has invalid value.")
             raise error
         return self._uploaderImp.display_subscriptionInfo(imagedef,imagelist,image)
     def display_endorser(self,endorser):
+        self.log.debug("display_endorser")
         if not hasattr(self, '_uploaderImp'):
             error = outputFacadeInputError("Property 'format' has invalid value.")
             raise error
         return self._uploaderImp.display_endorser(endorser)
     def info(self, *args, **kwargs):
+        self.log.debug("info")
         #expected_keys = ["ImageDefinition","ImageInstance",""]
         #self.env = kwargs.get('env', {})
         if not hasattr(self, '_uploaderImp'):

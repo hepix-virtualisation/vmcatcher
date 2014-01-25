@@ -300,25 +300,6 @@ class output_driver_lister_json(output_driver_lister):
         #self.log.info(type(imagelist))
         #self.log.info(type(image))
         #self.log.info(dir(image))
-        
-        if image.expired == None:
-            msg = "imagelist.expired=False\n"
-            
-        else:
-            msg = "imagelist.expired=True\n"
-        self.fpOutput.write (msg)
-        self.fpOutput.write ('imagelist.dc:date:imported=%s\n' % (image.imported.strftime(time_format_definition)))
-        self.fpOutput.write ('imagelist.dc:date:created=%s\n' % (image.created.strftime(time_format_definition)))
-        self.fpOutput.write ('imagelist.dc:date:expires=%s\n' % (image.expires.strftime(time_format_definition)))
-        #self.fpOutput.write ('imagedef.dc:identifier=%s\n' % (imagedef.identifier))
-        #self.fpOutput.write ('imagedef.cache=%s\n' % (imagedef.cache))
-        
-        return True    
-    def display_subscriptionInfo(self,imagedef,imagelist,image):
-        #self.log.info(type(imagedef))
-        #self.log.info(type(imagelist))
-        #self.log.info(type(image))
-        #self.log.info(dir(image))
         output = {}
         if image.expired == None:
             output["active"] =  True
@@ -382,10 +363,38 @@ class output_driver_lister_json(output_driver_lister):
                 "cache" : imageDef.cache}
         return output
 
-class output_driver_smime(output_driver_lister,output_driver_base):
+
+class output_driver_display_message(output_driver_base):
+    def __init__(self):
+        output_driver_base.__init__(self)
+        self.log = logging.getLogger("output_driver_display_message")
+    
+    def display_subscription(self,subscription):   
+        subauthq = self.saSession.query(model.ImageListInstance).\
+                filter(model.Subscription.id == subscription.id).\
+                filter(model.ImageInstance.fkIdentifier == model.ImageDefinition.id).\
+                filter(model.ImageInstance.fkimagelistinstance == model.ImageListInstance.id).\
+                filter(model.Subscription.imagelist_latest == model.ImageListInstance.id)
+        sub = subauthq.first()         
+        return self.display_imagelist(sub)
+
+class output_driver_display_metadata(output_driver_base):
+    def __init__(self):
+        output_driver_base.__init__(self)
+        self.log = logging.getLogger("output_driver_display_metadata")
+
+    def display_subscription(self,subscription):
+        query_imagelistInstance = self.saSession.query(model.ImageListInstance).\
+            filter(model.ImageListInstance.id==subscription.imagelist_latest)
+        for imagelistInstance in query_imagelistInstance:
+            #self._outputter.display_subscriptionInfo(firstSubscription,item,imagelistInstance)
+            self.info(Subscription=subscription,ImageListInstance=imagelistInstance)
+
+class output_driver_smime(output_driver_display_message,output_driver_lister,output_driver_base):
     def __init__(self):
         output_driver_base.__init__(self)
         output_driver_lister.__init__(self)
+        output_driver_display_message.__init__(self)
         self.log = logging.getLogger("output_driver_smime")
 
     def display_imagelist(self,imagelist):
@@ -418,11 +427,11 @@ class output_driver_smime(output_driver_lister,output_driver_base):
         if argImageInstance != None:
             self.display_imagelist(argImageInstance)
 
-
-class output_driver_message(output_driver_lister,output_driver_base):
+class output_driver_message(output_driver_display_message,output_driver_lister,output_driver_base):
     def __init__(self):
         output_driver_base.__init__(self)
         output_driver_lister.__init__(self)
+        output_driver_display_message.__init__(self)
         self.log = logging.getLogger("output_driver_message")
     def display_imagelist(self,imagelist):
         smimeProcessor =  smimeX509validation(self.x509anchor)
@@ -436,14 +445,6 @@ class output_driver_message(output_driver_lister,output_driver_base):
             return False
         self.fpOutput.write (smimeProcessor.InputDaraStringIO.getvalue())
         return True
-
-    def display_imagelistImage(self,subscription,imagedef,imagelist,image):
-        if not self.display_imagelist(imagelist):
-            return False
-        return True    
-    
-    def display_subscription(self,subscription):
-        pass
     
 
     def display_imagelistImage(self,subscription,imagedef,imagelist,image):
@@ -453,15 +454,28 @@ class output_driver_message(output_driver_lister,output_driver_base):
     def display_subscriptionInfo(self,imagedef,imagelist,image):
         return self.display_imagelist(image)
 
-class output_driver_json(output_driver_lister_json,output_driver_base):
+class output_driver_json(output_driver_display_metadata, output_driver_lister_json,output_driver_base):
     def __init__(self):
         output_driver_base.__init__(self)
         output_driver_lister_json.__init__(self)
+        output_driver_display_metadata.__init__(self)
         self.log = logging.getLogger("output_driver_json")
-        
+    def display_subscription(self,subscription):
+        query_imagelistInstance = self.saSession.query(model.ImageListInstance).\
+            filter(model.ImageListInstance.id==subscription.imagelist_latest)
+        for imagelistInstance in query_imagelistInstance:
+            #self._outputter.display_subscriptionInfo(firstSubscription,item,imagelistInstance)
+            self.info(Subscription=subscription,ImageListInstance=imagelistInstance)
 
-class output_driver_lines(output_driver_lister,output_driver_base):
+class output_driver_lines(output_driver_display_metadata, output_driver_lister,output_driver_base):
     def __init__(self):
         output_driver_base.__init__(self)
         output_driver_lister.__init__(self)
+        output_driver_display_metadata.__init__(self)
         self.log = logging.getLogger("output_driver_lines")
+    def display_subscription(self,subscription):
+        query_imagelistInstance = self.saSession.query(model.ImageListInstance).\
+            filter(model.ImageListInstance.id==subscription.imagelist_latest)
+        for imagelistInstance in query_imagelistInstance:
+            #self._outputter.display_subscriptionInfo(firstSubscription,item,imagelistInstance)
+            self.info(Subscription=subscription,ImageListInstance=imagelistInstance)
