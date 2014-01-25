@@ -392,9 +392,15 @@ class output_driver_display_metadata(output_driver_base):
     def display_subscription(self,subscription):
         query_imagelistInstance = self.saSession.query(model.ImageListInstance).\
             filter(model.ImageListInstance.id==subscription.imagelist_latest)
-        for imagelistInstance in query_imagelistInstance:
-            #self._outputter.display_subscriptionInfo(firstSubscription,item,imagelistInstance)
-            self.info(Subscription=subscription,ImageListInstance=imagelistInstance)
+        if query_imagelistInstance.count() > 0:
+            for imagelistInstance in query_imagelistInstance:
+                #self._outputter.display_subscriptionInfo(firstSubscription,item,imagelistInstance)
+                self.info(Subscription=subscription,ImageListInstance=imagelistInstance)
+            return
+        self.info(Subscription=subscription)
+        
+            
+
 
 class output_driver_smime(output_driver_display_message,output_driver_lister,output_driver_base):
     def __init__(self):
@@ -466,12 +472,6 @@ class output_driver_json(output_driver_display_metadata, output_driver_lister_js
         output_driver_lister_json.__init__(self)
         output_driver_display_metadata.__init__(self)
         self.log = logging.getLogger("output_driver_json")
-    def display_subscription(self,subscription):
-        query_imagelistInstance = self.saSession.query(model.ImageListInstance).\
-            filter(model.ImageListInstance.id==subscription.imagelist_latest)
-        for imagelistInstance in query_imagelistInstance:
-            #self._outputter.display_subscriptionInfo(firstSubscription,item,imagelistInstance)
-            self.info(Subscription=subscription,ImageListInstance=imagelistInstance)
 
 class output_driver_lines(output_driver_display_metadata, output_driver_lister,output_driver_base):
     def __init__(self):
@@ -479,9 +479,3 @@ class output_driver_lines(output_driver_display_metadata, output_driver_lister,o
         output_driver_lister.__init__(self)
         output_driver_display_metadata.__init__(self)
         self.log = logging.getLogger("output_driver_lines")
-    def display_subscription(self,subscription):
-        query_imagelistInstance = self.saSession.query(model.ImageListInstance).\
-            filter(model.ImageListInstance.id==subscription.imagelist_latest)
-        for imagelistInstance in query_imagelistInstance:
-            #self._outputter.display_subscriptionInfo(firstSubscription,item,imagelistInstance)
-            self.info(Subscription=subscription,ImageListInstance=imagelistInstance)

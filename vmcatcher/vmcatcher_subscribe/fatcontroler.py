@@ -230,7 +230,6 @@ class db_controler(object):
                 self.log.warning("Selections '%s' does not match any known subscriptions." % (selector_filter))
                 continue
             firstSubscription = query_subscription.first()
-            
             self._outputter.fpOutput = output_fileptr
             self._outputter.saSession = Session
             self._outputter.x509anchor = self.anchor

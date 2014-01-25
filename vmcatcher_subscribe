@@ -280,7 +280,6 @@ def main():
     
     # set default return code
     rc = 0
-    
     if 'subscribe' in actions:
         if not database.subscriptions_subscribe(subscription_url_list,autoEndorse):
             log.error("Failed to subscribe to '%s'" % (subscription_url_list))
