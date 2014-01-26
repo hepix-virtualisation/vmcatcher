@@ -32,6 +32,18 @@ class output_driver_base(object):
         if argImageDefinition != None:
             outut["ImageDefinition"] =  self.info_ImageDefinition(argImageDefinition)
         
+        
+        argSubscriptionAuth = kwargs.get('SubscriptionAuth', None)
+        if argSubscriptionAuth != None:
+            outut["SubscriptionAuth"] =  self.info_SubscriptionAuth(argSubscriptionAuth)
+            
+        argEndorser = kwargs.get('Endorser', None)
+        if argEndorser != None:
+            outut["Endorser"] =  self.info_Endorser(argEndorser)
+        argEndorserPrincible = kwargs.get('EndorserPrincible', None)
+        if argEndorserPrincible != None:
+            outut["EndorserPrincible"] =  self.info_EndorserPrincible(argEndorserPrincible)
+        
         self.fpOutput.write(json.dumps(outut,sort_keys=True, indent=4))
         #print dir(imagelistInstance)
         #display_subscription
@@ -65,7 +77,50 @@ class output_driver_base(object):
             bimappedOutput = imagedef.cache + (available << 1)
         return bimappedOutput
 
-    
+    def display_imagedef(self,imagedef):
+
+        details = self.saSession.query(model.Subscription, 
+                model.ImageListInstance, 
+                model.ImageInstance,
+                model.SubscriptionAuth,
+                model.Endorser,
+                model.EndorserPrincible).\
+            filter(model.ImageListInstance.id==model.ImageInstance.fkimagelistinstance).\
+            filter(model.ImageDefinition.id == imagedef.id).\
+            filter(model.ImageInstance.fkIdentifier == model.ImageDefinition.id).\
+            filter(model.Subscription.id == imagedef.subscription).\
+            filter(model.Subscription.imagelist_latest == model.ImageListInstance.id).\
+            filter(model.SubscriptionAuth.id == model.ImageListInstance.sub_auth).\
+            filter(model.SubscriptionAuth.endorser == model.Endorser.id).\
+            filter(model.Endorser.id == model.EndorserPrincible.endorser)
+        if details.count() > 0:
+            for item in details:
+                subscription = item[0]
+                imagelistinstance = item[1]
+                imageinstance = item[2]
+                SubscriptionAuth = item[3]
+                Endorser = item[4]
+                EndorserPrincible = item[5]
+                self.info(Subscription = subscription,
+                        ImageDefinition = imagedef,
+                        ImageListInstance = imagelistinstance,
+                        ImageInstance = imageinstance,
+                        SubscriptionAuth = SubscriptionAuth,
+                        Endorser = Endorser,
+                        EndorserPrincible = EndorserPrincible)
+            return True
+        self.log.warning("Image '%s' has expired." % (selector_filter)) 
+        details = Session.query(model.Subscription, model.ImageDefinition).\
+            filter(model.ImageDefinition.id == imagedef.id).\
+            filter(model.Subscription.id == imagedef.subscription)
+        if details.count() > 0:
+            for item in details:
+                subscription = item[0]
+                imagedef = item[1]
+                self.info(Subscription = subscription,
+                        ImageDefinition = imagedef)
+            return True
+        return False
     
 class output_driver_lister(output_driver_base):
     def __init__(self):
@@ -93,6 +148,18 @@ class output_driver_lister(output_driver_base):
         argImageDefinition = kwargs.get('ImageDefinition', None)
         if argImageDefinition != None:
             self.info_ImageDefinition(argImageDefinition)
+        
+        
+        argSubscriptionAuth = kwargs.get('SubscriptionAuth', None)
+        if argSubscriptionAuth != None:
+            self.info_SubscriptionAuth(argSubscriptionAuth)
+            
+        argEndorser = kwargs.get('Endorser', None)
+        if argEndorser != None:
+            self.info_Endorser(argEndorser)
+        argEndorserPrincible = kwargs.get('EndorserPrincible', None)
+        if argEndorserPrincible != None:
+            self.info_EndorserPrincible(argEndorserPrincible)
         
     def list_vmcatcher_image(self):
         self.log.debug("list_vmcatcher_image")
@@ -187,10 +254,22 @@ class output_driver_lister(output_driver_base):
     def info_ImageDefinition(self,imageDef):
         self.fpOutput.write ('imagedef.dc:identifier=%s\n' % (imageDef.identifier))
         self.fpOutput.write ('imagedef.cache=%s\n' % (imageDef.cache))
+    def info_SubscriptionAuth(self,SubscriptionAuth):       
+        return "link"
+    def info_Endorser(self,Endorser):       
+        output = {"identifier" : Endorser.identifier
+        }
+        return output
+    def info_EndorserPrincible(self,EndorserPrincible):
+        self.fpOutput.write ('endorser:hv:subject=%s\n' % (EndorserPrincible.hv_dn))
+        self.fpOutput.write ('endorser:hv:issuer=%s\n' %(EndorserPrincible.hv_ca))
+
+      
 class output_driver_lister_json(output_driver_lister):
     def __init__(self):
         output_driver_lister.__init__(self)
         self.log = logging.getLogger("output_driver_lister_json")
+ 
     def info(self, *args, **kwargs):
         self.log.debug("info")
         outut = {}
@@ -205,10 +284,24 @@ class output_driver_lister_json(output_driver_lister):
         argImageInstance = kwargs.get('ImageInstance', None)
         if argImageInstance != None:
             outut["ImageInstance"] =  self.info_ImageInstance(argImageInstance)
+        
         argImageDefinition = kwargs.get('ImageDefinition', None)
         if argImageDefinition != None:
             outut["ImageDefinition"] =  self.info_ImageDefinition(argImageDefinition)
-        self.fpOutput.write(json.dumps(outut,sort_keys=True, indent=4))    
+        
+        
+        argSubscriptionAuth = kwargs.get('SubscriptionAuth', None)
+        if argSubscriptionAuth != None:
+            outut["SubscriptionAuth"] =  self.info_SubscriptionAuth(argSubscriptionAuth)
+            
+        argEndorser = kwargs.get('Endorser', None)
+        if argEndorser != None:
+            outut["Endorser"] =  self.info_Endorser(argEndorser)
+        argEndorserPrincible = kwargs.get('EndorserPrincible', None)
+        if argEndorserPrincible != None:
+            outut["EndorserPrincible"] =  self.info_EndorserPrincible(argEndorserPrincible)
+        
+        self.fpOutput.write(json.dumps(outut,sort_keys=True, indent=4))
     def list_vmcatcher_subscribe(self):
         self.log.debug("list_vmcatcher_subscribe")
         output = []
@@ -263,6 +356,9 @@ class output_driver_lister_json(output_driver_lister):
                 "authorised" : aubauth.authorised
             })
         self.fpOutput.write(json.dumps(output,sort_keys=True, indent=4))
+    
+    
+    
     def display_endorser(self,endorser):
         self.log.debug("display_endorser")
         self.fpOutput.write ("endorser.dc:identifier=%s\n" % (endorser.identifier))
@@ -348,7 +444,17 @@ class output_driver_lister_json(output_driver_lister):
                 "cache" : imageDef.cache}
         return output
 
-
+    def info_SubscriptionAuth(self,SubscriptionAuth):       
+        return {}
+    def info_Endorser(self,Endorser):       
+        output = {"identifier" : Endorser.identifier
+        }
+        return output
+    def info_EndorserPrincible(self,EndorserPrincible):
+        output = {"subject" :EndorserPrincible.hv_dn,
+            "issuer" : EndorserPrincible.hv_ca
+        }
+        return output
 class output_driver_display_message(output_driver_base):
     def __init__(self):
         output_driver_base.__init__(self)
@@ -361,7 +467,7 @@ class output_driver_display_message(output_driver_base):
                 filter(model.ImageInstance.fkimagelistinstance == model.ImageListInstance.id).\
                 filter(model.Subscription.imagelist_latest == model.ImageListInstance.id)
         sub = subauthq.first()         
-        return self.display_imagelist(sub)
+        return self.display_ImageListInstance(sub)
 
 class output_driver_display_metadata(output_driver_base):
     def __init__(self):
@@ -387,30 +493,24 @@ class output_driver_smime(output_driver_display_message,output_driver_lister,out
         output_driver_display_message.__init__(self)
         self.log = logging.getLogger("output_driver_smime")
 
-    def display_imagelist(self,imagelist):
-        self.fpOutput.write(imagelist.data)
-        return True
-
     def info(self, *args, **kwargs):
-        self.log.debug("info")
-        outut = {}
-        argSubscription = kwargs.get('Subscription', None)
-        if argSubscription != None:
-            pass
-        argImageListInstance = kwargs.get('ImageListInstance', None)
-        if argImageListInstance != None:
-            pass
-        argImageInstance = kwargs.get('ImageInstance', None)
-        if argImageInstance != None:
-            pass
-        argImageDefinition = kwargs.get('ImageDefinition', None)
-        if  argImageDefinition != None:
-            pass
+        expectedkeys = set([
+                "Endorser",
+                "EndorserPrincible",
+                "ImageDefinition",
+                "ImageInstance",
+                "ImageListInstance",
+                "Subscription",
+                "SubscriptionAuth",
+                ])
         
+        found = set(kwargs.keys())
+        if "ImageListInstance" in found:
+            argImageInstance = kwargs.get('ImageListInstance', None)
+            self.fpOutput.write (argImageInstance.data)
+            return True
+        return False
         
-        
-        if argImageInstance != None:
-            self.display_imagelist(argImageInstance)
 
 class output_driver_message(output_driver_display_message,output_driver_lister,output_driver_base):
     def __init__(self):
@@ -418,7 +518,7 @@ class output_driver_message(output_driver_display_message,output_driver_lister,o
         output_driver_lister.__init__(self)
         output_driver_display_message.__init__(self)
         self.log = logging.getLogger("output_driver_message")
-    def display_imagelist(self,imagelist):
+    def display_ImageListInstance(self,imagelist):
         smimeProcessor =  smimeX509validation(self.x509anchor)
         try:
             smimeProcessor.Process(str(imagelist.data))
@@ -431,7 +531,24 @@ class output_driver_message(output_driver_display_message,output_driver_lister,o
         self.fpOutput.write (smimeProcessor.InputDaraStringIO.getvalue())
         return True
     
-
+    def info(self, *args, **kwargs):
+        expectedkeys = set([
+                "Endorser",
+                "EndorserPrincible",
+                "ImageDefinition",
+                "ImageInstance",
+                "ImageListInstance",
+                "Subscription",
+                "SubscriptionAuth",
+                ])
+        
+        found = set(kwargs.keys())
+        if "ImageListInstance" in found:
+            argImageInstance = kwargs.get('ImageListInstance', None)
+            
+            return self.display_ImageListInstance(argImageInstance)
+        return False
+        
 
 class output_driver_json(output_driver_display_metadata, output_driver_lister_json,output_driver_base):
     def __init__(self):

@@ -186,34 +186,9 @@ class db_controler:
             self._outputter.saSession = Session
             self._outputter.x509anchor = self.anchor
             for imagedef in queryImageDef:
-                details = Session.query(model.Subscription, model.ImageListInstance, model.ImageInstance).\
-                    filter(model.ImageListInstance.id==model.ImageInstance.fkimagelistinstance).\
-                    filter(model.ImageDefinition.id == imagedef.id).\
-                    filter(model.ImageInstance.fkIdentifier == model.ImageDefinition.id).\
-                    filter(model.Subscription.id == imagedef.subscription).\
-                    filter(model.Subscription.imagelist_latest == model.ImageListInstance.id)
-                if details.count() > 0:
-                    for item in details:
-                        subscription = item[0]
-                        imagelistinstance = item[1]
-                        imageinstance = item[2]
-                        self._outputter.info(Subscription = subscription,
-                                ImageDefinition = imagedef,
-                                ImageListInstance = imagelistinstance,
-                                ImageInstance = imageinstance)
-                    continue
-                self.log.warning("Image '%s' has expired." % (selector_filter)) 
-                details = Session.query(model.Subscription, model.ImageDefinition).\
-                    filter(model.ImageDefinition.id == imagedef.id).\
-                    filter(model.Subscription.id == imagedef.subscription)
-                if details.count() > 0:
-                    for item in details:
-                        subscription = item[0]
-                        imagedef = item[1]
-                        self._outputter.info(Subscription = subscription,
-                                ImageDefinition = imagedef)
-                    continue
-                NoErrorHappened = False
+                good = self._outputter.display_imagedef(imagedef)
+                if good != True:
+                    NoErrorHappened = False
             if output_file_name != None:
                 output_fileptr.close()
         return NoErrorHappened
