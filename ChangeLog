@@ -1,6 +1,9 @@
 Changelog
 
-* Deleted unused code
+vmcatcher-0.3.4
+
+ * Fixed bug in getting the SMIME and message level outputs.
+ * Deleted unused code
 
 vmcatcher-0.3.3
 
