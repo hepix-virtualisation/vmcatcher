@@ -1,5 +1,9 @@
 Changelog
 
+vmcatcher-0.3.5
+
+ * Fixed bug in manged_directory which was failing to download images.
+
 vmcatcher-0.3.4
 
  * Fixed bug in getting the SMIME and message level outputs.
