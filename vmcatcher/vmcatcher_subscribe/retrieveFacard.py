@@ -243,7 +243,9 @@ class retrieveFacard(object):
             return output
 
         def fset(self, value):
-            if not isinstance(value, str):
+            if isinstance(value,  unicode):
+                value = str(value)
+            if not isinstance(value,  str):
                 value = ""
             parsed = urlparse.urlparse(value)
             if len(parsed.scheme) > 0:

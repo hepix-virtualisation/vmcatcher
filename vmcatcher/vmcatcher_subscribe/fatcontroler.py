@@ -24,7 +24,7 @@ from vmcatcher.vmcatcher_subscribe.msgcheck import fileView
 
 from vmcatcher.listutils import pairsNnot
 import vmcatcher.outputfacard
-
+import retrieveFacard
 import vmcatcher.queryby
 try:
     import simplejson as json
@@ -377,20 +377,29 @@ class db_controler(object):
         subscriptionKey = int(subscription.id)
         ProcessingSubscriptionUuid = str(subscription.identifier)
         self.log.info("Updating:%s" % (ProcessingSubscriptionUuid))
-        req = urllib2.Request(url=subscription.uri)
-        try:
-            f = urllib2.urlopen(req)
-        except urllib2.URLError,E:
-            # Python 2.6 Exception
-            self.log.error("Download of url '%s' failed." % (subscription.uri))
-            # Error code - failed to download image list.
-            return 10
-        except OSError:
-            # Python 2.4 Exception
-    	    self.log.error("Download of url '%s' failed." % (subscription.uri))
-            # Error code - failed to download image list.
-            return 10
-        update_unprocessed = str(f.read())
+        
+        retriever = retrieveFacard.retrieveFacard()
+        retriever.uri = subscription.uri
+        retriever.trustanchor = self.anchor
+        resultDict = retriever.requestAsString()
+        if resultDict == None:
+            return 99
+        update_unprocessed = resultDict['responce']
+        #req = urllib2.Request(url=subscription.uri)
+        #try:
+        #    f = urllib2.urlopen(req)
+        #except urllib2.URLError,E:
+        #    # Python 2.6 Exception
+        #    self.log.error("Download of url '%s' failed." % (subscription.uri))
+        #    # Error code - failed to download image list.
+        #    return 10
+        #except OSError:
+        #    # Python 2.4 Exception
+    	#    self.log.error("Download of url '%s' failed." % (subscription.uri))
+        #    # Error code - failed to download image list.
+        #    return 10
+        
+        #update_unprocessed = str(f.read())
         # Now we have the update lets first check its hash
         messagehash = hashlib.sha512(update_unprocessed).hexdigest()
         now = datetime.datetime.utcnow()

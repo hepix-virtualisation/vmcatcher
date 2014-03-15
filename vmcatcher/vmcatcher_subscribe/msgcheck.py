@@ -30,7 +30,7 @@ class fileView(object):
             # Error code - failed to validate image list.
             self.errorNo =  11
             return
-        except smimeX509ValidationError,E:
+        except smimeX509validation.smimeX509ValidationError,E:
             self.log.error(E)
             # Error code - failed to validate image list.
             self.errorNo =  11

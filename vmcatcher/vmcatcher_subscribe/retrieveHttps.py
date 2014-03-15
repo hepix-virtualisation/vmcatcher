@@ -27,7 +27,6 @@ class retrieve(retrieveBase.retrieve):
         
         hostcert = ssl.get_server_certificate((self.server, self.port))
         m2x509Hostcert = M2Crypto.X509.load_cert_string(hostcert)
-        print dir(m2x509Hostcert)
         itemdictionary = {}
         issuer_dn = str(m2x509Hostcert.get_issuer())
         signer_dn = str(m2x509Hostcert.get_subject())
@@ -71,6 +70,5 @@ class retrieve(retrieveBase.retrieve):
         #print "withoutauth:" + con.getresponse().read()
         con.request("GET" , self.path, headers=headers)
         responce =  con.getresponse()
-        print responce
-        print "withauth" + responce.read()
-#smimeProcessor = smimeX509validation.smimeX509validation(anchor)
+        output = {'responce' : responce.read() }
+        return output
