@@ -1,7 +1,7 @@
 import retrieveBase
 import logging
 import httplib
-
+import socket
 import base64
 timeout = 60
 
@@ -18,13 +18,18 @@ class retrieve(retrieveBase.retrieve):
         if (self.username != None) and (self.password != None):
             auth = base64.standard_b64encode("%s:%s" % (self.username, self.password))
             headers["Authorization"] = "Basic %s" % (auth)
-        con.request("GET" , self.path, headers=headers)
+        try:
+            con.request("GET" , self.path, headers=headers)
+        except socket.gaierror, E:
+            output['error'] = E.strerror
+            output['code'] = 404
+            return output
         responce =  con.getresponse()
-        httpstatus = responce.status()
+        httpstatus = responce.status
         if httpstatus == 200:
-            output['responce'] == responce.read()
+            output['responce'] = responce.read()
         else:
             output['error'] = responce.reason
             output['code'] = httpstatus
         return output
-        
+

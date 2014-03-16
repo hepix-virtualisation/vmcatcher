@@ -2,8 +2,9 @@ import retrieveBase
 import logging
 import ssl
 import M2Crypto
-
 import base64
+import socket
+
 def Property(func):
     return property(**func())
     
@@ -25,7 +26,12 @@ class retrieve(retrieveBase.retrieve):
         return locals()
     def requestAsString(self):
         output = {'code' : 0}
-        hostcert = ssl.get_server_certificate((self.server, self.port))
+        try:
+            hostcert = ssl.get_server_certificate((self.server, self.port))
+        except socket.gaierror, E:
+            output['error'] = E.strerror
+            output['code'] = 404
+            return output
         m2x509Hostcert = M2Crypto.X509.load_cert_string(hostcert)
         itemdictionary = {}
         issuer_dn = str(m2x509Hostcert.get_issuer())
@@ -69,9 +75,9 @@ class retrieve(retrieveBase.retrieve):
             headers["Authorization"] = "Basic %s" % (auth)
         con.request("GET" , self.path, headers=headers)
         responce =  con.getresponse()
-        httpstatus = responce.status()
+        httpstatus = responce.status
         if httpstatus == 200:
-            output['responce'] == responce.read()
+            output['responce'] = responce.read()
         else:
             output['error'] = responce.reason
             output['code'] = httpstatus

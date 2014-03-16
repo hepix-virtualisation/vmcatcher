@@ -384,21 +384,14 @@ class db_controler(object):
         resultDict = retriever.requestAsString()
         if resultDict == None:
             return 99
+        rc = resultDict['code']
+        if rc != 0:
+            if 'error' in resultDict:
+                self.log.error("%s, while retriving %s" % (resultDict['error'],subscription.id))
+            else:
+                self.log.error("Download of url '%s' failed." % (subscription.id))
+            return 98
         update_unprocessed = resultDict['responce']
-        #req = urllib2.Request(url=subscription.uri)
-        #try:
-        #    f = urllib2.urlopen(req)
-        #except urllib2.URLError,E:
-        #    # Python 2.6 Exception
-        #    self.log.error("Download of url '%s' failed." % (subscription.uri))
-        #    # Error code - failed to download image list.
-        #    return 10
-        #except OSError:
-        #    # Python 2.4 Exception
-    	#    self.log.error("Download of url '%s' failed." % (subscription.uri))
-        #    # Error code - failed to download image list.
-        #    return 10
-        
         #update_unprocessed = str(f.read())
         # Now we have the update lets first check its hash
         messagehash = hashlib.sha512(update_unprocessed).hexdigest()
