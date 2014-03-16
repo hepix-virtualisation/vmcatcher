@@ -24,7 +24,7 @@ class retrieve(retrieveBase.retrieve):
             pass
         return locals()
     def requestAsString(self):
-        
+        output = {'code' : 0}
         hostcert = ssl.get_server_certificate((self.server, self.port))
         m2x509Hostcert = M2Crypto.X509.load_cert_string(hostcert)
         itemdictionary = {}
@@ -47,7 +47,9 @@ class retrieve(retrieveBase.retrieve):
             popedItems = m2x509hostcertStack.pop()
         x509StackLen = len(x509Stack)
         if x509StackLen == 0:
-            return False
+            output['error'] = 'Unrecognised host certificate'
+            output['code'] = 50
+            return output
         
         # create contect
         ctx = M2Crypto.SSL.Context()
@@ -61,14 +63,16 @@ class retrieve(retrieveBase.retrieve):
         # verify peer's certificate
         ctx.set_verify(M2Crypto.SSL.verify_peer, x509StackLen)
         con = M2Crypto.httpslib.HTTPSConnection(self.server,ssl_context=ctx)
-        auth = base64.standard_b64encode("%s:%s" % (self.username, self.password))
-#auth = "%s:%s" % (username, password)
-        headers = {"Authorization" : "Basic %s" % auth,
-            "User-Agent": "vmcatcher"}
-
-        #con.request("GET" , path)
-        #print "withoutauth:" + con.getresponse().read()
+        headers = {"User-Agent": "vmcatcher"}
+        if (self.username != None) and (self.password != None):
+            auth = base64.standard_b64encode("%s:%s" % (self.username, self.password))
+            headers["Authorization"] = "Basic %s" % (auth)
         con.request("GET" , self.path, headers=headers)
         responce =  con.getresponse()
-        output = {'responce' : responce.read() }
+        httpstatus = responce.status()
+        if httpstatus == 200:
+            output['responce'] == responce.read()
+        else:
+            output['error'] = responce.reason
+            output['code'] = httpstatus
         return output

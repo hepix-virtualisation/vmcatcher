@@ -44,14 +44,14 @@ class retrieveFacard(object):
             else:
                 self.log.error("Invalid protocol selected '%s'" % (name))
             if retrieveImpTmp != None:
-                retrieveImpTmp.server = self.server
-                retrieveImpTmp.port = self.port
-                retrieveImpTmp.username = self.username
-                retrieveImpTmp.password = self.password
-                retrieveImpTmp.path = self.path
-                retrieveImpTmp.trustanchor = self.trustanchor
-                retrieveImpTmp.trustanchor_needed = self.trustanchor_needed
-                retrieveImpTmp.protocol = self.protocol
+                retrieveImpTmp.server = self._server
+                retrieveImpTmp.port = self._port
+                retrieveImpTmp.username = self._username
+                retrieveImpTmp.password = self._password
+                retrieveImpTmp.path = self._path
+                retrieveImpTmp.trustanchor = self._trustanchor
+                retrieveImpTmp.trustanchor_needed = self._trustanchor_needed
+                retrieveImpTmp.protocol = self._protocol
                 self._retrieveImp = retrieveImpTmp
             else:
                 if hasattr(self, '_retrieveImp'):
