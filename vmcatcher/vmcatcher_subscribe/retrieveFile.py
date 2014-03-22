@@ -1,6 +1,6 @@
 import retrieveBase
 import logging
-import os
+import os.path
 
 
 
@@ -10,7 +10,7 @@ class retrieve(retrieveBase.retrieve):
     def requestAsString(self):
         output = {}
         content = None
-        if not os.path.exists(path):
+        if not os.path.exists(self.path):
             output['error'] = 'file noes not exist'
             output['code'] = 1
             return output
