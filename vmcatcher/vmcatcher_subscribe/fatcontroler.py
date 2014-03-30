@@ -389,8 +389,11 @@ class db_controler(object):
             if 'error' in resultDict:
                 self.log.error("%s, while retriving %s" % (resultDict['error'],subscription.id))
             else:
-                self.log.error("Download of url '%s' failed." % (subscription.id))
-            return 98
+                self.log.error("Download of uri '%s' failed." % (subscription.id))
+            if rc < 255:
+                return rc
+            else
+                return 10
         update_unprocessed = resultDict['responce']
         #update_unprocessed = str(f.read())
         # Now we have the update lets first check its hash

@@ -12,7 +12,7 @@ class retrieve(retrieveBase.retrieve):
         content = None
         if not os.path.exists(self.path):
             output['error'] = 'file noes not exist'
-            output['code'] = 1
+            output['code'] = 10
             return output
         with open(self.path, 'r') as content_file:
             content = content_file.read()
