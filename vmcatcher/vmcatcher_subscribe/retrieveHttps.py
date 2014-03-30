@@ -4,6 +4,7 @@ import ssl
 import M2Crypto
 import base64
 import socket
+import smimeX509validation
 
 def Property(func):
     return property(**func())
@@ -44,8 +45,12 @@ class retrieve(retrieveBase.retrieve):
         cetlist = [itemdictionary]
 
         
-        
-        m2x509hostcertStack = self.trustanchor.GetM2CryptoX509_Stack(cetlist)
+        try:
+            m2x509hostcertStack = self.trustanchor.GetM2CryptoX509_Stack(cetlist)
+        except smimeX509validation.smimeX509ValidationError, E:
+            output['error'] = E.parameter
+            output['code'] = 55
+            return output
         x509Stack = []
         popedItems = m2x509hostcertStack.pop()
         while popedItems != None:

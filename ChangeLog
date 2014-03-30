@@ -1,5 +1,9 @@
 Changelog
 
+vmcatcher-0.3.7
+
+ * Catch exception thrown by smimeX509validation when cirtificate is not in the trust store.
+
 vmcatcher-0.3.6
 
  * Added a facard class to retrive imagelist updates.
