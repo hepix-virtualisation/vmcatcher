@@ -1,5 +1,11 @@
 Changelog
 
+vmcatcher-0.3.6
+
+ * Added a facard class to retrive imagelist updates.
+ * With image list updates via https the host is authenticated.
+ * Support got subscriptions including an user name and password using basic access authentication.
+
 vmcatcher-0.3.5
 
  * Fixed bug in manged_directory which was failing to download images.
