@@ -392,7 +392,7 @@ class db_controler(object):
                 self.log.error("Download of uri '%s' failed." % (subscription.id))
             if rc < 255:
                 return rc
-            else
+            else:
                 return 10
         update_unprocessed = resultDict['responce']
         #update_unprocessed = str(f.read())
