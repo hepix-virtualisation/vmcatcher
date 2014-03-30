@@ -387,7 +387,7 @@ class db_controler(object):
         rc = resultDict['code']
         if rc != 0:
             if 'error' in resultDict:
-                self.log.error("%s, while retriving %s" % (resultDict['error'],subscription.id))
+                self.log.error("%s, while retrieving %s" % (resultDict['error'],subscription.id))
             else:
                 self.log.error("Download of uri '%s' failed." % (subscription.id))
             if rc > 255:
