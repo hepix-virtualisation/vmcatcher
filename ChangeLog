@@ -1,5 +1,9 @@
 Changelog
 
+vmcatcher-0.3.8
+
+ * Temparaty removal of host authentication of host using igtf trust anchor.
+
 vmcatcher-0.3.7
 
  * Catch exception thrown by smimeX509validation when certificate is not in the trust store.
