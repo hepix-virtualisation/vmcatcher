@@ -9,7 +9,6 @@ class retrieve(retrieveBase.retrieve):
     def __init__(self, *args, **kwargs):
         retrieveBase.retrieve.__init__(self,args,kwargs)
         self.port_default = 80
-        
     def requestAsString(self):
         output = {'code' : 0}
         auth = base64.standard_b64encode("%s:%s" % (self.username, self.password))

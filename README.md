@@ -1045,14 +1045,7 @@ with different log levels.
 
 
 
-### To Do (16-05-2012)
+### To Do (30-03-2014)
 
-  * Only message authenticity is checked, does not yet check authenticity of transport.
   * PGP signatures.
   * Support encrypted messages.
-
-While it does check the authenticity of the message using `x.509`, at the
-moment the authenticity of the host is unchecked. For the ease of programing
-it would be far simpler to use `x.509` certificates to check the host server.
-In terms of deployment it would be far easier just to check any host key
-mechanism, as this is sufficient.
