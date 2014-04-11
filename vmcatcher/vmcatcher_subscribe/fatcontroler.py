@@ -639,4 +639,9 @@ class db_controler(object):
         if errors != 0:
             return False
         return True
-    
+    def subscriptions_trustanchor_set(self,subscriptions, trustAnchor):
+        print "trustAnchor=%s" % (trustAnchor)
+    def subscriptions_username_set(self,subscriptions, username):
+        print "username=%s" % (username)
+    def subscriptions_password_set(self,subscriptions, password):
+        print "password=%s" % (password)

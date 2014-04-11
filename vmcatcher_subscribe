@@ -66,6 +66,9 @@ def main():
     p.add_option('--image-list', action ='store_true',help='list accepted image UUID for a subscription.', metavar='image UUID')
     p.add_option('--image-accept', action ='append',help='accept image UUID in subscription.', metavar='image UUID')
     p.add_option('--image-refuse', action ='append',help='refuse image UUID in subscription.', metavar='image UUID')
+    p.add_option('--uri-trustanchor', action ='store',help='Set trust anchor to authenticate imagelist hoster.', metavar='TRUST ANCHOR')
+    p.add_option('--uri-username', action ='store',help='User name to access imagelist hoster.', metavar='USERNAME')
+    p.add_option('--uri-password', action ='store',help='Password to access imagelist hoster.', metavar='PASSWORD')
     p.add_option('-u', '--uuid', action ='append',help='Select subscription', metavar='UUID')
     p.add_option('-r', '--uri', action ='append',help='Select subscription', metavar='URL')
     p.add_option('-f', '--format', action ='store',help='Sets the output format')
@@ -83,6 +86,7 @@ def main():
     anchor_needed = False
     format_needed = False
     actions = set([])
+    decorators = set([])
     subscriptions_selected = []
     subscription_url_list = []
     actionsrequiring_selections = set(['message',
@@ -91,7 +95,10 @@ def main():
         'info',
         'image_accept',
         'image_list',
-        'image_refuse'])
+        'image_refuse',
+        'uri_trustanchor',
+        'uri_username',
+        'uri_password'])
     outputformats = set(['SMIME','message','lines','json'])
     output_format_selected = 'lines'
     
@@ -106,6 +113,9 @@ def main():
     certDir = None
     eventExecutionString = None
     debugSqlEcho = False
+    uri_trustanchor = 0
+    uri_username = None
+    uri_password = None
     if 'VMCATCHER_RDBMS' in os.environ:
         databaseConnectionString = os.environ['VMCATCHER_RDBMS']
     if 'VMCATCHER_LOG_CONF' in os.environ:
@@ -205,13 +215,25 @@ def main():
         autoEndorse = True
     if options.execute:
         eventExecutionString = options.execute
-
+    if options.uri_trustanchor:
+        # Set Trust anchor
+        decorators.add('uri_trustanchor')
+        uri_trustanchor = options.uri_trustanchor
+    if options.uri_username:
+        # User name to access imagelist hoster.
+        decorators.add('uri_username')
+        uri_username = options.uri_username
+    if options.uri_password:
+        # Password to access imagelist hoster
+        decorators.add('uri_password')
+        uri_password = options.uri_password
+        
     # 1 So we have some command line validation
 
     if databaseConnectionString == None:
         databaseConnectionString = 'sqlite:///vmcatcher.db'
         log.info("Defaulting DB connection to '%s'" % (databaseConnectionString))
-    if len(actions) == 0:
+    if len(actions) + len(decorators) == 0:
         log.error("No actions selected")
         sys.exit(1)
     if len(actions) > 1:
@@ -237,8 +259,8 @@ def main():
 
     # Handle conflicting actions
     actions_req_sel = actionsrequiring_selections.intersection(actions)
-
     actions_req_sel_len = len(actions_req_sel)
+    
     if actions_req_sel_len == 1:
         if len(subscriptions_selected) == 0:
             log.error('No subscription selections made.')
@@ -246,6 +268,13 @@ def main():
     if actions_req_sel_len > 1:
         log.error('Conflicting functions.')
         sys.exit(1)
+    # Handle decorators
+    decorators_req_sel = actionsrequiring_selections.intersection(decorators)
+    if len(decorators_req_sel) > 0:
+        if len(subscriptions_selected) == 0:
+            log.error('No subscription selections made.')
+            sys.exit(1)
+        
     # Handle conflicting identifiers
 
     selectors_types = inputformats.intersection(input_format_selected)
@@ -306,6 +335,12 @@ def main():
         database.subscriptions_image_accept(subscriptions_selected,images_aproved)
     if 'image_refuse' in actions:
         database.subscriptions_image_refuse(subscriptions_selected,images_refused)
+    if 'uri_trustanchor' in decorators:
+        database.subscriptions_trustanchor_set(subscriptions_selected, uri_trustanchor)
+    if 'uri_username' in decorators:
+        database.subscriptions_username_set(subscriptions_selected, uri_username)
+    if 'uri_password' in decorators:
+        database.subscriptions_password_set(subscriptions_selected, uri_password)
     
     sys.exit(rc)
 

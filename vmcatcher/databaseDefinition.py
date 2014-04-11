@@ -77,12 +77,24 @@ class Subscription(Base):
     #     This is different from the creation time of the image list.
     #     It is provided only for instrumentation purposes.
     updated = Column(DateTime)
+    # Trust achor selector.
+    # 0 = None
+    # 1 = Browser based
+    # 2 = Interoperable Global Trust Federation
+    trustAnchor = Column(Integer,default=0,nullable = False)
+    # UserName for protocols using username
+    userName = Column(String(200), default=0,nullable = False)
+    # passWord for protocols using password
+    password = Column(String(200), default=0,nullable = False)
     def __init__(self,details, authorised = False):
         self.identifier = details[u'dc:identifier']
         self.description = details[u'dc:description']
         self.uri = details[u'hv:uri']
         self.imagelist_latest = None
         self.authorised = authorised
+        self.trustAnchor = 0
+        self.userName = ''
+        self.password = ''
     def __repr__(self):
         return "<Subscription('%s','%s', '%s')>" % (self.identifier, self.uri, self.description)
 
