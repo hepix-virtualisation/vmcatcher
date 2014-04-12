@@ -10,8 +10,8 @@ import optparse
 import  smimeX509validation 
 from vmcatcher.__version__ import version
 import vmcatcher
-import urllib2
 import urllib
+import urllib2
 import hashlib
 import datetime
 import uuid
@@ -243,7 +243,14 @@ class db_controler(object):
 
     def subscribe_file(self,Session,anchor,filename,autoEndorse):
         req = urllib2.Request(url=filename)
-        f = urllib2.urlopen(req)
+        try:
+            f = urllib2.urlopen(req)
+        except urllib2.HTTPError, E:
+            self.log.error("HTTPError code='%s' reason ='%s'" % (E.code,E.reason))
+            return False
+        except urllib2.URLError, E:
+            self.log.error("URLError reason ='%s'" % (E.reason))
+            return False
         smimeProcessor = smimeX509validation.smimeX509validation(anchor)
         try:
             smimeProcessor.Process(f.read())

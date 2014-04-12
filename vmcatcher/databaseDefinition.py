@@ -70,7 +70,7 @@ class Subscription(Base):
     description = Column(String(200))
     uri = Column(String(200),nullable = False,unique=True)
     authorised = Column( Boolean,nullable = False)
-    # Line woudl be but for inconsitancy #imagelist_latest =Column(Integer, ForeignKey('imagelist.id'))
+    # Line would be but for inconsitancy #imagelist_latest =Column(Integer, ForeignKey('imagelist.id'))
     imagelist_latest =Column(Integer)
     orm_auth = relationship("SubscriptionAuth", backref="Subscription",cascade='all, delete')
     # The data of the last update to the subscription.
