@@ -47,21 +47,24 @@ class retrieve(retrieveBase.retrieve):
             retrieveImpTmp = None
             if self.trustanchor_type == retrieveFacard.TRUST_ANCHOR_NONE:
                 retrieveImpTmp = retrieveHttps.retrieve()
+            elif self.trustanchor_type == retrieveFacard.TRUST_ANCHOR_BROWSER:
+                self.log.warning("TRUST_ANCHOR_BROWSER selected but not yet implemented.")
+                retrieveImpTmp = retrieveHttps.retrieve()
             elif self.trustanchor_type == retrieveFacard.TRUST_ANCHOR_IGTF:
                 retrieveImpTmp = retrieveHttpsIgtfTa.retrieve()
             elif self.trustanchor_type == None:
                 pass
             else:
-                self.log.error("Invalid protocol selected '%s'" % (name))
+                self.log.error("Invalid trustanchor_type selected '%s'" % (name))
             if retrieveImpTmp != None:
-                retrieveImpTmp.server = self.server
-                retrieveImpTmp.port = self.port
-                retrieveImpTmp.username = self.username
-                retrieveImpTmp.password = self.password
-                retrieveImpTmp.path = self.path
-                retrieveImpTmp.trustanchor = self.trustanchor
-                retrieveImpTmp.trustanchor_needed = self.trustanchor_needed
-                retrieveImpTmp.trustanchor_type = self.trustanchor_type
+                retrieveImpTmp.server = self._server
+                retrieveImpTmp.port = self._port
+                retrieveImpTmp.username = self._username
+                retrieveImpTmp.password = self._password
+                retrieveImpTmp.path = self._path
+                retrieveImpTmp.trustanchor = self._trustanchor
+                retrieveImpTmp.trustanchor_needed = self._trustanchor_needed
+                retrieveImpTmp.trustanchor_type = self._trustanchor_type
                 retrieveImpTmp.protocol = "https"
                 self._retrieveImp = retrieveImpTmp
             else:
