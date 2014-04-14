@@ -5,6 +5,8 @@ import logging
 import vmcatcher.databaseDefinition as model
 import json
 
+trustAnchorMap =  ['None','Browser','IGTF']
+
 class output_driver_base(object):
     def __init__(self):
         self.log = logging.getLogger("output_driver_base")
@@ -234,6 +236,14 @@ class output_driver_lister(output_driver_base):
         self.fpOutput.write ('subscription.dc:description=%s\n' % (subscription.description))
         self.fpOutput.write ('subscription.sl:authorised=%s\n' % (subscription.authorised))
         self.fpOutput.write ('subscription.hv:uri=%s\n' % (subscription.uri))
+        self.fpOutput.write ('subscription.hv:uri.trustAnchor=%s\n' % (trustAnchorMap[subscription.trustAnchor]))
+        if (subscription.userName != None):
+            if len(subscription.userName) > 0:
+                self.fpOutput.write ('subscription.hv:uri.username=%s\n' % (subscription.userName))
+        if (subscription.password != None):
+            if len(subscription.password) > 0:
+                self.fpOutput.write ('subscription.hv:uri.password=%s\n' % (subscription.password))
+        
         if subscription.updated:
             self.fpOutput.write ('subscription.dc:date:updated=%s\n' % (subscription.updated.strftime(time_format_definition)))
         else:
@@ -406,7 +416,14 @@ class output_driver_lister_json(output_driver_lister):
             "authorised" : subscription.authorised,
             "uri" : subscription.uri,
             "updated" : upddated}
-        return output    
+        if (subscription.userName != None):
+            if len(subscription.userName) > 0:
+                output["uri.username"] = subscription.userName
+        if (subscription.password != None):
+            if len(subscription.password) > 0:
+                output["uri.password"] = subscription.password                  
+        return output
+ 
     def info_ImageListInstance(self,argImageListInstance):
         #self.fpOutput.write ('imagelist.dc:date:imported=%s\n' % (argImageListInstance.imported.strftime(time_format_definition)))
         #self.fpOutput.write ('imagelist.dc:date:created=%s\n' % (argImageListInstance.created.strftime(time_format_definition)))
@@ -424,8 +441,16 @@ class output_driver_lister_json(output_driver_lister):
             "description" : subscription.description,
             "authorised" : subscription.authorised,
             "uri" : subscription.uri,
-            "updated" : upddated}
-        return output    
+            "updated" : upddated,
+            "uri.trustAnchor" : trustAnchorMap[subscription.trustAnchor]}
+        if (subscription.userName != None):
+            if len(subscription.userName) > 0:
+                output["uri.username"] = subscription.userName
+        if (subscription.password != None):
+            if len(subscription.password) > 0:
+                output["uri.password"] = subscription.password
+        return output
+
     def info_ImageInstance(self,imageInstance):
         output = {"description" : imageInstance.description,
                     "title" : imageInstance.title,
