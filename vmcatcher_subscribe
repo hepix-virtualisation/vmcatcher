@@ -66,9 +66,11 @@ def main():
     p.add_option('--image-list', action ='store_true',help='list accepted image UUID for a subscription.', metavar='image UUID')
     p.add_option('--image-accept', action ='append',help='accept image UUID in subscription.', metavar='image UUID')
     p.add_option('--image-refuse', action ='append',help='refuse image UUID in subscription.', metavar='image UUID')
-    p.add_option('--uri-trustanchor', action ='store',help='Set trust anchor to authenticate imagelist hoster.', metavar='TRUST ANCHOR')
-    p.add_option('--uri-username', action ='store',help='User name to access imagelist hoster.', metavar='USERNAME')
-    p.add_option('--uri-password', action ='store',help='Password to access imagelist hoster.', metavar='PASSWORD')
+    p.add_option('--uri-trustanchor-set', action ='store',help='Set trust anchor to authenticate imagelist hoster.', metavar='TRUST ANCHOR')
+    p.add_option('--uri-username-set', action ='store',help='User name to access imagelist hoster.', metavar='USERNAME')
+    p.add_option('--uri-username-clear', action ='store_true',help='User name to access imagelist hoster.', metavar='USERNAME')
+    p.add_option('--uri-password-set', action ='store',help='Password to access imagelist hoster.', metavar='PASSWORD')
+    p.add_option('--uri-password-clear', action ='store_true',help='Password to access imagelist hoster.', metavar='PASSWORD')
     p.add_option('-u', '--uuid', action ='append',help='Select subscription', metavar='UUID')
     p.add_option('-r', '--uri', action ='append',help='Select subscription', metavar='URL')
     p.add_option('-f', '--format', action ='store',help='Sets the output format')
@@ -215,18 +217,26 @@ def main():
         autoEndorse = True
     if options.execute:
         eventExecutionString = options.execute
-    if options.uri_trustanchor:
+    if options.uri_trustanchor_set:
         # Set Trust anchor
         decorators.add('uri_trustanchor')
-        uri_trustanchor = options.uri_trustanchor
-    if options.uri_username:
+        uri_trustanchor = options.uri_trustanchor_set
+    if options.uri_username_clear:
         # User name to access imagelist hoster.
         decorators.add('uri_username')
-        uri_username = options.uri_username
-    if options.uri_password:
+        uri_username = ""
+    if options.uri_username_set:
+        # User name to access imagelist hoster.
+        decorators.add('uri_username')
+        uri_username = options.uri_username_set
+    if options.uri_password_clear:
         # Password to access imagelist hoster
         decorators.add('uri_password')
-        uri_password = options.uri_password
+        uri_password = ""
+    if options.uri_password_set:
+        # Password to access imagelist hoster
+        decorators.add('uri_password')
+        uri_password = options.uri_password_set
         
     # 1 So we have some command line validation
 
