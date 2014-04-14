@@ -640,8 +640,55 @@ class db_controler(object):
             return False
         return True
     def subscriptions_trustanchor_set(self,subscriptions, trustAnchor):
-        print "trustAnchor=%s" % (trustAnchor)
+        errorhappened = False
+        Session = self.SessionFactory()
+        for subscription_filter in subscriptions:
+            
+            query_subscription = self.selector_curent(Session,subscription_filter)
+            if query_subscription.count() == 0:
+                self.log.warning("Selections '%s' does not match any known subscriptions." % (selector_filter))
+                errorhappened = True
+                continue
+            firstSubscription = query_subscription.first()
+            firstSubscription.trustAnchor = trustAnchor
+            Session.add(firstSubscription)
+            Session.commit()
+        if errorhappened:
+            return False
+        return True
+        
     def subscriptions_username_set(self,subscriptions, username):
-        print "username=%s" % (username)
+        errorhappened = False
+        Session = self.SessionFactory()
+        for subscription_filter in subscriptions:
+            
+            query_subscription = self.selector_curent(Session,subscription_filter)
+            if query_subscription.count() == 0:
+                self.log.warning("Selections '%s' does not match any known subscriptions." % (selector_filter))
+                errorhappened = True
+                continue
+            firstSubscription = query_subscription.first()
+            firstSubscription.userName = username
+            Session.add(firstSubscription)
+            Session.commit()
+        if errorhappened:
+            return False
+        return True
+        
     def subscriptions_password_set(self,subscriptions, password):
-        print "password=%s" % (password)
+        errorhappened = False
+        Session = self.SessionFactory()
+        for subscription_filter in subscriptions:
+            
+            query_subscription = self.selector_curent(Session,subscription_filter)
+            if query_subscription.count() == 0:
+                self.log.warning("Selections '%s' does not match any known subscriptions." % (selector_filter))
+                errorhappened = True
+                continue
+            firstSubscription = query_subscription.first()
+            firstSubscription.password = password
+            Session.add(firstSubscription)
+            Session.commit()
+        if errorhappened:
+            return False
+        return True
