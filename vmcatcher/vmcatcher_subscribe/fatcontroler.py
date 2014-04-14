@@ -387,6 +387,17 @@ class db_controler(object):
         
         retriever = retrieveFacard.retrieveFacard()
         retriever.uri = subscription.uri
+        userName = None
+        if subscription.userName != None:
+            if len(subscription.userName) > 0:
+                userName = subscription.userName
+        retriever.username = userName
+        password = None
+        if subscription.password != None:
+            if len(subscription.password) > 0:
+                password = subscription.password
+        retriever.password = password
+        
         retriever.trustanchor = self.anchor
         resultDict = retriever.requestAsString()
         if resultDict == None:
