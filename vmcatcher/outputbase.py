@@ -131,7 +131,8 @@ class output_driver_lister(output_driver_base):
     def list_vmcatcher_subscribe(self):
         subauthq = self.saSession.query(model.Subscription).all()
         for item in subauthq:
-            self.fpOutput.write ("%s\t%s\t%s\n" % (item.identifier,item.authorised,item.uri))
+            taout = trustAnchorMap[item.trustAnchor]
+            self.fpOutput.write ("%s\t%s\t%s\t%s\n" % (item.identifier,item.authorised,taout,item.uri))
     
     def info(self, *args, **kwargs):
         self.log.debug("info")

@@ -116,6 +116,8 @@ def main():
     eventExecutionString = None
     debugSqlEcho = False
     uri_trustanchor = 0
+    uri_trustanchor_str = None
+    uri_trustanchor_str_valid = { 'none' : 0, 'browser' : 1, 'igtf' : 2 }
     uri_username = None
     uri_password = None
     if 'VMCATCHER_RDBMS' in os.environ:
@@ -220,7 +222,7 @@ def main():
     if options.uri_trustanchor_set:
         # Set Trust anchor
         decorators.add('uri_trustanchor')
-        uri_trustanchor = options.uri_trustanchor_set
+        uri_trustanchor_str = options.uri_trustanchor_set.lower()
     if options.uri_username_clear:
         # User name to access imagelist hoster.
         decorators.add('uri_username')
@@ -309,6 +311,14 @@ def main():
     if rc != True:
         log.error("Invalid format set : %s" % (selector_str))
         sys.exit(1)
+        
+    if uri_trustanchor_str != None:
+        if uri_trustanchor_str in uri_trustanchor_str_valid.keys():
+            uri_trustanchor = uri_trustanchor_str_valid[uri_trustanchor_str]
+        else:
+            log.error("Invalid trust anchor value")
+            log.info("Allowed trust anchors '%s'" % ( "', '".join(uri_trustanchor_str_valid.keys())))
+            sys.exit(1)
     # Handle the output_view
 
         
