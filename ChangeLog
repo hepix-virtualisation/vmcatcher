@@ -11,12 +11,12 @@ vmcatcher-0.4.0
  * Added username and password to the table 'subscription'. Note this will require database migration.
  * Display used trust anchor when listing subscriptions.
  * Better exception handling on missing files when image list does not exist.
- * Better loging when URI does nto match expected URI.
- * New facard depending upon trust anchor model for http.
+ * Better logging when URI does not match expected URI.
+ * New facade depending upon trust anchor model for https.
  
 vmcatcher-0.3.8
 
- * Temparaty removal of host authentication of host using igtf trust anchor.
+ * Temporary removal of host authentication of host using igtf trust anchor.
 
 vmcatcher-0.3.7
 
@@ -24,7 +24,7 @@ vmcatcher-0.3.7
 
 vmcatcher-0.3.6
 
- * Added a facard class to retrieve imagelist updates.
+ * Added a facade class to retrieve imagelist updates.
  * With image list updates via https the host is authenticated.
  * Support got subscriptions including an user name and password using basic access authentication.
 
