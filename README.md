@@ -1043,6 +1043,7 @@ Restore your database content
 
     # vmcatcher.db < dump
 
+You will get some errors that tables already exist dont worry about these.
 
 #### Data base migration from versions prior to 0.2.X
 
