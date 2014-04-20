@@ -1,5 +1,19 @@
 Changelog
 
+vmcatcher-0.4.0
+
+ * Added new options to command line.
+    '--uri-trustanchor-set' Sets the trust anchor type, 'none', 'browser' or 'igtf'.
+    '--uri-username-set'    Sets the user name for image list URI.
+    '--uri-username-clear'  Clears previously set username.
+    '--uri-password-set'    Sets the password for image list URI.
+    '--uri-password-clear'  Clears the password.
+ * Added username and password to the table 'subscription'. Note this will require database migration.
+ * Display used trust anchor when listing subscriptions.
+ * Better exception handling on missing files when image list does not exist.
+ * Better loging when URI does nto match expected URI.
+ * New facard depending upon trust anchor model for http.
+ 
 vmcatcher-0.3.8
 
  * Temparaty removal of host authentication of host using igtf trust anchor.
