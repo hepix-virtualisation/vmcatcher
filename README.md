@@ -1013,6 +1013,37 @@ the next download without blocking. Since events are not resent so error
 handling is more complex, it may be wise to use a message queue, or storing
 the event and processing after, rather than just using a simple fork.
 
+
+#### Data base migration from versions prior to 0.4.X
+
+Backup your old database:
+
+    #mv vmcatcher.db vmcatcher.db.old
+    #sqlite3 vmcatcher.db.old .dump > dump
+
+edit thew dump file with each line starting
+
+    INSERT INTO "subscription" VALUES
+
+Add three extra columns with the values, 0,'',''
+
+for example:
+
+    INSERT INTO "subscription" VALUES(1,'e55c1afe-0a62-4d31-a8d7-fb8c825f92a2','Endorsed list of CernVM Images','https://cernvm.cern.ch/releases/image.list',1,1,'2014-01-25 22:20:29.859405');
+
+becomes:
+
+    INSERT INTO "subscription" VALUES(1,'e55c1afe-0a62-4d31-a8d7-fb8c825f92a2','Endorsed list of CernVM Images','https://cernvm.cern.ch/releases/image.list',1,1,'2014-01-25 22:20:29.859405',0,'','');
+
+regenerate your data base
+
+    # vmcatcher_subscribe  -l 
+
+Restore your database content
+
+    # vmcatcher.db < dump
+
+
 #### Data base migration from versions prior to 0.2.X
 
 
