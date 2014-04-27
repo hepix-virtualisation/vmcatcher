@@ -31,6 +31,8 @@ try:
 except:
     import json
 
+from vmcatcher.urimunge import uriNormalise,uriNormaliseAnonymous
+
 # command line error codes.
 #  10 failed to download image list.
 #  11 failed to validate image list.
@@ -175,12 +177,12 @@ class db_controler(object):
         retriever.username = userName
         retriever.password = password
         retriever.trustanchor = anchor
-        
         resultDict = retriever.requestAsString()
-        if resultDict == None:
-            
-            return {'code' : 800}
         
+        
+        if resultDict == None:
+            return {'code' : 800}
+        resultDict['uri'] = uriNormaliseAnonymous(retriever)
         return resultDict
         
     def set_selector(self,selector_string):
@@ -316,25 +318,26 @@ class db_controler(object):
                 return rc
             else:
                 return 10
+        metadata["uri"] = uriNormaliseAnonymous(filename)
         smimeProcessor = smimeX509validation.smimeX509validation(anchor)
         try:
             smimeProcessor.Process(resultDict['responce'])
         except smimeX509validation.truststore.TrustStoreError,E:
-            self.log.error("Validate text '%s' produced error '%s'" % (filename,E))
+            self.log.error("Validate text '%s' produced error '%s'" % (resultDict['uri'],E))
             return False
         except smimeX509validation.smimeX509ValidationError,E:
-            self.log.error("Validate text '%s' produced error '%s'" % (filename,E))
+            self.log.error("Validate text '%s' produced error '%s'" % (resultDict['uri'],E))
             return False
         if not smimeProcessor.verified:
-            self.log.error("Failed to  verify text '%s'" % (filename))
+            self.log.error("Failed to  verify text '%s'" % (resultDict['uri']))
             return False
         jsontext = json.loads(smimeProcessor.InputDaraStringIO.getvalue())
         if jsontext == None:
-            self.log.error("Message down loaded from '%s' was not valid JSON." % (filename))
+            self.log.error("Message down loaded from '%s' was not valid JSON." % (resultDict['uri']))
             return False
         vmilist = VMimageListDecoder(jsontext)
         if vmilist == None:
-            self.log.error("Failed to decode the json as an image list Object for '%s'." % (filename))
+            self.log.error("Failed to decode the json as an image list Object for '%s'." % (resultDict['uri']))
             return False
         metadata = {u'il.transfer.protocol:trustAnchor' :anchor,
             u'il.transfer.protocol:userName' : userName,
@@ -350,8 +353,10 @@ class db_controler(object):
         if metadata[u'hv:ca'] != smimeProcessor.InputCertMetaDataList[0]['issuer']:
             self.log.error('list hv:ca does not match signature')
             return False
-        if metadata[u'hv:uri'] != filename:
+        if uriNormaliseAnonymous(metadata[u'hv:uri']) !=  uriNormaliseAnonymous(filename):
             self.log.warning('list hv:uri does not match subscription uri')
+            self.log.info('hv:uri=%s' % (metadata[u'hv:uri']))
+            self.log.info('subscription uri=%s' % (resultDict['uri']))
         db = db_actions(Session)
         endorser_list = db.endorser_get(metadata)
         if endorser_list.count() == 0:
@@ -549,7 +554,10 @@ class db_controler(object):
                     self.log.info('imageList Expired:%s' % (ProcessingSubscriptionUuid))
                     imageList.expired = now
                     Session.commit()
-                return 0    
+                return 0
+            
+                
+                 
             messageVersion = checker.Json[u'hv:imagelist'][u'hv:version']
             self.log.debug('Downloaded version:%s' % (messageVersion))
             VersionCompare = split_numeric_sort(imageList.version,messageVersion)
@@ -560,6 +568,7 @@ class db_controler(object):
                 self.log.error('Downloaded version "%s" version "%s" has lower version number than the old version "%s".' % (ProcessingSubscriptionUuid,messageVersion, imageList.version))
                 return 17 #  17 New version number is less than old version number.
         
+        metadata[u'hv:uri'] = uriNormaliseAnonymous(metadata[u'hv:uri'])
         
         imagelist = model.ImageListInstance(auth.id,metadata)
         Session.add(imagelist)
@@ -587,7 +596,8 @@ class db_controler(object):
                 imagelist.authorised = False
                 Session.add(imagelist)
         subscription.updated = datetime.datetime.utcnow()
-
+        
+        subscription.uri = metadata[u'hv:uri']
         subscription.imagelist_latest = imagelistref
         Session.add(subscription)
         Session.commit()
