@@ -69,12 +69,12 @@ class fileView(object):
             return
             
         if vmilist.metadata[u'hv:uri'] != self.MatchMetadata[u'hv:uri']:
-            self.log.error("list hv:uri does not match subscription uri for '%s'" % (self.MatchMetadata[u'dc:identifier']))
+            self.log.warning("list hv:uri does not match subscription uri for '%s'" % (self.MatchMetadata[u'dc:identifier']))
             self.log.info("Expected URI '%s'" % (self.MatchMetadata[u'hv:uri']))
             self.log.info("Downloaded URI '%s'" % (vmilist.metadata[u'hv:uri']))
-            # Error code - metadata and certificate dont match.
-            self.errorNo =  12
-            return
+        #    # Error code - metadata and certificate dont match.
+        #    self.errorNo =  12
+        #    return
         
         if vmilist.metadata[u'dc:identifier'] != self.MatchMetadata[u'dc:identifier']:
             self.log.info("Expected identifier '%s'" % (self.MatchMetadata[u'dc:identifier']))
