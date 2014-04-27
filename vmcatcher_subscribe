@@ -272,7 +272,6 @@ def main():
     # Handle conflicting actions
     actions_req_sel = actionsrequiring_selections.intersection(actions)
     actions_req_sel_len = len(actions_req_sel)
-    
     if actions_req_sel_len == 1:
         if len(subscriptions_selected) == 0:
             log.error('No subscription selections made.')
@@ -281,11 +280,12 @@ def main():
         log.error('Conflicting functions.')
         sys.exit(1)
     # Handle decorators
-    decorators_req_sel = actionsrequiring_selections.intersection(decorators)
-    if len(decorators_req_sel) > 0:
-        if len(subscriptions_selected) == 0:
-            log.error('No subscription selections made.')
-            sys.exit(1)
+    if not 'subscribe' in actions:
+        decorators_req_sel = actionsrequiring_selections.intersection(decorators)
+        if len(decorators_req_sel) > 0:
+            if len(subscriptions_selected) == 0:
+                log.error('No subscription selections made.')
+                sys.exit(1)
         
     # Handle conflicting identifiers
 
@@ -330,7 +330,10 @@ def main():
     # set default return code
     rc = 0
     if 'subscribe' in actions:
-        if not database.subscriptions_subscribe(subscription_url_list,autoEndorse):
+        metadata = { "subscription_url_list" : subscription_url_list,
+                "autoEndorse" : autoEndorse,
+            }
+        if not database.subscriptions_subscribe(metadata):
             log.error("Failed to subscribe to '%s'" % (subscription_url_list))
             sys.exit(1)
     if 'list' in actions:

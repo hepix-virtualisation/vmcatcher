@@ -145,7 +145,43 @@ class db_controler(object):
         self.selectors_available = ['sub_uuid', 'sub_uri']
         self.selector_curent = None
         self._outputter = vmcatcher.outputfacard.outputFacade()
+
+    def _retiver_uri(self,metadata):
+        retriever = retrieveFacard.retrieveFacard()
         
+        uri = None
+        userName = None
+        password = None
+        anchor = None
+        if "userName" in metadata.keys():
+            if metadata["userName"] != None:
+                if len(metadata["userName"]) > 0:
+                    userName = metadata["userName"]
+        if "password" in metadata.keys():
+            if metadata["password"] != None:
+                if len(metadata["password"]) > 0:
+                    password = metadata["password"]
+        
+        if "anchor" in metadata.keys():
+            if metadata["anchor"] != None:
+                if len(metadata["anchor"]) > 0:
+                   anchor = metadata["anchor"]
+        if "uri" in metadata.keys():
+            if metadata["uri"] != None:
+                if len(metadata["uri"]) > 0:
+                   uri = metadata["uri"]
+        
+        retriever.uri = uri
+        retriever.username = userName
+        retriever.password = password
+        retriever.trustanchor = anchor
+        
+        resultDict = retriever.requestAsString()
+        if resultDict == None:
+            
+            return {'code' : 800}
+        
+        return resultDict
         
     def set_selector(self,selector_string):
         self.selector_curent = None
@@ -202,12 +238,30 @@ class db_controler(object):
                 foundOne = True
         Session.commit()
         return foundOne
-    def subscriptions_subscribe(self,urls_selected,autoEndorse):
+    def subscriptions_subscribe(self,inmetadata):
+        
+        urls_selected = inmetadata['subscription_url_list']
+        autoEndorse = inmetadata['autoEndorse']
+        userName = None
+        if "userName" in inmetadata:
+            userName = inmetadata['userName']
+        password = None
+        if "password" in inmetadata:
+            password = inmetadata['password']
+        trustAnchor = self.anchor
+        if "trustAnchor" in inmetadata:
+            trustAnchor = inmetadata['trustAnchor']
         rc = True
         Session = self.SessionFactory()
         db = db_actions(Session)
         for uri in urls_selected:
-            if not self.subscribe_file(Session,self.anchor,uri,autoEndorse):
+            metadata = { "autoEndorse" : autoEndorse,
+                "filename" : uri,
+                "trustAnchor" : trustAnchor,
+                "userName" : userName,
+                "password" : password
+            }
+            if not self.subscribe_file(Session,metadata):
                 rc = False
         return rc
 
@@ -240,20 +294,31 @@ class db_controler(object):
             
     def setEventObj(self,obj):
         self.eventObj = obj
-
-    def subscribe_file(self,Session,anchor,filename,autoEndorse):
-        req = urllib2.Request(url=filename)
-        try:
-            f = urllib2.urlopen(req)
-        except urllib2.HTTPError, E:
-            self.log.error("HTTPError code='%s' reason ='%s'" % (E.code,E.reason))
-            return False
-        except urllib2.URLError, E:
-            self.log.error("URLError reason ='%s'" % (E.reason))
-            return False
+    def subscribe_file(self,Session,inmetadata):
+        autoEndorse = inmetadata["autoEndorse"]
+        filename = inmetadata["filename"]
+        anchor = inmetadata["trustAnchor"]
+        userName = inmetadata["userName"]
+        password  = inmetadata["password"]
+        metadata= {"uri" : filename,
+            "trustAnchor" : anchor,
+            "userName" : userName,
+            "password" : password,
+        }
+        resultDict = self._retiver_uri(metadata)
+        rc = resultDict['code']
+        if rc != 0:
+            if 'error' in resultDict:
+                self.log.error("%s, while retrieving %s" % (['error'],filename))
+            else:
+                self.log.error("Download of uri '%s' failed." % (filename))
+            if rc > 255:
+                return rc
+            else:
+                return 10
         smimeProcessor = smimeX509validation.smimeX509validation(anchor)
         try:
-            smimeProcessor.Process(f.read())
+            smimeProcessor.Process(resultDict['responce'])
         except smimeX509validation.truststore.TrustStoreError,E:
             self.log.error("Validate text '%s' produced error '%s'" % (filename,E))
             return False
@@ -265,13 +330,15 @@ class db_controler(object):
             return False
         jsontext = json.loads(smimeProcessor.InputDaraStringIO.getvalue())
         if jsontext == None:
-            self.log.error("Message downlaoded from '%s' was not valid JSON." % (filename))
+            self.log.error("Message down loaded from '%s' was not valid JSON." % (filename))
             return False
         vmilist = VMimageListDecoder(jsontext)
         if vmilist == None:
             self.log.error("Failed to decode the json as an image list Object for '%s'." % (filename))
             return False
-        metadata = {}
+        metadata = {u'il.transfer.protocol:trustAnchor' :anchor,
+            u'il.transfer.protocol:userName' : userName,
+            u'il.transfer.protocol:password' : password}
         metadata.update(vmilist.metadata)
         metadata.update(vmilist.endorser.metadata)
         if u'dc:identifier' not in metadata.keys():
@@ -387,31 +454,24 @@ class db_controler(object):
         
         retriever = retrieveFacard.retrieveFacard()
         retriever.uri = subscription.uri
-        userName = None
-        if subscription.userName != None:
-            if len(subscription.userName) > 0:
-                userName = subscription.userName
-        retriever.username = userName
-        password = None
-        if subscription.password != None:
-            if len(subscription.password) > 0:
-                password = subscription.password
-        retriever.password = password
+        resultDict = self._retiver_uri({"uri" : subscription.uri,
+            "trustAnchor" : subscription.trustAnchor,
+            "userName" : subscription.userName,
+            "password" : subscription.password,
+            })
         
-        retriever.trustanchor = self.anchor
-        resultDict = retriever.requestAsString()
-        if resultDict == None:
-            return 99
+        
         rc = resultDict['code']
         if rc != 0:
             if 'error' in resultDict:
-                self.log.error("%s, while retrieving %s" % (resultDict['error'],subscription.id))
+                self.log.error("%s, while retrieving %s" % (resultDict['error'],retriever.uri))
             else:
-                self.log.error("Download of uri '%s' failed." % (subscription.id))
+                self.log.error("Download of uri '%s' failed." % (subscriptionKey))
             if rc > 255:
                 return rc
             else:
                 return 10
+        
         update_unprocessed = resultDict['responce']
         #update_unprocessed = str(f.read())
         # Now we have the update lets first check its hash
