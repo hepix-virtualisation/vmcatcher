@@ -331,4 +331,4 @@ class retrieveFacard(object):
         else:
             self.log.critical("programming error no protocol implementation")
         return None
-        
+
