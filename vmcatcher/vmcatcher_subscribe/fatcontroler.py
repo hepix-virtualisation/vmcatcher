@@ -323,10 +323,10 @@ class db_controler(object):
         try:
             smimeProcessor.Process(resultDict['responce'])
         except smimeX509validation.truststore.TrustStoreError,E:
-            self.log.error("Validate text '%s' produced error '%s'" % (resultDict['uri'],E))
+            self.log.error("Validate text '%s' produced error '%s'" % (filename,E))
             return False
         except smimeX509validation.smimeX509ValidationError,E:
-            self.log.error("Validate text '%s' produced error '%s'" % (resultDict['uri'],E))
+            self.log.error("Validate text '%s' produced error '%s'" % (filename,E))
             return False
         if not smimeProcessor.verified:
             self.log.error("Failed to  verify text '%s'" % (resultDict['uri']))
