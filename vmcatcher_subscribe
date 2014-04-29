@@ -333,6 +333,10 @@ def main():
         metadata = { "subscription_url_list" : subscription_url_list,
                 "autoEndorse" : autoEndorse,
             }
+        if 'uri_username' in decorators:
+            metadata["userName"] = uri_username
+        if 'uri_password' in decorators:
+            metadata["password"] = uri_password
         if not database.subscriptions_subscribe(metadata):
             log.error("Failed to subscribe to '%s'" % (subscription_url_list))
             sys.exit(1)
