@@ -27,6 +27,14 @@ class retrieve(retrieveBase.retrieve):
         return locals()
     def requestAsString(self):
         output = {'code' : 0}
+        if self.server == None:
+            output['error'] = "undefined server"
+            output['code'] = 101
+            return output
+        if self.port == None:
+            output['error'] = "undefined port"
+            output['code'] = 101
+            return output
         try:
             hostcert = ssl.get_server_certificate((self.server, self.port))
         except socket.gaierror, E:
