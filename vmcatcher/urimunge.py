@@ -16,10 +16,6 @@ def setUri(value):
         value = u""
     parsed = urlparse.urlparse(value)
     target["protocol"] = parsed.scheme
-    newServer = None
-    newPort = None
-    newUsername = None
-    newPassword = None
     if len(parsed.netloc) > 0:
         netloc = parsed.netloc.split('@')
         hostPort = ""
@@ -32,8 +28,10 @@ def setUri(value):
         if len(userPass) > 0:
             splitUserPass = userPass.split(':')
             newUsername = splitUserPass[0]
+            target["username"] = newUsername
             if len(splitUserPass) > 1:
                 newPassword = ':'.join([str(x) for x in splitUserPass[1:]])
+                target["password"] = newPassword
         if len(hostPort) > 0:
             splitHostPort = hostPort.split(':')
             newServer = splitHostPort[0]
@@ -41,10 +39,8 @@ def setUri(value):
                 asInt = int(splitHostPort[1])
                 if asInt != 0:
                     newPort = asInt
-    target["server"] = newServer
-    target["port"] = newPort
-    target["username"] = newUsername
-    target["password"] = newPassword
+                    target["port"] = newPort
+            target["server"] = newServer    
     if len(parsed.path) > 0:
         target["path"] = parsed.path
     else:
@@ -54,6 +50,7 @@ def setUri(value):
 
 
 def getUri(target):
+    
     if target["protocol"] == None:
         return None
     userPass = u""
@@ -63,42 +60,56 @@ def getUri(target):
             userPass = target["username"]
         else:
             userPass = u"%s:%s" % (target["username"], target["password"])
-    hostPort = ""
-    if target["server"] != None:
-        if target["port"] == None:
-            hostPort = target["server"]
-        else:
-            hostPort = u"%s:%s" % (target["server"], target["port"])
-    netloc = ""
-    if (len(hostPort) > 0):
-        if (len(userPass) > 0):
-            netloc = u"%s@%s" % (userPass, hostPort)
-        else:
-            netloc = hostPort
-    path = ""
-    if target["path"] != None:
-        path = target["path"]
-    output = u"%s://%s%s" % (target["protocol"],netloc,path)
+    
+    if "server" in target:
+        hostPort = ""
+        if target["server"] != None:
+            if target["port"] == None:
+                hostPort = target["server"]
+            else:
+                hostPort = u"%s:%s" % (target["server"], target["port"])
+        netloc = ""
+        if (len(hostPort) > 0):
+            if (len(userPass) > 0):
+                netloc = u"%s@%s" % (userPass, hostPort)
+            else:
+                netloc = hostPort
+        path = ""
+        if target["path"] != None:
+            path = target["path"]
+        output = u"%s://%s%s" % (target["protocol"],netloc,path)
+    else:
+        path = ""
+        if target["path"] != None:
+            path = target["path"]
+        output = u"%s://%s" % (target["protocol"],path)
     return output
     
 def getUriAnonymous(target):
+    
     if target["protocol"] == None:
         return None
-    userPass = ""
-    hostPort = ""
-    if target["server"] != None:
-        if target["port"] == None:
-            hostPort = target["server"]
-        else:
-            hostPort = "%s:%s" % (target["server"], target["port"])
-    netloc = ""
-    if (len(hostPort) > 0):
-        if (len(userPass) > 0):
-            netloc = "%s@%s" % (userPass, hostPort)
-        else:
-            netloc = hostPort
-    path = ""
-    if target["path"] != None:
-        path = target["path"]
-    output = "%s://%s%s" % (target["protocol"],netloc,path)
+    if "server" in target:
+        userPass = ""
+        hostPort = ""
+        if target["server"] != None:
+            if not "port" in target or target["port"] == None:
+                hostPort = target["server"]
+            else:
+                hostPort = "%s:%s" % (target["server"], target["port"])
+        netloc = ""
+        if (len(hostPort) > 0):
+            if (len(userPass) > 0):
+                netloc = "%s@%s" % (userPass, hostPort)
+            else:
+                netloc = hostPort
+        path = ""
+        if target["path"] != None:
+            path = target["path"]
+        output = "%s://%s%s" % (target["protocol"],netloc,path)
+    else:
+        path = ""
+        if target["path"] != None:
+            path = target["path"]
+        output = u"%s://%s" % (target["protocol"],path)
     return output
