@@ -92,19 +92,19 @@ class Subscription(Base):
         self.uri = details[u'hv:uri']
         self.imagelist_latest = None
         self.authorised = authorised
-        if [u'il.transfer.protocol:trustAnchor'] in details.keys():
+        if u'il.transfer.protocol:trustAnchor' in details.keys():
             self.trustAnchor = details[u'il.transfer.protocol:trustAnchor']
         else:
             self.trustAnchor = 0
-        if [u'il.transfer.protocol:userName'] in details.keys():
+        if u'il.transfer.protocol:userName' in details.keys():
             self.userName = details[u'il.transfer.protocol:userName']
         else:
             self.userName = None
-        if [u'il.transfer.protocol:password'] in details.keys():
+        if u'il.transfer.protocol:password' in details.keys():
             self.password = details[u'il.transfer.protocol:password']
         else:
             self.password = None
-
+            
     def __repr__(self):
         return "<Subscription('%s','%s', '%s')>" % (self.identifier, self.uri, self.description)
 
