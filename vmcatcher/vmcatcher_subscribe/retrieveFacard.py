@@ -20,7 +20,7 @@ class retrieveFacardError(Exception):
         
 class retrieveFacard(object):
     def __init__(self, *args, **kwargs):
-        self.log = logging.getLogger("uploaderFacade")
+        self.log = logging.getLogger("retrieveFacard")
         self._retrieveImp = None
         # Detailed properties
         self.server = kwargs.get('server', None)
