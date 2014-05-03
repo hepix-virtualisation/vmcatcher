@@ -8,6 +8,10 @@ class retrieve(retrieveBase.retrieve):
     def __init__(self, *args, **kwargs):
         retrieveBase.retrieve.__init__(self,args,kwargs)
     def requestAsString(self):
+        if self.path == None:
+            output['error'] = 'Path not defined'
+            output['code'] = 404
+            return output
         output = {}
         content = None
         if not os.path.exists(self.path):
