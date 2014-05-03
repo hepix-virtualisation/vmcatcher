@@ -30,7 +30,7 @@ try:
     import simplejson as json
 except:
     import json
-
+import  vmcatcher.urimunge as urimunge
 from vmcatcher.urimunge import uriNormalise,uriNormaliseAnonymous
 
 # command line error codes.
@@ -89,6 +89,7 @@ class db_actions(object):
         return subscriptionlist
 
     def subscription_create(self,metadata,authorised):
+        #self.log.debug( "subscription_create called with=%s" % json.dumps(metadata.keys(),sort_keys=True, indent=4))
         subscription_query = self.subscription_get(metadata)
         if subscription_query.count() > 0:
             return subscription_query
@@ -151,38 +152,52 @@ class db_controler(object):
     def _retiver_uri(self,metadata):
         retriever = retrieveFacard.retrieveFacard()
         
-        uri = None
-        userName = None
-        password = None
-        anchor = None
-        if "userName" in metadata.keys():
-            if metadata["userName"] != None:
-                if len(metadata["userName"]) > 0:
-                    userName = metadata["userName"]
-        if "password" in metadata.keys():
-            if metadata["password"] != None:
-                if len(metadata["password"]) > 0:
-                    password = metadata["password"]
-        
-        if "anchor" in metadata.keys():
-            if metadata["anchor"] != None:
-                if len(metadata["anchor"]) > 0:
-                   anchor = metadata["anchor"]
         if "uri" in metadata.keys():
             if metadata["uri"] != None:
                 if len(metadata["uri"]) > 0:
                    uri = metadata["uri"]
+                   retriever.uri = uri
+       
+        if "userName" in metadata.keys():
+            if metadata["userName"] != None:
+                if len(metadata["userName"]) > 0:
+                    userName = metadata["userName"]
+                    retriever.username = userName
+        if "password" in metadata.keys():
+            if metadata["password"] != None:
+                if len(metadata["password"]) > 0:
+                    password = metadata["password"]
+                    retriever.password = password
+        if "anchor" in metadata.keys():
+            if metadata["anchor"] != None:
+                if len(metadata["anchor"]) > 0:
+                   anchor = metadata["anchor"]
+                   retriever.trustanchor = anchor
+        if "filename" in metadata.keys():
+            if metadata["filename"] != None:
+                if len(metadata["filename"]) > 0:
+                   filename = metadata["filename"]
+                   retriever.uri = filename
+        if "protocol" in metadata.keys():
+            if metadata["protocol"] != None:
+                if len(metadata["protocol"]) > 0:
+                   protocol = metadata["protocol"]
+                   retriever.protocol = protocol
         
-        retriever.uri = uri
-        retriever.username = userName
-        retriever.password = password
-        retriever.trustanchor = anchor
+                   self.log.debug("protocol=%s" % (protocol))
+        if "server" in metadata.keys():
+            if metadata["server"] != None:
+                if len(metadata["server"]) > 0:
+                   server = metadata["server"]
+                   retriever.server = server
+        
+                   self.log.debug("server=%s" % (server))
+        
         resultDict = retriever.requestAsString()
-        
         
         if resultDict == None:
             return {'code' : 800}
-        resultDict['uri'] = uriNormaliseAnonymous(retriever)
+        resultDict['uri'] = uriNormaliseAnonymous(retriever.uri)
         return resultDict
         
     def set_selector(self,selector_string):
@@ -241,29 +256,36 @@ class db_controler(object):
         Session.commit()
         return foundOne
     def subscriptions_subscribe(self,inmetadata):
-        
+        #self.log.debug("subscriptions_subscribe called with %s" % (inmetadata))
+        metadata = {}
+        if 'autoEndorse' in inmetadata:
+            metadata["autoEndorse"] = inmetadata['autoEndorse']
+         
         urls_selected = inmetadata['subscription_url_list']
-        autoEndorse = inmetadata['autoEndorse']
-        userName = None
+        
+        
         if "userName" in inmetadata:
             userName = inmetadata['userName']
+            metadata["userName"] = userName
         password = None
         if "password" in inmetadata:
-            password = inmetadata['password']
+            metadata["password"] = inmetadata['password']
         trustAnchor = self.anchor
         if "trustAnchor" in inmetadata:
             trustAnchor = inmetadata['trustAnchor']
+        metadata["trustAnchor"] = trustAnchor
+        
         rc = True
         Session = self.SessionFactory()
         db = db_actions(Session)
         for uri in urls_selected:
-            metadata = { "autoEndorse" : autoEndorse,
-                "filename" : uri,
-                "trustAnchor" : trustAnchor,
-                "userName" : userName,
-                "password" : password
-            }
-            if not self.subscribe_file(Session,metadata):
+            mungedUri = urimunge.setUri(uri)
+            #self.log.error("mungedUri=%s" % (json.dumps(mungedUri,sort_keys=True, indent=4)))
+            newmetatdata = dict(mungedUri)
+            newmetatdata["filename"] = uri
+            newmetatdata["trustAnchor"] = self.anchor
+            
+            if not self.subscribe_file(Session,newmetatdata):
                 rc = False
         return rc
 
@@ -297,36 +319,63 @@ class db_controler(object):
     def setEventObj(self,obj):
         self.eventObj = obj
     def subscribe_file(self,Session,inmetadata):
-        autoEndorse = inmetadata["autoEndorse"]
-        filename = inmetadata["filename"]
-        anchor = inmetadata["trustAnchor"]
-        userName = inmetadata["userName"]
-        password  = inmetadata["password"]
-        metadata= {"uri" : filename,
-            "trustAnchor" : anchor,
-            "userName" : userName,
-            "password" : password,
-        }
-        resultDict = self._retiver_uri(metadata)
+        metadata_retriver = {}
+        metadata = {}
+        if 'autoEndorse' in inmetadata:
+            metadata["autoEndorse"] = inmetadata["autoEndorse"]
+            
+        if 'filename' in inmetadata:
+            metadata["uri"] = inmetadata["filename"]
+        if 'trustAnchor' in inmetadata:
+            metadata["trustAnchor"] = inmetadata["trustAnchor"]
+        else:
+            metadata[u'il.transfer.protocol:trustAnchor'] = self.anchor
+        
+        if 'userName' in inmetadata:
+            metadata["userName"] = inmetadata["userName"]
+            metadata[u'il.transfer.protocol:userName'] = inmetadata["userName"]
+        elif 'username' in inmetadata:
+            metadata["userName"] = inmetadata["username"]
+            metadata[u'il.transfer.protocol:userName'] = inmetadata["username"]
+        else:
+            self.log.error("username=%s" % (None) )
+        
+        
+        
+        
+        
+        if 'password' in inmetadata:
+            metadata["password"] = inmetadata["password"]
+            metadata[u'il.transfer.protocol:password'] = inmetadata["password"]
+        #print inmetadata.keys()
+        if 'protocol' in inmetadata:
+            metadata["password"] = inmetadata["password"]
+            metadata[u'il.transfer.protocol:password'] = inmetadata["password"]
+        
+        
+        resultDict = self._retiver_uri(inmetadata)
         rc = resultDict['code']
         if rc != 0:
             if 'error' in resultDict:
-                self.log.error("%s, while retrieving %s" % (['error'],filename))
+                self.log.error("%s, while retrieving %s" % (['error'],metadata["uri"]))
+                self.log.debug(resultDict)
             else:
-                self.log.error("Download of uri '%s' failed." % (filename))
+                self.log.error("Download of uri '%s' failed." % (metadata["uri"]))
             if rc > 255:
                 return rc
             else:
                 return 10
-        metadata["uri"] = uriNormaliseAnonymous(filename)
-        smimeProcessor = smimeX509validation.smimeX509validation(anchor)
+        
+        smimeProcessor = smimeX509validation.smimeX509validation(metadata["trustAnchor"])
         try:
             smimeProcessor.Process(resultDict['responce'])
         except smimeX509validation.truststore.TrustStoreError,E:
-            self.log.error("Validate text '%s' produced error '%s'" % (filename,E))
+            self.log.error("Validate text '%s' produced error '%s'" % (metadata["uri"],E))
+            self.log.debug("Downloaded=%s" % (resultDict['responce']))
             return False
         except smimeX509validation.smimeX509ValidationError,E:
-            self.log.error("Validate text '%s' produced error '%s'" % (filename,E))
+            self.log.error("Validate text '%s' produced error '%s'" % (metadata["uri"],E))
+            self.log.debug("Downloaded=%s" % (resultDict['responce']))
             return False
         if not smimeProcessor.verified:
             self.log.error("Failed to  verify text '%s'" % (resultDict['uri']))
@@ -334,14 +383,18 @@ class db_controler(object):
         jsontext = json.loads(smimeProcessor.InputDaraStringIO.getvalue())
         if jsontext == None:
             self.log.error("Message down loaded from '%s' was not valid JSON." % (resultDict['uri']))
+            self.log.debug("Downloaded=" % (jsontext))
             return False
         vmilist = VMimageListDecoder(jsontext)
         if vmilist == None:
             self.log.error("Failed to decode the json as an image list Object for '%s'." % (resultDict['uri']))
             return False
-        metadata = {u'il.transfer.protocol:trustAnchor' :anchor,
-            u'il.transfer.protocol:userName' : userName,
-            u'il.transfer.protocol:password' : password}
+        if 'userName' in inmetadata:
+            metadata["userName"] = inmetadata["userName"]
+            metadata[u'il.transfer.protocol:userName'] = inmetadata["userName"]
+        if 'password' in inmetadata:
+            metadata["password"] = inmetadata["password"]
+            metadata[u'il.transfer.protocol:password'] = inmetadata["password"]
         metadata.update(vmilist.metadata)
         metadata.update(vmilist.endorser.metadata)
         if u'dc:identifier' not in metadata.keys():
@@ -353,7 +406,7 @@ class db_controler(object):
         if metadata[u'hv:ca'] != smimeProcessor.InputCertMetaDataList[0]['issuer']:
             self.log.error('list hv:ca does not match signature')
             return False
-        if uriNormaliseAnonymous(metadata[u'hv:uri']) !=  uriNormaliseAnonymous(filename):
+        if uriNormaliseAnonymous(metadata[u'hv:uri']) !=  uriNormaliseAnonymous(resultDict["uri"]):
             self.log.warning('list hv:uri does not match subscription uri')
             self.log.info('hv:uri=%s' % (metadata[u'hv:uri']))
             self.log.info('subscription uri=%s' % (resultDict['uri']))
@@ -745,7 +798,7 @@ class db_controler(object):
             
             query_subscription = self.selector_curent(Session,subscription_filter)
             if query_subscription.count() == 0:
-                self.log.warning("Selections '%s' does not match any known subscriptions." % (selector_filter))
+                self.log.warning("Selections '%s' does not match any known subscriptions." % (subscription_filter))
                 errorhappened = True
                 continue
             firstSubscription = query_subscription.first()
@@ -763,7 +816,7 @@ class db_controler(object):
             
             query_subscription = self.selector_curent(Session,subscription_filter)
             if query_subscription.count() == 0:
-                self.log.warning("Selections '%s' does not match any known subscriptions." % (selector_filter))
+                self.log.warning("Selections '%s' does not match any known subscriptions." % (subscription_filter))
                 errorhappened = True
                 continue
             firstSubscription = query_subscription.first()
