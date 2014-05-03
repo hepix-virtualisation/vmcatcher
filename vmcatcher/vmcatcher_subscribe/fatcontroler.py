@@ -349,8 +349,8 @@ class db_controler(object):
             metadata[u'il.transfer.protocol:password'] = inmetadata["password"]
         #print inmetadata.keys()
         if 'protocol' in inmetadata:
-            metadata["password"] = inmetadata["password"]
-            metadata[u'il.transfer.protocol:password'] = inmetadata["password"]
+            metadata["protocol"] = inmetadata["protocol"]
+            metadata[u'il.transfer.protocol'] = inmetadata["protocol"]
         
         
         resultDict = self._retiver_uri(inmetadata)
