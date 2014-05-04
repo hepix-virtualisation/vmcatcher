@@ -1,5 +1,10 @@
 Changelog
 
+vmcatcher-0.4.1
+
+ * Subscriping to an image list now works.
+ * Code restructuring.
+
 vmcatcher-0.4.0
 
  * Added new options to command line.
