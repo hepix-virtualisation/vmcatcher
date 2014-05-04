@@ -284,7 +284,7 @@ class db_controler(object):
             newmetatdata = dict(mungedUri)
             newmetatdata["filename"] = uri
             newmetatdata["trustAnchor"] = self.anchor
-            
+            newmetatdata.update(metadata)
             if not self.subscribe_file(Session,newmetatdata):
                 rc = False
         return rc
