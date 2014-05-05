@@ -1,5 +1,9 @@
 Changelog
 
+vmcatcher-0.4.2
+
+ * Fixed a critical bug in subscription.
+
 vmcatcher-0.4.1
 
  * Subscriping to an image list now works.
