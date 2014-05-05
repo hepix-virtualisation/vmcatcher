@@ -321,9 +321,10 @@ class db_controler(object):
     def subscribe_file(self,Session,inmetadata):
         metadata_retriver = {}
         metadata = {}
+        autoEndorse = False
         if 'autoEndorse' in inmetadata:
             metadata["autoEndorse"] = inmetadata["autoEndorse"]
-            
+            autoEndorse = True
         if 'filename' in inmetadata:
             metadata["uri"] = inmetadata["filename"]
         if 'trustAnchor' in inmetadata:
@@ -337,13 +338,6 @@ class db_controler(object):
         elif 'username' in inmetadata:
             metadata["userName"] = inmetadata["username"]
             metadata[u'il.transfer.protocol:userName'] = inmetadata["username"]
-        else:
-            self.log.error("username=%s" % (None) )
-        
-        
-        
-        
-        
         if 'password' in inmetadata:
             metadata["password"] = inmetadata["password"]
             metadata[u'il.transfer.protocol:password'] = inmetadata["password"]
@@ -406,10 +400,10 @@ class db_controler(object):
         if metadata[u'hv:ca'] != smimeProcessor.InputCertMetaDataList[0]['issuer']:
             self.log.error('list hv:ca does not match signature')
             return False
-        if uriNormaliseAnonymous(metadata[u'hv:uri']) !=  uriNormaliseAnonymous(resultDict["uri"]):
-            self.log.warning('list hv:uri does not match subscription uri')
-            self.log.info('hv:uri=%s' % (metadata[u'hv:uri']))
-            self.log.info('subscription uri=%s' % (resultDict['uri']))
+        #if uriNormaliseAnonymous(metadata[u'hv:uri']) !=  uriNormaliseAnonymous(resultDict["uri"]):
+        #    self.log.warning('list hv:uri does not match subscription uri')
+        #    self.log.info('hv:uri=%s' % (metadata[u'hv:uri']))
+        #    self.log.info('subscription uri=%s' % (resultDict['uri']))
         db = db_actions(Session)
         endorser_list = db.endorser_get(metadata)
         if endorser_list.count() == 0:
