@@ -1,5 +1,11 @@
 Changelog
 
+vmcatcher-0.4.3
+
+ * vmcatcher_cache Added VMCATCHER_EVENT_HV_VERSION environment variable.
+ * vmcatcher_subscribe:  fixed --auto-endorse which was always enabled.
+ * Fixed environment variable bleed between events.
+
 vmcatcher-0.4.2
 
  * Fixed a critical bug in subscription.
