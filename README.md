@@ -802,6 +802,7 @@ The following environment variables may be set by events:
   * VMCATCHER_EVENT_HV_HYPERVISOR
   * VMCATCHER_EVENT_HV_SIZE
   * VMCATCHER_EVENT_HV_URI
+  * VMCATCHER_EVENT_HV_VERSION
   * VMCATCHER_EVENT_SL_ARCH
   * VMCATCHER_EVENT_SL_CHECKSUM_SHA512
   * VMCATCHER_EVENT_SL_COMMENTS
@@ -877,7 +878,9 @@ The Image Size
 
 The Original URI for the image
 
+###### VMCATCHER_EVENT_HV_VERSION
 
+The version number of the image
 
 ###### VMCATCHER_EVENT_SL_ARCH
 
