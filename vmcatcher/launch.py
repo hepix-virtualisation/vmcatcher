@@ -60,12 +60,11 @@ class EventObj(object):
             'sl:os' : 'VMCATCHER_EVENT_SL_OS',
             'sl:osversion' : 'VMCATCHER_EVENT_SL_OSVERSION',
             'sl:checksum:sha512' : 'VMCATCHER_EVENT_SL_CHECKSUM_SHA512'}
-        newEnv = self.env
+        newEnv = dict(self.env)
         newEnv['VMCATCHER_EVENT_TYPE'] = EventStr
         for key in mappingdict.keys():
             if key in metadata.keys():
                 newEnv[str(mappingdict[key])] = str(metadata[key])
-        
         rc,stdout,stderr = self.launch(newEnv)
         if rc == 0:
             self.log.debug("event '%s' executed '%s'" % (newEnv['VMCATCHER_EVENT_TYPE'],self.eventExecutionString))
