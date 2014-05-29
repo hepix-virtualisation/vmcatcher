@@ -152,6 +152,7 @@ class CacheMan(object):
                     'msgHash' : str(imageListInst.data_hash),
                     'dc:title' : str(ImageInst.title),
                     'dc:description' : str(ImageInst.description),
+                    'hv:version' : str(ImageInst.version),
                     'hv:hypervisor' : str(ImageInst.hypervisor),
                     'sl:arch' : str(ImageInst.arch),
                     'sl:comments' : str(ImageInst.comments),
