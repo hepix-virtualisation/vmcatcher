@@ -260,10 +260,7 @@ class db_controler(object):
         metadata = {}
         if 'autoEndorse' in inmetadata:
             metadata["autoEndorse"] = inmetadata['autoEndorse']
-         
         urls_selected = inmetadata['subscription_url_list']
-        
-        
         if "userName" in inmetadata:
             userName = inmetadata['userName']
             metadata["userName"] = userName
@@ -323,8 +320,8 @@ class db_controler(object):
         metadata = {}
         autoEndorse = False
         if 'autoEndorse' in inmetadata:
-            metadata["autoEndorse"] = inmetadata["autoEndorse"]
-            autoEndorse = True
+            if inmetadata["autoEndorse"] == True:
+                autoEndorse = inmetadata["autoEndorse"]
         if 'filename' in inmetadata:
             metadata["uri"] = inmetadata["filename"]
         if 'trustAnchor' in inmetadata:
