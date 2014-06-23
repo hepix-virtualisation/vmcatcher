@@ -123,7 +123,7 @@ class output_driver_base(object):
                         ImageDefinition = imagedef)
             return True
         return False
-    
+
 class output_driver_lister(output_driver_base):
     def __init__(self):
         output_driver_base.__init__(self)
@@ -274,7 +274,7 @@ class output_driver_lister(output_driver_base):
     def info_EndorserPrincible(self,EndorserPrincible):
         self.fpOutput.write ('endorser:hv:subject=%s\n' % (EndorserPrincible.hv_dn))
         self.fpOutput.write ('endorser:hv:issuer=%s\n' %(EndorserPrincible.hv_ca))
-
+    
       
 class output_driver_display_message(output_driver_base):
     def __init__(self):
@@ -306,31 +306,6 @@ class output_driver_display_metadata(output_driver_base):
         
             
 
-
-class output_driver_smime(output_driver_display_message,output_driver_lister,output_driver_base):
-    def __init__(self):
-        output_driver_base.__init__(self)
-        output_driver_lister.__init__(self)
-        output_driver_display_message.__init__(self)
-        self.log = logging.getLogger("output_driver_smime")
-
-    def info(self, *args, **kwargs):
-        expectedkeys = set([
-                "Endorser",
-                "EndorserPrincible",
-                "ImageDefinition",
-                "ImageInstance",
-                "ImageListInstance",
-                "Subscription",
-                "SubscriptionAuth",
-                ])
-        
-        found = set(kwargs.keys())
-        if "ImageListInstance" in found:
-            argImageInstance = kwargs.get('ImageListInstance', None)
-            self.fpOutput.write (argImageInstance.data)
-            return True
-        return False
         
 
 class output_driver_message(output_driver_display_message,output_driver_lister,output_driver_base):
@@ -369,10 +344,3 @@ class output_driver_message(output_driver_display_message,output_driver_lister,o
             
             return self.display_ImageListInstance(argImageInstance)
         return False
-   
-class output_driver_lines(output_driver_display_metadata, output_driver_lister,output_driver_base):
-    def __init__(self):
-        output_driver_base.__init__(self)
-        output_driver_lister.__init__(self)
-        output_driver_display_metadata.__init__(self)
-        self.log = logging.getLogger("output_driver_lines")
