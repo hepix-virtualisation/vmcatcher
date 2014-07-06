@@ -66,6 +66,8 @@ def main():
     p.add_option('--image-list', action ='store_true',help='list accepted image UUID for a subscription.', metavar='image UUID')
     p.add_option('--image-accept', action ='append',help='accept image UUID in subscription.', metavar='image UUID')
     p.add_option('--image-refuse', action ='append',help='refuse image UUID in subscription.', metavar='image UUID')
+    p.add_option('--imagelist-new-accept', action ='append',help='Accept new image UUID in subscription.')
+    p.add_option('--imagelist-new-subscribe', action ='append',help='Accept and subscribe to new image UUID in subscription.')
     p.add_option('--uri-trustanchor-set', action ='store',help='Set trust anchor to authenticate imagelist hoster.', metavar='TRUST ANCHOR')
     p.add_option('--uri-username-set', action ='store',help='User name to access imagelist hoster.', metavar='USERNAME')
     p.add_option('--uri-username-clear', action ='store_true',help='User name to access imagelist hoster.', metavar='USERNAME')

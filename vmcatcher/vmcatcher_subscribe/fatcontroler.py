@@ -534,6 +534,7 @@ class db_controler(object):
         checker = fileView(self.anchor,update_unprocessed,metadataFV)
         if checker.errorNo != 0:
             self.log.error("Failed to verify subscription '%s' with URI '%s'" % (subscription.identifier,subscription.uri))
+            self.log.debug(update_unprocessed)
             return checker.errorNo
         if checker.Json == None:
             return 14

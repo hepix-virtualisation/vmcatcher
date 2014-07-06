@@ -86,6 +86,11 @@ class Subscription(Base):
     userName = Column(String(200), default=None,nullable = True)
     # passWord for protocols using password
     password = Column(String(200), default=None,nullable = True)
+    # updateMode
+    # 0 default
+    # 1 autoadd
+    # 2 autosubscribe
+    updateMode = Column(Integer,default=0,nullable = False)
     def __init__(self,details, authorised = False):
         self.identifier = details[u'dc:identifier']
         self.description = details[u'dc:description']
@@ -104,6 +109,10 @@ class Subscription(Base):
             self.password = details[u'il.transfer.protocol:password']
         else:
             self.password = None
+        if u'il.transfer.updatemode' in details.keys():
+            self.trustAnchor = details[u'il.transfer.updatemode']
+        else:
+            self.trustAnchor = 0
             
     def __repr__(self):
         return "<Subscription('%s','%s', '%s')>" % (self.identifier, self.uri, self.description)

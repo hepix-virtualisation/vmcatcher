@@ -1059,7 +1059,11 @@ Now dump the data base content
 
     $ sqlite3 vmcatcher.db .dump > dump
 
-No regenerate the data base.
+Remove old data base.
+
+    $ rm vmcatcher.db
+
+Now regenerate the data base.
 
     $ vmcatcher_image -l
 
