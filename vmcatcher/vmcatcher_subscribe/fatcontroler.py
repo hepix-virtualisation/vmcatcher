@@ -284,6 +284,10 @@ class db_controler(object):
             newmetatdata.update(metadata)
             if not self.subscribe_file(Session,newmetatdata):
                 rc = False
+                continue
+            if "imagelist_newimage" in inmetadata:
+                self.subscriptions_imagelist_newimage_set(inmetadata["imagelist_newimage"])
+            
         return rc
 
 
@@ -813,6 +817,24 @@ class db_controler(object):
                 continue
             firstSubscription = query_subscription.first()
             firstSubscription.password = password
+            Session.add(firstSubscription)
+            Session.commit()
+        if errorhappened:
+            return False
+        return True
+
+    def subscriptions_imagelist_newimage_set(self, subscriptions, imagelist_newimage):
+        errorhappened = False
+        Session = self.SessionFactory()
+        for subscription_filter in subscriptions:
+            
+            query_subscription = self.selector_curent(Session,subscription_filter)
+            if query_subscription.count() == 0:
+                self.log.warning("Selections '%s' does not match any known subscriptions." % (subscription_filter))
+                errorhappened = True
+                continue
+            firstSubscription = query_subscription.first()
+            firstSubscription.updateMode = imagelist_newimage
             Session.add(firstSubscription)
             Session.commit()
         if errorhappened:

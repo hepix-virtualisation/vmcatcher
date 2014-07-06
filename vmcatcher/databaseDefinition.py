@@ -110,9 +110,9 @@ class Subscription(Base):
         else:
             self.password = None
         if u'il.transfer.updatemode' in details.keys():
-            self.trustAnchor = details[u'il.transfer.updatemode']
+            self.updateMode = details[u'il.transfer.updatemode']
         else:
-            self.trustAnchor = 0
+            self.updateMode = 0
             
     def __repr__(self):
         return "<Subscription('%s','%s', '%s')>" % (self.identifier, self.uri, self.description)

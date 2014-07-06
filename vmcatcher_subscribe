@@ -66,8 +66,9 @@ def main():
     p.add_option('--image-list', action ='store_true',help='list accepted image UUID for a subscription.', metavar='image UUID')
     p.add_option('--image-accept', action ='append',help='accept image UUID in subscription.', metavar='image UUID')
     p.add_option('--image-refuse', action ='append',help='refuse image UUID in subscription.', metavar='image UUID')
-    p.add_option('--imagelist-new-accept', action ='append',help='Accept new image UUID in subscription.')
-    p.add_option('--imagelist-new-subscribe', action ='append',help='Accept and subscribe to new image UUID in subscription.')
+    p.add_option('--imagelist-newimage-accept', action ='store_true',help='Accept new image UUID in subscription.')
+    p.add_option('--imagelist-newimage-subscribe', action ='store_true',help='Accept and subscribe to new image UUID in subscription.')
+    p.add_option('--imagelist-newimage-refuse', action ='store_true',help='Refuse new image UUID in subscription. (default)')
     p.add_option('--uri-trustanchor-set', action ='store',help='Set trust anchor to authenticate imagelist hoster.', metavar='TRUST ANCHOR')
     p.add_option('--uri-username-set', action ='store',help='User name to access imagelist hoster.', metavar='USERNAME')
     p.add_option('--uri-username-clear', action ='store_true',help='User name to access imagelist hoster.', metavar='USERNAME')
@@ -102,7 +103,8 @@ def main():
         'image_refuse',
         'uri_trustanchor',
         'uri_username',
-        'uri_password'])
+        'uri_password',
+        'imagelist_newimage'])
     outputformats = set(['SMIME','message','lines','json'])
     output_format_selected = 'lines'
     
@@ -122,6 +124,7 @@ def main():
     uri_trustanchor_str_valid = { 'none' : 0, 'browser' : 1, 'igtf' : 2 }
     uri_username = None
     uri_password = None
+    imagelist_newimage = 0
     if 'VMCATCHER_RDBMS' in os.environ:
         databaseConnectionString = os.environ['VMCATCHER_RDBMS']
     if 'VMCATCHER_LOG_CONF' in os.environ:
@@ -241,7 +244,16 @@ def main():
         # Password to access imagelist hoster
         decorators.add('uri_password')
         uri_password = options.uri_password_set
-        
+    if options.imagelist_newimage_accept:
+        decorators.add('imagelist_newimage')
+        imagelist_newimage = 1
+    if options.imagelist_newimage_subscribe:
+        decorators.add('imagelist_newimage')
+        imagelist_newimage = 3
+    if options.imagelist_newimage_refuse:
+        decorators.add('imagelist_newimage')
+        imagelist_newimage = 0
+
     # 1 So we have some command line validation
 
     if databaseConnectionString == None:
@@ -339,6 +351,8 @@ def main():
             metadata["userName"] = uri_username
         if 'uri_password' in decorators:
             metadata["password"] = uri_password
+        if 'imagelist_newimage' in decorators:
+            metadata["imagelist_newimage"] = imagelist_newimage
         if not database.subscriptions_subscribe(metadata):
             log.error("Failed to subscribe to '%s'" % (subscription_url_list))
             sys.exit(1)
@@ -370,7 +384,8 @@ def main():
         database.subscriptions_username_set(subscriptions_selected, uri_username)
     if 'uri_password' in decorators:
         database.subscriptions_password_set(subscriptions_selected, uri_password)
-    
+    if 'imagelist_newimage' in decorators:
+        database.subscriptions_imagelist_newimage_set(subscriptions_selected, imagelist_newimage)
     sys.exit(rc)
 
 
