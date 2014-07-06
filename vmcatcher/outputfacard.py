@@ -13,11 +13,11 @@ def Property(func):
 
 
 
-class Error(Exception):
+class outputFacadeException(Exception):
     """Base class for exceptions in this module."""
     pass
 
-class outputFacadeInputError(Error):
+class outputFacadeInputError(outputFacadeException):
     """Exception raised for errors in the input.
 
     Attributes:
@@ -44,7 +44,10 @@ class outputFacade(object):
                 if self._uploaderImp != None:
                     if hasattr(self._uploaderImp,'fpOutput'):
                         return self._uploaderImp.fpOutput
-            return self._fpOutput
+            if hasattr(self,'_fpOutput'):
+                return self._fpOutput
+            else:
+                return None
 
         def fset(self, name):
             self._fpOutput = name
@@ -56,7 +59,7 @@ class outputFacade(object):
         return locals()
     @Property
     def saSession():
-        doc = "Ouput File Pointer"
+        doc = "SQL alchamy session."
         def fget(self):
             if hasattr(self, '_uploaderImp'):
                 if self._uploaderImp != None:
@@ -74,7 +77,7 @@ class outputFacade(object):
         return locals()
     @Property
     def x509anchor():
-        doc = "Ouput File Pointer"
+        doc = "x509 achor"
         def fget(self):
             if hasattr(self, '_uploaderImp'):
                 if self._uploaderImp != None:
@@ -101,9 +104,10 @@ class outputFacade(object):
                 return None
         def fset(self, name):
             if not name in availableFormats:
+                self.log.error("asdsdasd")
                 del(self._uploaderImp)
                 del(self._outputFormatName)
-                error = InputError("Invalid Value")
+                error = outputFacadeInputError("Invalid Value")
                 raise error
             self._outputFormatName = name
             new_implementation_ptr = {'SMIME' : output_driver_smime,
