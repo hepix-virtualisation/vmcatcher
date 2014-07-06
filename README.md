@@ -1016,6 +1016,37 @@ the next download without blocking. Since events are not resent so error
 handling is more complex, it may be wise to use a message queue, or storing
 the event and processing after, rather than just using a simple fork.
 
+#### Data base migration from versions 0.4.X to 0.5.X
+
+Backup your old database:
+
+    #mv vmcatcher.db vmcatcher.db.old
+    #sqlite3 vmcatcher.db.old .dump > dump
+
+edit thew dump file with each line starting
+
+    INSERT INTO "subscription" VALUES
+
+Add One extra column with the value, 0
+
+for example:
+
+    INSERT INTO "subscription" VALUES(2,'87576537-59cd-47e0-9777-e061e178435f','This is a demo Virtual Appliance Version','https://vmcaster.appdb.egi.eu/store/vappliance/demo.va.public/image.list',1,5,'2014-05-29 19:59:05.305093',0,NULL,NULL);
+
+becomes:
+    
+    INSERT INTO "subscription" VALUES(2,'87576537-59cd-47e0-9777-e061e178435f','This is a demo Virtual Appliance Version','https://vmcaster.appdb.egi.eu/store/vappliance/demo.va.public/image.list',1,5,'2014-05-29 19:59:05.305093',0,NULL,NULL,0);
+
+regenerate your data base
+
+    # vmcatcher_subscribe  -l 
+
+Restore your database content
+
+    # vmcatcher.db < dump
+
+You will get some errors that tables already exist dont worry about these.
+
 
 #### Data base migration from versions prior to 0.4.X
 
@@ -1028,7 +1059,7 @@ edit thew dump file with each line starting
 
     INSERT INTO "subscription" VALUES
 
-Add three extra columns with the values, 0,'',''
+Add four extra columns with the values, 0,'','',0
 
 for example:
 
@@ -1036,7 +1067,7 @@ for example:
 
 becomes:
 
-    INSERT INTO "subscription" VALUES(1,'e55c1afe-0a62-4d31-a8d7-fb8c825f92a2','Endorsed list of CernVM Images','https://cernvm.cern.ch/releases/image.list',1,1,'2014-01-25 22:20:29.859405',0,'','');
+    INSERT INTO "subscription" VALUES(1,'e55c1afe-0a62-4d31-a8d7-fb8c825f92a2','Endorsed list of CernVM Images','https://cernvm.cern.ch/releases/image.list',1,1,'2014-01-25 22:20:29.859405',0,'','',0);
 
 regenerate your data base
 
@@ -1083,6 +1114,11 @@ Logging can be independently set up for each object to multiple locations, and
 with different log levels.
 
 
+#### Running Units tests.
+
+Checkout the source code from git hub.
+
+    $ python setup.py  nosetests
 
 ### To Do (30-03-2014)
 
