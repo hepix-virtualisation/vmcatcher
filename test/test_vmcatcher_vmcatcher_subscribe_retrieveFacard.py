@@ -18,9 +18,9 @@ class TestRetrieveFacard(unittest.TestCase):
         #print ("trustanchor=%s" % (foo.trustanchor))
         responce = foo.requestAsString()
         self.log.error("output=%s" % (foo.requestAsString()))
-        self.assertIn("code", responce)
-        self.assertIn("responce", responce)
-        
+        # self.assertIn is not available in SL5
+        self.assertTrue("code" in responce.keys())
+        self.assertTrue("responce" in responce.keys())
         #raise exception
         
     
