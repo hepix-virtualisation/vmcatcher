@@ -4,21 +4,23 @@ import smimeX509validation
 import unittest
 
 class TestRetrieveFacard(unittest.TestCase):
+    def setUp(self):
+        self.log = logging.getLogger("TestRetrieveFacard")
+        self.trustAnchordirectory = "/etc/grid-security/certificates"
+        
     def test_appdb(self):
-        directory= "/etc/grid-security/certificates"
-        anchor = smimeX509validation.LoadDirChainOfTrust(directory)
-
+        anchor = smimeX509validation.LoadDirChainOfTrust(self.trustAnchordirectory)
         foo = vmcatcher.vmcatcher_subscribe.retrieveFacard.retrieveFacard()
-        print anchor
         foo.trustanchor = anchor
-        print foo.trustanchor
-        print ("trustanchor=%s" % (foo.trustanchor))
+        #print ("trustanchor=%s" % (foo.trustanchor))
         uri = "https://3728760c-f6d8-403f-9926-96fa9b5d15f3:x-oauth-basic@vmcaster.appdb-dev.marie.hellasgrid.gr:443/store/software/demo.va/image.list"
         foo.uri = uri
-        print ("trustanchor=%s" % (foo.trustanchor))
-        print ("outpout=%s" % (foo.requestAsString()))
-        uri = "https://cernvm.cern.ch/releases/image.list"
-        foo.uri = uri
-        #print ("outpout=%s" % (foo.requestAsString()))
-
+        #print ("trustanchor=%s" % (foo.trustanchor))
+        responce = foo.requestAsString()
+        self.log.error("output=%s" % (foo.requestAsString()))
+        self.assertIn("code", responce)
+        self.assertIn("responce", responce)
+        
+        #raise exception
+        
     
