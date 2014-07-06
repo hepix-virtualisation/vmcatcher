@@ -1,15 +1,29 @@
 from vmcatcher.__version__ import version
 from sys import version_info
-if version_info < (2, 6):
-	from distutils.core import setup
-else:
-	try:
-        	from setuptools import setup, find_packages
-	except ImportError:
-        	from ez_setup import use_setuptools
-        	use_setuptools()
-        	from setuptools import setup, find_packages
 
+if version_info < (2, 6):
+    import sys
+    print "Please use a newer version of python"
+    sys.exit(1)
+
+
+
+try:
+    from setuptools import setup, find_packages
+except ImportError:
+	try:
+            from distutils.core import setup
+	except ImportError:
+            from ez_setup import use_setuptools
+            use_setuptools()
+            from setuptools import setup, find_packages
+
+# we want this module for nosetests
+try:
+    import multiprocessing
+except ImportError:
+    # its not critical if this fails though.
+    pass
 
 setup(name='vmcatcher',
     version=version,
@@ -42,5 +56,14 @@ back end, and caches available image lists.""",
         ],
 
     scripts=['vmcatcher_image','vmcatcher_subscribe','vmcatcher_cache','vmcatcher_endorser'],
-    data_files=[('share/doc/vmcatcher-%s' % (version),['README.md','LICENSE','logger.conf','ChangeLog','vmcatcher_eventHndlExpl'])]
+    data_files=[('share/doc/vmcatcher-%s' % (version),['README.md','LICENSE','logger.conf','ChangeLog','vmcatcher_eventHndlExpl'])],
+    tests_require=[
+        'coverage >= 3.0',
+        'nose >= 1.1.0',
+        'mock',
+    ],
+    setup_requires=[
+        'nose',
+    ],
+    test_suite = 'nose.collector',
     )
