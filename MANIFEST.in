@@ -3,4 +3,4 @@ include README.md
 include logger.conf
 include ChangeLog
 include vmcatcher_eventHndlExpl
-include tests/*.py
+include test/*.py
