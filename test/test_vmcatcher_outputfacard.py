@@ -66,17 +66,3 @@ class TestOutputFacard(unittest.TestCase):
     
     def test_info(self):
         self.outputfacard.info()
-
-
-        
-    def test_lines(self):
-        pass
-    def test_json(self):
-        pass
-    def test_smime(self):
-        pass
-    def test_message(self):
-        pass
-    
-    
-    
