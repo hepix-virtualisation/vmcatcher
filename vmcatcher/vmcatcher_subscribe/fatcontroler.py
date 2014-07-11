@@ -52,6 +52,7 @@ from vmcatcher.urimunge import uriNormalise,uriNormaliseAnonymous
 #  36 image is not registeresd with subscription.
 #  37 Message was not valid JSON.
 #  38 Message JSON was not valid to build image list.
+#  39 Creation of ImageDefinition referance failed
 
 
 
@@ -453,14 +454,30 @@ class db_controler(object):
             return 31
         db = db_actions(Session)
         imageDefQuery = db.ImageDefinition_get(subscriptionKey,imageObj.metadata)
-        if imageDefQuery.count() != 1:
+        if imageDefQuery.count() != 1:            
             if self.callbackEventImageNew != None:
+                # Triggor an event for new image.
                 self.callbackEventImageNew(imageObj.metadata)
-            # Triggor an event for new image.
-            self.log.info("ImageId '%s' refused by subscription '%s'" %
-                (imageObj.metadata[u'dc:identifier'],ProcessingSubscriptionUuid))
-            # Error code - image dc:identifier invalid.
-            return 32
+            # Now we see the updatemode
+            if (subscription.updateMode & 1 != 1):
+                # We should not create the image referance            
+                self.log.info("ImageId '%s' refused by subscription '%s'" %
+                    (imageObj.metadata[u'dc:identifier'],ProcessingSubscriptionUuid))
+                # Error code - image dc:identifier invalid.
+                return 32
+            else:
+                # We should not create the image referance
+                metadata = {}
+                metadata.update(imageObj.metadata)
+                metadata['cache'] = 0
+                if (subscription.updateMode & 2 != 2):
+                    metadata['cache'] = 1
+                ImageDefinition_query = db.ImageDefinition_create(subscriptionKey,metadata)
+                if ImageDefinition_query.count() != 1:
+                    self.log.error('Creation of ImageDefinition referance failed.')
+                    failedToCreateImages.append(imageReferance)
+                    return 39
+                imageDefQuery = db.ImageDefinition_get(subscriptionKey,imageObj.metadata)
         ThisImageDef = imageDefQuery.one()
 
         ThisImageDefId = int(ThisImageDef.id)
