@@ -560,7 +560,7 @@ class db_controler(object):
 
         count = subq.count()
         if count == 0:
-            self.log.error('Endorser not authorised on subscription %s' % (ProcessingSubscriptionUuid))
+            self.log.error("Endorser dn='%s' ca='%s' not authorised on subscription '%s'" % (checker.subject,checker.issuer,ProcessingSubscriptionUuid))
             # Error code - Endorser not authorised on subscription.
             return 13
         if count != 1:
