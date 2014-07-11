@@ -430,7 +430,7 @@ class db_controler(object):
         subscriptionKey = int(subscription.id)
         failedToCreateImages = []
         for imageReferance in vmilist.images:
-            # Now we creat image definitions
+            # Now we create image definitions
             metadata = {}
             metadata.update(imageReferance.metadata)
             metadata['cache'] = 0
