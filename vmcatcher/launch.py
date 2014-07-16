@@ -59,6 +59,7 @@ class EventObj(object):
             'sl:comments' : 'VMCATCHER_EVENT_SL_COMMENTS',
             'sl:os' : 'VMCATCHER_EVENT_SL_OS',
             'sl:osversion' : 'VMCATCHER_EVENT_SL_OSVERSION',
+            'hv:image.ad:mpuri' : 'VMCATCHER_EVENT_AD_MPURI',
             'sl:checksum:sha512' : 'VMCATCHER_EVENT_SL_CHECKSUM_SHA512'}
         newEnv = dict(self.env)
         newEnv['VMCATCHER_EVENT_TYPE'] = EventStr
