@@ -1,5 +1,25 @@
 Changelog
 
+vmcatcher-0.5.0
+
+ * vmcatcher_subscribe: added command line option --imagelist-newimage-accept to
+   allow an imagelist to add new images and accept them automatically.
+ * vmcatcher_subscribe: added command line option --imagelist-newimage-subscribe
+   to allow an imagelist to add new images and subscribe to them automatically.
+ * vmcatcher_subscribe: added command line option --imagelist-newimage-refuse to
+   prevent an imagelist adding new images.
+ * Changed the database schema to support the above options.
+ * README.md updated on how to migrate existing databases to the new database 
+   format.
+ * Added VMCATCHER_EVENT_AD_MPURI environment variable when available to show
+   image "ad:mpuri" value for fedcloud project (thanks Salvatore Pinto)
+ * Improved setup.py to allow installation in a python virtualenv.
+ * Added unit tests. 
+ * Internal code reorganisation making code more extensible.
+ * Added new error code.
+   - 39 Creation of ImageDefinition reference failed
+ * Improved error messages when endorser is invalid.
+
 vmcatcher-0.4.3
 
  * vmcatcher_cache: Added VMCATCHER_EVENT_HV_VERSION environment variable.
