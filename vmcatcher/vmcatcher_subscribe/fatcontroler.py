@@ -470,7 +470,7 @@ class db_controler(object):
                 metadata = {}
                 metadata.update(imageObj.metadata)
                 metadata['cache'] = 0
-                if (subscription.updateMode & 2 != 2):
+                if (subscription.updateMode & 2 == 2):
                     metadata['cache'] = 1
                 ImageDefinition_query = db.ImageDefinition_create(subscriptionKey,metadata)
                 if ImageDefinition_query.count() != 1:
