@@ -272,7 +272,6 @@ class db_controler(object):
         if "trustAnchor" in inmetadata:
             trustAnchor = inmetadata['trustAnchor']
         metadata["trustAnchor"] = trustAnchor
-        
         rc = True
         Session = self.SessionFactory()
         db = db_actions(Session)
@@ -284,11 +283,25 @@ class db_controler(object):
             newmetatdata["trustAnchor"] = self.anchor
             newmetatdata.update(metadata)
             if not self.subscribe_file(Session,newmetatdata):
+                log.error("subscriptions subscribe failed for %s" % (uri))
                 rc = False
                 continue
             if "imagelist_newimage" in inmetadata:
-                self.subscriptions_imagelist_newimage_set(inmetadata["imagelist_newimage"])
-            
+                slectorUri = urimunge.getUriAnonymous(newmetatdata)
+                self.set_selector("sub_uri")
+                if not self.subscriptions_imagelist_newimage_set([slectorUri],inmetadata["imagelist_newimage"]):
+                    self.log.error("setting subscriptions update policy failed for %s" % (uri))
+                    rc = False
+                    continue
+                if inmetadata["imagelist_newimage"] == 3:
+                    # Now we have new images so make all images subscribed.
+                    allImages = Session.query(model.ImageDefinition).\
+                        filter(model.ImageDefinition.subscription  ==model.Subscription.id).\
+                        filter(model.Subscription.uri == slectorUri)
+                    for image in allImages:
+                        image.cache = 1
+                        Session.add(image)
+                        Session.commit()
         return rc
 
 
