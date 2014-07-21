@@ -1043,7 +1043,7 @@ regenerate your data base
 
 Restore your database content
 
-    # vmcatcher.db < dump
+    # sqlite3 vmcatcher.db < dump
 
 You will get some errors that tables already exist dont worry about these.
 
@@ -1075,7 +1075,7 @@ regenerate your data base
 
 Restore your database content
 
-    # vmcatcher.db < dump
+    # sqlite3 vmcatcher.db < dump
 
 You will get some errors that tables already exist dont worry about these.
 
