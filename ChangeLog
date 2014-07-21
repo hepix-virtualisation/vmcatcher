@@ -1,5 +1,12 @@
 Changelog
 
+vmcatcher-0.5.1
+
+ * Fixed bug subscribing to an imagelist at the same time as selecting 
+   --imagelist-newimage-accept, or --imagelist-newimage-subscribe
+ * When subscribing to an imagelist and selecting --imagelist-newimage-subscribe
+   images will all be subscribed.
+
 vmcatcher-0.5.0
 
  * vmcatcher_subscribe: added command line option --imagelist-newimage-accept to
