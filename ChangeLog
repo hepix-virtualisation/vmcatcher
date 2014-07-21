@@ -6,6 +6,7 @@ vmcatcher-0.5.1
    --imagelist-newimage-accept, or --imagelist-newimage-subscribe
  * When subscribing to an imagelist and selecting --imagelist-newimage-subscribe
    images will all be subscribed.
+ * Documentation for migration process fixed.
 
 vmcatcher-0.5.0
 
