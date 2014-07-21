@@ -808,9 +808,9 @@ The following environment variables may be set by events:
   * VMCATCHER_EVENT_SL_COMMENTS
   * VMCATCHER_EVENT_SL_OS
   * VMCATCHER_EVENT_SL_OSVERSION
-  * VMCATCHER_EVENT_TYPE
   * VMCATCHER_EVENT_FILENAME
   * VMCATCHER_EVENT_IL_DC_IDENTIFIER
+  * VMCATCHER_EVENT_AD_MPURI
 
 These correspond to the variables within the `Virtual Machine Image List`.
 
@@ -930,7 +930,11 @@ The format of the image. This is only available if the image list contains the
 format metadata.
 
 
+##### VMCATCHER_EVENT_AD_MPURI
 
+This provides the market place URI for imagelists that include the field 
+"ad:mpuri". Not all imagelist provide this optional field so this environment
+variable will only be provided when it is available.
 
 
 #### Set up for Production using Cron
