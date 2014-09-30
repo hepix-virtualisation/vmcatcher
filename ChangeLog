@@ -2,12 +2,13 @@ Changelog
 
 vmcatcher-0.5.2
 
- * New feature: Imagelists containing providing the attribute 'ad:vo' will now 
+ * New feature: Imagelists containing providing the attribute 'ad:vo' will now
    trigger give handlers the environment variable 'VMCATCHER_EVENT_VO' with the
-   value of this field. This is useful to allow handlers to separate roles with 
-   a single database of subscribed Imagelists.
- * Bug fix: Enviroment variable VMCATCHER_LOG_CONF now successfully sets the log
-   config file, previously this failed.
+   value of this field. This is useful to allow handlers to separate roles with
+   a single database of subscribed Imagelists. Thanks - Marios Chatziangelou for
+   putting this in the AppDb also.
+ * Bug fix: Environment variable VMCATCHER_LOG_CONF now successfully sets the log
+   config file, previously this failed. Thanks - Boris Parak for reporting this.
 
 vmcatcher-0.5.1
 
