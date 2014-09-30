@@ -6,6 +6,8 @@ vmcatcher-0.5.2
    trigger give handlers the environment variable 'VMCATCHER_EVENT_VO' with the
    value of this field. This is useful to allow handlers to separate roles with 
    a single database of subscribed Imagelists.
+ * Bug fix: Enviroment variable VMCATCHER_LOG_CONF now successfully sets the log
+   config file, previously this failed.
 
 vmcatcher-0.5.1
 
