@@ -62,9 +62,9 @@ def main():
     p.add_option('-i', '--info', action ='store_true',help='Information on endoser.')
     p.add_option('-f', '--format', action ='store',help='Sets the output format')
     p.add_option('-S', '--subject',action ='append',help='Endorsers certificate subject name.', metavar='SUBJECT')
-    p.add_option('-v', '--verbose', action ='count',help='Change global log level, increasing log output.', metavar='LOGFILE')
-    p.add_option('-q', '--quiet', action ='count',help='Change global log level, decreasing log output.', metavar='LOGFILE')
-    p.add_option('--log-config', action ='store',help='Logfile configuration file, (overrides command line).', metavar='LOGFILE')
+    p.add_option('-v', '--verbose', action ='count',help='Change global log level, increasing log output.')
+    p.add_option('-q', '--quiet', action ='count',help='Change global log level, decreasing log output.')
+    p.add_option('--log-config', action ='store',help='Logfile configuration file, (overrides command line).', metavar='LOG_CONFIG')
     p.add_option('--log-sql-info', action ='store_true',help='Echo all SQL commands.', metavar='LOGFILE')
     
     options, arguments = p.parse_args()
@@ -115,10 +115,10 @@ def main():
         LoggingLevel = logging.CRITICAL
     
     if options.log_config:
-        logFile = options.log_config
+        logFile = str(options.log_config)
     if logFile != None:
-        if os.path.isfile(str(options.log_config)):
-            logging.config.fileConfig(options.log_config)
+        if os.path.isfile(logFile):
+            logging.config.fileConfig(logFile)
         else:
             logging.basicConfig(level=LoggingLevel)
             log = logging.getLogger("main")
