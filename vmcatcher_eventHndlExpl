@@ -78,16 +78,16 @@ def main():
     p.add_option('--generator',  action ='store',help='Set the dictionary Generator.', metavar='minium')
     p.add_option('--datetime',  action ='store_true',help='Add a datetime stamp.')
     
-    p.add_option('--logcfg', action ='store',help='Logfile configuration file.', metavar='LOGCFGFILE')
+    p.add_option('--log-config', action ='store',help='Logfile configuration file.', metavar='LOG_CONFIG')
     
     options, arguments = p.parse_args()
-    if options.logcfg:
-        if os.path.isfile(str(options.logfile)):
-            logging.config.fileConfig(options.logfile)
+    if options.log_config:
+        if os.path.isfile(str(options.log_config)):
+            logging.config.fileConfig(options.log_config)
         else:
             logging.basicConfig(level=logging.INFO)
             log = logging.getLogger("main")
-            log.error("Logfile configuration file '%s' was not found." % (options.logfile))
+            log.error("Logfile configuration file '%s' was not found." % (options.log_config))
             sys.exit(1)
     else:
         logging.basicConfig(level=logging.INFO)    
