@@ -811,6 +811,7 @@ The following environment variables may be set by events:
   * VMCATCHER_EVENT_FILENAME
   * VMCATCHER_EVENT_IL_DC_IDENTIFIER
   * VMCATCHER_EVENT_AD_MPURI
+  * VMCATCHER_EVENT_VO
 
 These correspond to the variables within the `Virtual Machine Image List`.
 
@@ -936,6 +937,12 @@ This provides the market place URI for imagelists that include the field
 "ad:mpuri". Not all imagelist provide this optional field so this environment
 variable will only be provided when it is available.
 
+##### VMCATCHER_EVENT_VO
+
+Imagelists containing providing the attribute 'ad:vo' will now 
+trigger give handlers the environment variable 'VMCATCHER_EVENT_VO' with the
+value of this field. This is useful to allow handlers to separate roles in 
+clouds with a single database of subscribed Imagelists.
 
 #### Set up for Production using Cron
 

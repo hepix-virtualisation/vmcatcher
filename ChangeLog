@@ -1,5 +1,12 @@
 Changelog
 
+vmcatcher-0.5.2
+
+ * New feature: Imagelists containing providing the attribute 'ad:vo' will now 
+   trigger give handlers the environment variable 'VMCATCHER_EVENT_VO' with the
+   value of this field. This is useful to allow handlers to separate roles with 
+   a single database of subscribed Imagelists.
+
 vmcatcher-0.5.1
 
  * Fixed bug subscribing to an imagelist at the same time as selecting 
