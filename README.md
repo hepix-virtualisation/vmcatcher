@@ -534,7 +534,13 @@ An example of how to execute a command with an action command line.
 
 Sets the path to the logging configuration file.
 
+This is a standard python logging file and is documented in the standard python 
+documentation on logging. For further information please read here.
 
+https://docs.python.org/2/howto/logging.html
+
+Setting this operation overides the command line options "--verbose" and 
+"--quiet" and is overridern by "--log-config"
 
 #### VMCATCHER_DIR_CERT
 
