@@ -534,12 +534,12 @@ An example of how to execute a command with an action command line.
 
 Sets the path to the logging configuration file.
 
-This is a standard python logging file and is documented in the standard python 
+This is a standard python logging file and is documented in the standard python
 documentation on logging. For further information please read here.
 
 https://docs.python.org/2/howto/logging.html
 
-Setting this operation overides the command line options "--verbose" and 
+Setting this operation overides the command line options "--verbose" and
 "--quiet" and is overridern by "--log-config"
 
 #### VMCATCHER_DIR_CERT
@@ -829,6 +829,10 @@ These correspond to the variables within the `Virtual Machine Image List`.
 
 ###### VMCATCHER_EVENT_TYPE
 
+  * ProcessPrefix
+
+Vmcatcher has started updating its cache.
+
   * AvailablePrefix
 
 An image will be available soon as it is being attempted to be retrieved.
@@ -846,7 +850,13 @@ This image is will no longer be available in the cache directory.
 
 This image is no longer in the cache directory.
 
+  * ProcessPostfix
 
+Vmcatcher has finished updating its cache.
+
+  * SubscriptionImageNew
+
+A new image exists in a subscribed imagelist.
 
 ###### VMCATCHER_EVENT_DC_DESCRIPTION
 
