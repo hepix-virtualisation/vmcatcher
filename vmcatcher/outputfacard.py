@@ -1,9 +1,10 @@
-
 import logging
 from vmcatcher.output_json import output_driver_json
 from vmcatcher.output_lines import output_driver_lines
 from vmcatcher.output_smime import output_driver_smime
 from vmcatcher.output_msg import output_driver_message
+
+
 availableFormats = set([ "SMIME", "message", "lines", "json"])
 
 
