@@ -1,5 +1,11 @@
 Changelog
 
+
+vmcatcher-0.5.3
+
+ * Fixed a lot of ooutput bugs for various output formats.
+ * White space cleanup.
+
 vmcatcher-0.5.2
 
  * New feature: Imagelists containing providing the attribute 'ad:vo' will now

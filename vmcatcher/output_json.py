@@ -104,7 +104,6 @@ class output_driver_lister_json(output_driver_lister):
 
     def display_endorser(self,endorser):
         self.log.debug("display_endorser")
-        self.fpOutput.write ("endorser.dc:identifier=%s\n" % (endorser.identifier))
         if len(endorser.princibles) == 0:
             self.log.warning("endorser '%s' has no princibles" % (selector_filter))
             return False
