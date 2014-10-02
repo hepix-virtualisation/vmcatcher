@@ -5,42 +5,45 @@ from vmcatcher.outputbase import output_driver_lister
 from vmcatcher.outputbase import output_driver_display_metadata
 from vmcatcher.outputbase import output_driver_base
 from vmcatcher.outputbase import trustAnchorMap
+
+import vmcatcher.databaseDefinition as model
+
 class output_driver_lister_json(output_driver_lister):
     def __init__(self):
         output_driver_lister.__init__(self)
         self.log = logging.getLogger("output_driver_lister_json")
- 
+
     def info(self, *args, **kwargs):
         self.log.debug("info")
         outut = {}
         argSubscription = kwargs.get('Subscription', None)
         if argSubscription != None:
             outut["Subscription"] =  self.info_Subscription(argSubscription)
-        
+
         argImageListInstance = kwargs.get('ImageListInstance', None)
         if argImageListInstance != None:
             outut["ImageListInstance"] =  self.info_ImageListInstance(argImageListInstance)
-        
+
         argImageInstance = kwargs.get('ImageInstance', None)
         if argImageInstance != None:
             outut["ImageInstance"] =  self.info_ImageInstance(argImageInstance)
-        
+
         argImageDefinition = kwargs.get('ImageDefinition', None)
         if argImageDefinition != None:
             outut["ImageDefinition"] =  self.info_ImageDefinition(argImageDefinition)
-        
-        
+
+
         argSubscriptionAuth = kwargs.get('SubscriptionAuth', None)
         if argSubscriptionAuth != None:
             outut["SubscriptionAuth"] =  self.info_SubscriptionAuth(argSubscriptionAuth)
-            
+
         argEndorser = kwargs.get('Endorser', None)
         if argEndorser != None:
             outut["Endorser"] =  self.info_Endorser(argEndorser)
         argEndorserPrincible = kwargs.get('EndorserPrincible', None)
         if argEndorserPrincible != None:
             outut["EndorserPrincible"] =  self.info_EndorserPrincible(argEndorserPrincible)
-        
+
         self.fpOutput.write(json.dumps(outut,sort_keys=True, indent=4))
     def list_vmcatcher_subscribe(self):
         self.log.debug("list_vmcatcher_subscribe")
@@ -96,9 +99,9 @@ class output_driver_lister_json(output_driver_lister):
                 "authorised" : aubauth.authorised
             })
         self.fpOutput.write(json.dumps(output,sort_keys=True, indent=4))
-    
-    
-    
+
+
+
     def display_endorser(self,endorser):
         self.log.debug("display_endorser")
         self.fpOutput.write ("endorser.dc:identifier=%s\n" % (endorser.identifier))
@@ -106,14 +109,14 @@ class output_driver_lister_json(output_driver_lister):
             self.log.warning("endorser '%s' has no princibles" % (selector_filter))
             return False
         output = {'Princables' : [] , 'Subscription' : []}
-        
+
         for princible in endorser.princibles:
             tmp = { "hv:dn" : princible.hv_dn,
-                'hv:ca' : princible.hv_ca                
+                'hv:ca' : princible.hv_ca
             }
             output['Princables'].append(tmp)
-            
-        
+
+
         for subauth in endorser.subscriptionauth:
             #self.fpOutput.write("subauth.authorised=%s\n" % (subauth.authorised))
             subscription_query = self.saSession.query(model.Subscription).\
@@ -131,17 +134,17 @@ class output_driver_lister_json(output_driver_lister):
         output["uri"] = subscription.uri
         if subscription.updated:
             output["updated"] = subscription.updated.strftime(time_format_definition)
-        
+
         self.fpOutput.write (json.dumps(output,sort_keys=True, indent=4))
         return True
-    
- 
+
+
     def info_Subscription(self,subscription):
         upddated = False
         if subscription.updated:
             upddated = subscription.updated.strftime(time_format_definition)
-            
-        output = {"identifier" : subscription.identifier, 
+
+        output = {"identifier" : subscription.identifier,
             "description" : subscription.description,
             "authorised" : subscription.authorised,
             "uri" : subscription.uri,
@@ -151,9 +154,9 @@ class output_driver_lister_json(output_driver_lister):
                 output["uri.username"] = subscription.userName
         if (subscription.password != None):
             if len(subscription.password) > 0:
-                output["uri.password"] = subscription.password                  
+                output["uri.password"] = subscription.password
         return output
- 
+
     def info_ImageListInstance(self,argImageListInstance):
         #self.fpOutput.write ('imagelist.dc:date:imported=%s\n' % (argImageListInstance.imported.strftime(time_format_definition)))
         #self.fpOutput.write ('imagelist.dc:date:created=%s\n' % (argImageListInstance.created.strftime(time_format_definition)))
@@ -166,8 +169,8 @@ class output_driver_lister_json(output_driver_lister):
         upddated = False
         if subscription.updated:
             upddated = subscription.updated.strftime(time_format_definition)
-            
-        output = {"identifier" : subscription.identifier, 
+
+        output = {"identifier" : subscription.identifier,
             "description" : subscription.description,
             "authorised" : subscription.authorised,
             "uri" : subscription.uri,
@@ -199,9 +202,9 @@ class output_driver_lister_json(output_driver_lister):
                 "cache" : imageDef.cache}
         return output
 
-    def info_SubscriptionAuth(self,SubscriptionAuth):       
+    def info_SubscriptionAuth(self,SubscriptionAuth):
         return {}
-    def info_Endorser(self,Endorser):       
+    def info_Endorser(self,Endorser):
         output = {"identifier" : Endorser.identifier
         }
         return output
@@ -212,7 +215,7 @@ class output_driver_lister_json(output_driver_lister):
         return output
 
 
-     
+
 
 class output_driver_json(output_driver_display_metadata, output_driver_lister_json,output_driver_base):
     def __init__(self):
