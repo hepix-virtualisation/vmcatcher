@@ -47,13 +47,13 @@ class db_controler:
             self.selector_curent = vmcatcher.queryby.query_endorser_by_identifier
         elif selector_string == 'sub_uri':
             self.selector_curent = vmcatcher.queryby.query_subscriptions_by_uri
-        return True    
+        return True
     def setup_trust_anchor(self,directory):
         self.anchor = LoadDirChainOfTrust(directory)
-    
+
     def setup_view_format(self,format):
         self._outputter.format = format
-           
+
     def endosers_list(self):
         Session = self.SessionFactory()
         self._outputter.fpOutput = sys.stdout
@@ -97,8 +97,8 @@ class db_controler:
                 Session.commit()
             else:
                 self.log.warning("endorser and subscription already linked.")
-                
-                
+
+
     def unlink(self,endorsers_selected,subscriptions_selected):
         Session = self.SessionFactory()
         pairs, extra_selectors ,extra_paths = pairsNnot(endorsers_selected,subscriptions_selected)
@@ -136,13 +136,13 @@ class db_controler:
                 self._outputter.display_endorser(endorser)
                 princible_query = Session.query(model.EndorserPrincible).\
                     filter(model.EndorserPrincible.endorser == endorser.id)
-                
+
                 if princible_query.count() == 0:
                     self.log.warning("endorser '%s' has no princibles" % (selector_filter))
                 else:
                     pass
         return True
-    
+
     def endorser_create(self,endorser,subjects,issuers):
         # Check input parameters.
         pairs, extra_subs ,extra_issuers = pairsNnot(subjects,issuers)
@@ -177,7 +177,7 @@ class db_controler:
             deleteOnError = True
             endorserQuery = Session.query(model.Endorser).\
                 filter(model.Endorser.identifier==endorser)
-            
+
         endorserObj = endorserQuery.one()
         endorserObjId = int(endorserObj.id)
         for pair in pairs:
@@ -215,7 +215,7 @@ class db_controler:
                 Session.delete(obj)
                 self.log.info("Deleting endorser '%s'." % (endorser))
             Session.commit()
-                
-                
-                
-            
+
+
+
+
