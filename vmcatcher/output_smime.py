@@ -13,13 +13,10 @@ class output_driver_smime(output_driver_display_message,output_driver_lister,out
 
     def info(self, *args, **kwargs):
         expectedkeys = set([
-                "Endorser",
-                "EndorserPrincible",
                 "ImageDefinition",
                 "ImageInstance",
                 "ImageListInstance",
                 "Subscription",
-                "SubscriptionAuth",
                 ])
         
         found = set(kwargs.keys())
@@ -28,3 +25,10 @@ class output_driver_smime(output_driver_display_message,output_driver_lister,out
             self.fpOutput.write (argImageInstance.data)
             return True
         return False
+
+
+    def display_ImageListInstance(self,imagelist):
+        self.fpOutput.write (imagelist.data)
+        return True
+       
+ 
