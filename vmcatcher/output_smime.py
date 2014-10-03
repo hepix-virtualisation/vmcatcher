@@ -18,7 +18,7 @@ class output_driver_smime(output_driver_display_message,output_driver_lister,out
                 "ImageListInstance",
                 "Subscription",
                 ])
-        
+
         found = set(kwargs.keys())
         if "ImageListInstance" in found:
             argImageInstance = kwargs.get('ImageListInstance', None)
@@ -28,7 +28,11 @@ class output_driver_smime(output_driver_display_message,output_driver_lister,out
 
 
     def display_ImageListInstance(self,imagelist):
+
+        if imagelist.data == None:
+            self.log.error("Message not yet available.")
+            return False
         self.fpOutput.write (imagelist.data)
         return True
-       
- 
+
+
