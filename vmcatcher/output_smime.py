@@ -28,7 +28,9 @@ class output_driver_smime(output_driver_display_message,output_driver_lister,out
 
 
     def display_ImageListInstance(self,imagelist):
-
+        if imagelist == None:
+            self.log.error("Imagelist not yet available.")
+            return False
         if imagelist.data == None:
             self.log.error("Message not yet available.")
             return False
