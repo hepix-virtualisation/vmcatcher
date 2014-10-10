@@ -283,7 +283,7 @@ class db_controler(object):
             newmetatdata["trustAnchor"] = self.anchor
             newmetatdata.update(metadata)
             if not self.subscribe_file(Session,newmetatdata):
-                log.error("subscriptions subscribe failed for %s" % (uri))
+                self.log.error("subscriptions subscribe failed for %s" % (uri))
                 rc = False
                 continue
             if "imagelist_newimage" in inmetadata:
