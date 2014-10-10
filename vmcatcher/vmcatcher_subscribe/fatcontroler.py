@@ -438,7 +438,7 @@ class db_controler(object):
                     return False
         subscription_query = db.subscription_create(metadata,True)
         if subscription_query.count() != 1:
-            self.log.error('Creation of Subscription referance failed.')
+            self.log.error('Creation of Subscription reference failed.')
             return False
         subscription = subscription_query.one()
         subscriptionKey = int(subscription.id)
