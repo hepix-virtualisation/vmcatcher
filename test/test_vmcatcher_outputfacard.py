@@ -1,3 +1,6 @@
+import sys, os
+sys.path = [os.path.abspath(os.path.dirname(os.path.dirname(__file__)))] + sys.path
+
 import vmcatcher.vmcatcher_subscribe.retrieveFacard
 import logging
 import smimeX509validation
@@ -6,7 +9,7 @@ import unittest
 import vmcatcher.outputfacard
 
 from vmcatcher.vmcatcher_subscribe.fatcontroler import db_controler
-
+import nose
 
 class TestOutputFacard(unittest.TestCase):
     def setUp(self):
@@ -67,3 +70,10 @@ class TestOutputFacard(unittest.TestCase):
     
     def test_info(self):
         self.outputfacard.info()
+
+if __name__ == "__main__":
+    logging.basicConfig()
+    LoggingLevel = logging.DEBUG
+    logging.basicConfig(level=LoggingLevel)
+    log = logging.getLogger("main")
+    nose.runmodule()

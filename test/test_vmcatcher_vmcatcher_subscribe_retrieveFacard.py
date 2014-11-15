@@ -1,7 +1,10 @@
+import sys, os
+sys.path = [os.path.abspath(os.path.dirname(os.path.dirname(__file__)))] + sys.path
 import vmcatcher.vmcatcher_subscribe.retrieveFacard
 import logging
 import smimeX509validation
 import unittest
+import nose
 
 class TestRetrieveFacard(unittest.TestCase):
     def setUp(self):
@@ -12,8 +15,8 @@ class TestRetrieveFacard(unittest.TestCase):
         anchor = smimeX509validation.LoadDirChainOfTrust(self.trustAnchordirectory)
         foo = vmcatcher.vmcatcher_subscribe.retrieveFacard.retrieveFacard()
         foo.trustanchor = anchor
-        #print ("trustanchor=%s" % (foo.trustanchor))
-        uri = "https://3728760c-f6d8-403f-9926-96fa9b5d15f3:x-oauth-basic@vmcaster.appdb-dev.marie.hellasgrid.gr:443/store/software/demo.va/image.list"
+        #uri = "http://http.fritz.box/repos/public/imagelist/yokel.imagelist.smime"'
+        uri = "http://www.yokel.org/pub/software/yokel.org/imagelist/yokel.imagelist.smime"
         foo.uri = uri
         #print ("trustanchor=%s" % (foo.trustanchor))
         responce = foo.requestAsString()
@@ -24,3 +27,10 @@ class TestRetrieveFacard(unittest.TestCase):
         #raise exception
         
     
+
+if __name__ == "__main__":
+    logging.basicConfig()
+    LoggingLevel = logging.DEBUG
+    logging.basicConfig(level=LoggingLevel)
+    log = logging.getLogger("main")
+    nose.runmodule()
