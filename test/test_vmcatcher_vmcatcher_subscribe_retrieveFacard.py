@@ -11,7 +11,7 @@ class TestRetrieveFacard(unittest.TestCase):
         self.log = logging.getLogger("TestRetrieveFacard")
         self.trustAnchordirectory = "/etc/grid-security/certificates"
         
-    def test_appdb(self):
+    def test_http(self):
         anchor = smimeX509validation.LoadDirChainOfTrust(self.trustAnchordirectory)
         foo = vmcatcher.vmcatcher_subscribe.retrieveFacard.retrieveFacard()
         foo.trustanchor = anchor
