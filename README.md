@@ -1044,6 +1044,24 @@ the next download without blocking. Since events are not resent so error
 handling is more complex, it may be wise to use a message queue, or storing
 the event and processing after, rather than just using a simple fork.
 
+
+#### Data base migration from versions 0.5.X to 0.6.X
+
+Backup your old database:
+
+    #mv vmcatcher.db vmcatcher.db.old
+    #sqlite3 vmcatcher.db.old .dump > dump
+
+regenerate your data base
+
+    # vmcatcher_subscribe  -l
+
+Restore your database content
+
+    # sqlite3 vmcatcher.db < dump
+
+You will get some errors that tables already exist dont worry about these.
+
 #### Data base migration from versions 0.4.X to 0.5.X
 
 Backup your old database:
@@ -1051,7 +1069,7 @@ Backup your old database:
     #mv vmcatcher.db vmcatcher.db.old
     #sqlite3 vmcatcher.db.old .dump > dump
 
-edit thew dump file with each line starting
+edit the dump file with each line starting
 
     INSERT INTO "subscription" VALUES
 
