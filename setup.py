@@ -61,6 +61,7 @@ back end, and caches available image lists.""",
         'coverage >= 3.0',
         'nose >= 0.10.0',
         'mock',
+        'SQLAlchemy >= 0.7.8',
     ],
     setup_requires=[
         'nose',
