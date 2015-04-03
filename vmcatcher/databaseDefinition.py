@@ -1,5 +1,5 @@
 from sqlalchemy import create_engine
-from sqlalchemy import Table, Column, Integer, String, MetaData, ForeignKey, Boolean, DateTime
+from sqlalchemy import Table, Column, Integer, String, MetaData, ForeignKey, Boolean, DateTime,LargeBinary
 from sqlalchemy.orm import mapper
 
 from sqlalchemy import ForeignKey
@@ -173,7 +173,7 @@ class ImageListInstance(Base):
     __tablename__ = 'imageListInstance'
     id = Column(Integer, primary_key=True)
     # Raw signed messsage
-    data = Column(String(1000),nullable = False)
+    data = Column(LargeBinary,nullable = False)
     # Hash of Raw signed message
     data_hash = Column(String(128),nullable = False)
     # Null until expired then with date
