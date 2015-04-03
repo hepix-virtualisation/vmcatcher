@@ -111,17 +111,18 @@ class output_driver_base(object):
                         Endorser = Endorser,
                         EndorserPrincible = EndorserPrincible)
             return True
-        self.log.warning("Image '%s' has expired." % (selector_filter))
-        details = Session.query(model.Subscription, model.ImageDefinition).\
+        details = self.saSession.query(model.Subscription, model.ImageDefinition).\
             filter(model.ImageDefinition.id == imagedef.id).\
             filter(model.Subscription.id == imagedef.subscription)
         if details.count() > 0:
             for item in details:
                 subscription = item[0]
                 imagedef = item[1]
+                self.log.warning("Subscription '%s' needs an update." % (subscription.identifier))
                 self.info(Subscription = subscription,
                         ImageDefinition = imagedef)
             return True
+        self.log.error("Image '%s' needs an update." % (imagedef.identifier))
         return False
 
 class output_driver_lister(output_driver_base):
