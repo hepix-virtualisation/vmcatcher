@@ -1,3 +1,4 @@
+import pkg_resources
 # If there is a conflicting non egg module,
 # i.e. an older standard system module installed,
 # then replace it with this requirement
