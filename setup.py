@@ -64,6 +64,7 @@ back end, and caches available image lists.""",
     ],
     setup_requires=[
         'nose',
+        'SQLAlchemy >= 0.7.8',
     ],
     test_suite = 'nose.collector',
     )
