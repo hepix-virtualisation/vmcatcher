@@ -22,9 +22,6 @@ if sys.version_info < (2, 5):
         print "Could not find SQLAlchemy installed."
         sys.exit(1)
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.exc import IntegrityError, DatabaseError, ProgrammingError
 import vmcatcher.databaseDefinition as model
 import os
 import re
