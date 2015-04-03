@@ -1,5 +1,19 @@
 Changelog
 
+vmcatcher-0.6.0
+
+ * Fixed crash when querying image from a fresh subscription. And improved the 
+   associated logging code.
+ * Removed arbitrary length of 1000 characters fro imagelists.
+ * Changed the database schema so supporting JSON outside containing non
+   8-bit bytestrings. Table imageListInstance field data changed from type 
+   VARCHAR(1000) to BLOB
+ * Added documentation on how to upgrade the database from the old to new schema.
+ * SQLAlchemy dependency had to be upgraded to  >= 0.7.8 to support BLOB.
+ * Support for EPEL's interesting egg based packaging of two versions of 
+   SQLAlchemy, in the modules __init__.py of the module.
+ * Removed unnecessary imports of sqlalchamy
+
 vmcatcher-0.5.4
 
  * Fixed testing bugs.
