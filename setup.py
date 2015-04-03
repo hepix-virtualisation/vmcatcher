@@ -59,7 +59,7 @@ back end, and caches available image lists.""",
     data_files=[('share/doc/vmcatcher-%s' % (version),['README.md','LICENSE','logger.conf','ChangeLog','vmcatcher_eventHndlExpl'])],
     tests_require=[
         'coverage >= 3.0',
-        'nose >= 1.1.0',
+        'nose >= 0.10.0',
         'mock',
     ],
     setup_requires=[
