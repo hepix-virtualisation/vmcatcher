@@ -865,6 +865,16 @@ class db_controler(object):
                 continue
             firstSubscription = query_subscription.first()
             firstSubscription.updateMode = imagelist_newimage
+            # clear cache of image list if one exists
+            if firstSubscription.imagelist_latest != None:
+                imagelist_inst_qry = Session.query(model.ImageListInstance).\
+                    filter(model.ImageListInstance.id == firstSubscription.imagelist_latest).\
+                    filter(model.ImageListInstance.id == model.Subscription.imagelist_latest)
+                il_instance = imagelist_inst_qry.one()
+                if il_instance == None:
+                    continue
+                il_instance.data_hash = "reload cache"
+                Session.add(il_instance)
             Session.add(firstSubscription)
             Session.commit()
         if errorhappened:
