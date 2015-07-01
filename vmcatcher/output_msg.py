@@ -63,4 +63,6 @@ class output_driver_message(output_driver_display_message,output_driver_lister,o
             filter(model.ImageInstance.fkimagelistinstance == model.ImageListInstance.id).\
             filter(model.Subscription.imagelist_latest == model.ImageListInstance.id)
         sub = subauthq.first()
+        if sub == None:
+            return True
         return self.display_ImageListInstance(sub)
