@@ -174,7 +174,9 @@ class output_driver_lister_json(output_driver_lister):
             "authorised" : subscription.authorised,
             "uri" : subscription.uri,
             "updated" : upddated,
-            "uri.trustAnchor" : trustAnchorMap[subscription.trustAnchor]}
+            "uri.trustAnchor" : trustAnchorMap[subscription.trustAnchor],
+            "updateMode" : subscription.updateMode
+            }
         if (subscription.userName != None):
             if len(subscription.userName) > 0:
                 output["uri.username"] = subscription.userName

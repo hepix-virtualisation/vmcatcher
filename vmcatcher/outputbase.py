@@ -250,7 +250,9 @@ class output_driver_lister(output_driver_base):
             self.fpOutput.write ('subscription.dc:date:updated=%s\n' % (subscription.updated.strftime(time_format_definition)))
         else:
             self.fpOutput.write ('subscription.dc:date:updated=%s\n'% (False))
+        self.fpOutput.write ('subscription.updateMode=%s\n' % (subscription.updateMode))
         return True
+
     def info_ImageInstance(self,imageInstance):
         self.fpOutput.write ('image.dc:description=%s\n' % (imageInstance.description))
         self.fpOutput.write ('image.dc:title=%s\n' % (imageInstance.title))
