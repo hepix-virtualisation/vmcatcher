@@ -139,7 +139,6 @@ def main():
         input_format_selected.add('uuid')
     if options.info:
         actions.add('info')
-        anchor_needed = True
     if options.output:
         format_needed = True
         outputfiles = options.output
@@ -170,6 +169,8 @@ def main():
         log.error("Invalid format '%s' allowed formats are '%s'" % (output_format_selected,outputformats))
         sys.exit(1)
     # 1 So we have some actions to process
+    if output_format_selected == "message" and "info" in actions:
+        anchor_needed = True
 
     # 1.1 Initate DB
     database = db_controler(databaseConnectionString,debugSqlEcho)
@@ -178,6 +179,9 @@ def main():
         if certDir == None:
             certDir = "/etc/grid-security/certificates/"
             log.info("Defaulting Certificate directory to '%s'" % (certDir))
+        if not os.path.isdir(certDir):
+            log.error('Invalid x509 trust store directory: %s.' % (certDir))
+            sys.exit(1)
         database.setup_trust_anchor(certDir)
     # Handle conflicting identifiers
     selectors_types = inputformats.intersection(input_format_selected)

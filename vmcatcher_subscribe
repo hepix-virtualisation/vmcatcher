@@ -203,7 +203,8 @@ def main():
     if options.format:
         if options.format in outputformats:
             output_format_selected = options.format
-            anchor_needed = True
+            if output_format_selected == "message":
+                anchor_needed = True
         else:
             log.error("Invalid format '%s' allowed formats are '%s'" % (options.format,outputformats))
             sys.exit(1)
@@ -278,6 +279,9 @@ def main():
         if certDir == None:
             certDir = "/etc/grid-security/certificates/"
             log.info("Defaulting Certificate directory to '%s'" % (certDir))
+        if not os.path.isdir(certDir):
+            log.error('Invalid x509 trust store directory: %s.' % (certDir))
+            sys.exit(1)
         database.setup_trust_anchor(certDir)
 
     # Handle conflicting actions

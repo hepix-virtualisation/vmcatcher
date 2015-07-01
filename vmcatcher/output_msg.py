@@ -17,6 +17,7 @@ class output_driver_message(output_driver_display_message,output_driver_lister,o
 
     def display_ImageListInstance(self,imagelist):
         if self.x509anchor == None:
+            self.log.warning("No trust anchor found so can not decode.")
             self.fpOutput.write (str(imagelist.data))
             return True
         smimeProcessor =  smimeX509validation(self.x509anchor)
