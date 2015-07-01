@@ -16,6 +16,9 @@ class output_driver_message(output_driver_display_message,output_driver_lister,o
         self.log = logging.getLogger("output_driver_message")
 
     def display_ImageListInstance(self,imagelist):
+        if imagelist.data == None:
+            self.log.warning("No imagelist found.")
+            return True
         if self.x509anchor == None:
             self.log.warning("No trust anchor found so can not decode.")
             self.fpOutput.write (str(imagelist.data))
