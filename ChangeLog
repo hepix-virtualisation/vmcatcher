@@ -1,5 +1,14 @@
 Changelog
 
+vmcatcher-0.6.1
+
+ * Bugfix #10 "subscribe --info" updateMode displayed.
+ * Improved handling of the trust anchor.
+   Only when displaying with the format "message" you need the trust anchor.
+ * Bugfix #9 invalidate image list cache when changing subscription.
+   attributes for images.
+ * Bugfix of crash when displaying subscriptions with no imagelist.
+
 vmcatcher-0.6.0
 
  * Fixed crash when querying image from a fresh subscription. And improved the 
