@@ -881,7 +881,7 @@ class db_controler(object):
             return False
         return True
 
-    def subscriptions_update(self, subscriptions):
+    def subscriptions_update_selected(self, subscriptions):
         errorhappened = False
         Session = self.SessionFactory()
         for subscription_filter in subscriptions:
