@@ -245,13 +245,15 @@ def main():
     if options.imagelist_newimage_accept:
         decorators.add('imagelist_newimage')
         imagelist_newimage = 1
+        anchor_needed = True
     if options.imagelist_newimage_subscribe:
         decorators.add('imagelist_newimage')
         imagelist_newimage = 3
+        anchor_needed = True
     if options.imagelist_newimage_refuse:
         decorators.add('imagelist_newimage')
         imagelist_newimage = 0
-
+        anchor_needed = True
     # 1 So we have some command line validation
 
     if databaseConnectionString == None:
@@ -387,6 +389,7 @@ def main():
         database.subscriptions_password_set(subscriptions_selected, uri_password)
     if 'imagelist_newimage' in decorators:
         database.subscriptions_imagelist_newimage_set(subscriptions_selected, imagelist_newimage)
+        database.subscriptions_update(subscriptions_selected)
     sys.exit(rc)
 
 

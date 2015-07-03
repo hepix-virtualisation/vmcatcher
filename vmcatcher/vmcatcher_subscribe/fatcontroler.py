@@ -880,3 +880,20 @@ class db_controler(object):
         if errorhappened:
             return False
         return True
+
+    def subscriptions_update(self, subscriptions):
+        errorhappened = False
+        Session = self.SessionFactory()
+        for subscription_filter in subscriptions:
+            query_subscription = self.selector_curent(Session,subscription_filter)
+            if query_subscription.count() == 0:
+                self.log.warning("Selections '%s' does not match any known subscriptions." % (subscription_filter))
+                errorhappened = True
+                continue
+            firstSubscription = query_subscription.first()
+            thisRc = self.subscription_update(Session,firstSubscription)
+            if thisRc != 0:
+                errorhappened = True
+        if errorhappened:
+            return False
+        return True
