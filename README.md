@@ -2,13 +2,13 @@ vmcatcher
 ---------
 
 This virtual machine `Virtual Machine Image List` subscriber implementation is
-intended to be a production grade reference implementation.
+intended to be a production-grade reference implementation.
 
 The software makes use of a database to store subscriptions in a similar way
 to a podcast reader or a Linux package manager. The tested Database is
-SqlLight, but it is based upon SQLalchamy so should support many databases.
-Sdllight has proved more than adequate for the low transaction rate of a image
-list subscriber and so deployment issues are just backing up a databasefile.
+Sqlite, but it is based upon SQLalchemy so should support many databases.
+Sqlite has proved more than adequate for the low transaction rate of an image
+list subscriber and so deployment issues are just backing up a database file.
 
 Since the software is made with the Grid in mind it is only natural that the
 `x.509` certificate model is used.
@@ -20,8 +20,8 @@ Since the software is made with the Grid in mind it is only natural that the
 This application allows users to subscribe to `Virtual Machine Image List`s,
 cache the images referenced to in the `Virtual Machine Image List`, validate
 the images list with `x.509` based public key cryptography, and validate the
-images against sha512 hashes in the images lists and provide events for
-further applications to process update or expire changes of virtual machine
+images against sha512 hashes in the images list and provide events for
+further applications to process, update or expire changes of virtual machine
 images without having to further validate the images.
 
 This software is available at:
@@ -30,10 +30,10 @@ This software is available at:
 
 The software is based upon a simple database that stores subscriptions to
 `Virtual Machine Image List`s, who can sign the `Virtual Machine Image List`,
-and which images belong to which subscriptions. It allows images to selected
+and which images belong to which subscriptions. It allows images to be selected
 for subscription.
 
-Subscribed images can be downloaded verified and cached. Cached images can be
+Subscribed images can be downloaded, verified and cached. Cached images can be
 verified, and if invalid or expired they are moved to an expiry directory.
 
 
@@ -44,12 +44,12 @@ verified, and if invalid or expired they are moved to an expiry directory.
   * Update subscriptions checking authenticity of the message using `x.509` based signatures.
   * Automation as a cron script.
   * Subscribe and unsubscribe to images from `Virtual Machine Image List`s.
-  * Download verify images into a local cache.
+  * Download & verify images into a local cache.
   * Expire images to an archive when no longer endorsed or corrupt.
-  * Open Stack intgration by Mattieu Puel CC-IN2P3.fr.
-  * OpenNebula intgration by Roberto Rosende Dopazo CESGA.es.
+  * OpenStack integration by Mattieu Puel CC-IN2P3.fr.
+  * OpenNebula integration by Roberto Rosende Dopazo CESGA.es.
 
-This set of applications are designed to provide a similar work flow from each
+This set of applications is designed to provide a similar work flow from each
 area of control to the `Virtual Machine Image List` archive.
 
   * `vmcatcher_endorser` - Endorsers of `Virtual Machine Image List` subscriptions.
@@ -66,7 +66,7 @@ used the majority of the time without intervention.
 If you are signing a list using the HEPiX `Virtual Machine Image List` signer,
 you should also install this application and subscribe to your current image.
 
-It is intended to with a couple of cron scripts to be informed at any time if
+It is intended to work with a couple of cron scripts to be informed at any time if
 your local images are matching signatures in the `Virtual Machine Image List`.
 
 Anyone curious about this application should consider this application a
@@ -80,7 +80,7 @@ TableCloud Integration with vmcatcher
 
 CloudNameAuthorEmployerURI
 
-Open Stack
+OpenStack
 
 glancepush-vmcatcher
 
@@ -90,7 +90,7 @@ CC-IN2P3.fr
 
 https://github.com/EGI-FCTF/glancepush-vmcatcher
 
-Open Stack
+OpenStack
 
 glancepush
 
@@ -117,23 +117,23 @@ https://github.com/grnet/snf-vmcatcher
 
 ### Quick start use of vmcatcher
 
-First make sure that all the Certificate Revocation Lists (CRL) are upto date.
+First make sure that all the Certificate Revocation Lists (CRL) are up to date.
 
 
     [root] #  fetch-crl
 
 This suit of applications can use either environment variable or command line
 to set most parameters. If neither environment variables or command line
-parameters are not set for critical variables the application will provide
+parameters are set for critical variables the application will provide
 defaults and show warnings.
 
 The most important setting is the location of the database. This is read from
 VMCATCHER_RDBMS,
 
 
-    [user] $ export VMCATCHER_RDBMS="sqlite:////var/lib/vmcatcher/vmcatcher.db"
+    [user] $ export VMCATCHER_RDBMS="sqlite:///var/lib/vmcatcher/vmcatcher.db"
 
-The above line instructs the SQLalchamy interface to databases to use sqlite
+The above line instructs the SQLAlchemy interface to databases to use sqlite
 and path "/var/lib/vmcatcher/vmcatcher.db" on a UNIX system. This is the only
 important file and stores the older signed image lists. SQL is used to enforce
 most of the rules such as unique nature of `RFC 4122 UUID`'s and the URLS for
@@ -175,7 +175,7 @@ is the users certificate subject (some times know as distinguished name) while
 the third column is the subject of the issuing certificate authority.
 
 
-    [user] $  vmcatcher_subscribe -s file:////`pwd`/hepix_signed_image_list
+    [user] $  vmcatcher_subscribe -s file://`pwd`/hepix_signed_image_list
     INFO:main:Defaulting DB connection to 'sqlite:///vmcatcher.db'
     WARNING:db_actions:list hv:uri does not match subscription uri
 
@@ -185,7 +185,7 @@ certificate subjects are added to the database automatically. This is
 particularly useful for testing.
 
 
-    [user] $  vmcatcher_subscribe  --auto-endorse -s file:////`pwd`/hepix_signed_image_list
+    [user] $  vmcatcher_subscribe --auto-endorse -s file://`pwd`/hepix_signed_image_list
     INFO:main:Defaulting DB connection to 'sqlite:///vmcatcher.db'
     WARNING:db_actions:list hv:uri does not match subscription uri
 
@@ -201,8 +201,8 @@ List the registered Images.
 The results show the `RFC 4122 UUID` of the image, the availability state and
 the subscription `RFC 4122 UUID`. The state value is a bitmap;
 
-  * 1 Image is subscribed
-  * 2 Image is available from a valid `Virtual Machine Image List`s.
+  * bit 1: Image is subscribed
+  * bit 2: Image is available from a valid `Virtual Machine Image List`s.
 
 Now we will select an image for local caching.
 
@@ -223,7 +223,7 @@ List`. To list the available images referenced in the local database:
     858a817e-0ca2-473f-89d3-d5bdfc51968e    2       63175437-7d59-4851-b333-c96cb6545a86
     da42ca85-179b-4873-b12e-32d549bf02b6    2       63175437-7d59-4851-b333-c96cb6545a86
 
-This now shows the images are available in the latest `Virtual Machine Image
+This now shows the images that are available in the latest `Virtual Machine Image
 List`.
 
 
@@ -240,7 +240,7 @@ The `Virtual Machine Image List` state is now changed to
     da42ca85-179b-4873-b12e-32d549bf02b6    2       63175437-7d59-4851-b333-c96cb6545a86
 
 Clearly showing that the image '858a817e-0ca2-473f-89d3-d5bdfc51968e' is
-subscribed.
+subscribed to.
 
 Make the directories for caching the images.
 
@@ -288,7 +288,7 @@ binary RPM packages in the following repository sporting.
   * http://www.yokel.org/pub/software/yokel.org/release/x86_64/scientific/6x/rpm/
   * http://grid.desy.de/vm/repo/yum/sl5/noarch/RPMS.stable/
 
-Prebuilt Debian packages is currently work in progress, but prebuilt tar balls
+Prebuilt Debian packages are currently work in progress, but prebuilt tar balls
 are available.
 
 Deployment instructions are provided in the README included in the source code
@@ -305,6 +305,7 @@ Install EPEL for dependencies.
 
 Install Yokel yum repository.
 
+    [root] # cat /etc/yum.repos.d/yokel_sl6.repo
     [yokel_scientific_release_6]
     name=yokel_scientific_release_6
     baseurl=http://www.yokel.org/pub/software/yokel.org/scientific/6/release/x86_64/rpm/
@@ -322,15 +323,18 @@ https://wiki.egi.eu/wiki/EGI_IGTF_Release
     gpgcheck=1
     enabled=1
 
-install the ca-policy-egi-core
+Install the ca-policy-egi-core
 
 
     [root] # yum install ca-policy-egi-core
 
-install fetch-crl
+Install fetch-crl
 
 
     [root] # yum install fetch-crl
+
+Install the HEPiX `Virtual Machine Image List` subscriber.
+
 
     [root] # yum install vmcatcher
 
@@ -373,7 +377,7 @@ Install the lcg-CA
 
     [root] # yum install lcg-CA
 
-install fetch-crl
+Install fetch-crl
 
 
     [root] # yum install fetch-crl
@@ -385,7 +389,7 @@ Install the HEPiX `Virtual Machine Image List` subscriber.
 
 This may fail due to a dependency of m2crypto that cannot be satisfied. This
 is due to known bugs in m2crypto in the version shipped in RHEL5. If this is a
-problem please download the following
+problem please download the following:
 
 
     http://ftp.informatik.uni-frankfurt.de/fedora-archive/fedora/linux/releases/8/Everything/source/SRPMS/m2crypto-0.18-2.src.rpm
@@ -401,7 +405,7 @@ is not stable.
 
 These instructions are for Debian Linux 7.0 (Wheezy) or later.
 
-Unfortunately at this moment the code is not packaged, but they will be soon.
+Unfortunately at this moment the code is not packaged, but it will be soon.
 All the dependencies are available in the Debian repository.
 
 For Grid scientific use you can get a trust store easily using the egi.eu
@@ -441,7 +445,7 @@ Now install the code from git.
 
     http://www.yokel.org/pub/software/yokel.org/release/source/debian/7.0/tgz/
 
-The latest version of hepixvmitrust-X.X.XX.src.tar.gz should be downloaded
+The latest version of hepixvmitrust-X.X.XX.src.tar.gz should be downloaded,
 extracted and installed.
 
 
@@ -461,11 +465,10 @@ extracted and installed.
     [root] # echo $?
     [root] # cd ..
 
-The latest version ofsmimeX509validation-0.0.11.src.tar.gz -X.X.XX.src.tar.gz
-should be downloaded extracted and installed.
+The latest version of smimeX509validation-0.0.11.src.tar.gz -X.X.XX.src.tar.gz
+should be downloaded, extracted and installed.
 
 
-    [root] #
     [root] # wget http://www.yokel.org/pub/software/yokel.org/release/source/debian/7.0/tgz/smimeX509validation-0.0.11.src.tar.gz
     Resolving grid.desy.de (grid.desy.de)... 131.169.180.46
     Connecting to grid.desy.de (grid.desy.de)|131.169.180.46|:80... connected.
@@ -482,11 +485,10 @@ should be downloaded extracted and installed.
     [root] # echo $?
     [root] # cd ..
 
-The latest version of vmcatcher-X.X.XX.src.tar.gz should be downloaded
+The latest version of vmcatcher-X.X.XX.src.tar.gz should be downloaded,
 extracted and installed.
 
 
-    [root] #
     [root] # wget http://www.yokel.org/pub/software/yokel.org/release/source/debian/7.0/tgz/vmcatcher-0.1.29.src.tar.gz
     Resolving grid.desy.de (grid.desy.de)... 131.169.180.46
     Connecting to grid.desy.de (grid.desy.de)|131.169.180.46|:80... connected.
@@ -540,8 +542,8 @@ documentation on logging. For further information please read here.
 
 https://docs.python.org/2/howto/logging.html
 
-Setting this operation overides the command line options "--verbose" and
-"--quiet" and is overridern by "--log-config"
+Setting this operation overrides the command line options "--verbose" and
+"--quiet" and is overridden by "--log-config"
 
 #### VMCATCHER_DIR_CERT
 
@@ -579,7 +581,7 @@ integrity.
 
 #### VMCATCHER_CACHE_ACTION_CHECK
 
-Instructs '`vmcatcher_endorser`' check integrity for all currently stored VM
+Instructs '`vmcatcher_endorser`' to check integrity for all currently stored VM
 images.
 
 
@@ -652,11 +654,11 @@ To add a subscription
 
     [user] $  vmcatcher_subscribe  -s https://cernvm.cern.ch/releases/image.list
 
-Or alternatively you can download a file visually inspect it and subscribe to
+Or alternatively you can download a file, visually inspect it and subscribe to
 the local file.
 
 
-    [user] $  vmcatcher_subscribe  -s file:////`pwd`/hepix_signed_image_list
+    [user] $  vmcatcher_subscribe  -s file://`pwd`/hepix_signed_image_list
 
 To update your subscriptions
 
@@ -778,7 +780,7 @@ Image List`s.
 
 Since this application suite is intended to be embedded in a larger
 application and concerned with downloading and managing updates of VM images
-into a cloud infrastructure, it is some times beneficial to have an event
+into a cloud infrastructure, it is sometimes beneficial to have an event
 interface so that applications may embed these applications in larger systems.
 
 
@@ -789,14 +791,14 @@ The event must process its command within 10 seconds or else it will be sent a
 termination signal. See the following example:
 
 
-    [user] $  vmcatcher_cache -x 'env  ; exit 1'
+    [user] $  vmcatcher_cache -x 'env ; exit 1'
 
 All Events have a type. This is given to the event handler by setting the
 variable, `VMCATCHER_EVENT_TYPE` with the following values "AvailablePrefix",
 "AvailablePostfix", "ExpirePrefix" and "ExpirePosfix".
 
 "Available" events happen when a new image is validated, while "Expire" events
-occur when an image i no longer the validated image. The "Prefix" events occur
+occur when an image is no longer the validated image. The "Prefix" events occur
 before the file changes state, and the "Posfix" events occur after the state
 change.
 
@@ -863,34 +865,24 @@ A new image exists in a subscribed imagelist.
 
 The description text in the image.
 
-
-
 ###### VMCATCHER_EVENT_DC_IDENTIFIER
 
 Unique identifier of the image. Its suggested that image producers use RFC
 4122 `RFC 4122 UUID` for `Virtual Machine Image List` this allows updating the
 list, and uniqueness.
 
-
-
 ###### VMCATCHER_EVENT_DC_TITLE
 
 Image Title.
-
-
 
 ###### VMCATCHER_EVENT_HV_HYPERVISOR
 
 Typically set to reflect the Virtualization technology values such as "xen",
 "kvm".
 
-
-
 ###### VMCATCHER_EVENT_HV_SIZE
 
 The Image Size
-
-
 
 ###### VMCATCHER_EVENT_HV_URI
 
@@ -904,49 +896,34 @@ The version number of the image
 
 The images architecture.
 
-
-
 ###### VMCATCHER_EVENT_SL_CHECKSUM_SHA512
 
-The Images sha512 checksum.
-
-
+The images sha512 checksum.
 
 ###### VMCATCHER_EVENT_SL_COMMENTS
 
 Comments added by the image author
 
-
-
 ###### VMCATCHER_EVENT_SL_OS
 
 The Operating System the VM image contains
-
-
 
 ###### VMCATCHER_EVENT_SL_OSVERSION
 
 The Operating System version
 
-
-
 ###### VMCATCHER_EVENT_FILENAME
 
-The Image file name.
-
-
+The image file name.
 
 ###### VMCATCHER_EVENT_IL_DC_IDENTIFIER
 
 The image list the image comes from.
 
-
-
 ###### VMCATCHER_EVENT_HV_FORMAT
 
 The format of the image. This is only available if the image list contains the
 format metadata.
-
 
 ##### VMCATCHER_EVENT_AD_MPURI
 
@@ -963,8 +940,7 @@ clouds with a single database of subscribed Imagelists.
 
 #### Set up for Production using Cron
 
-Then the by hand configuration for your master DB
-
+Manual configuration for your master DB
 
     [root] #  useradd vmcatcher
 
@@ -979,13 +955,13 @@ Then the by hand configuration for your master DB
 
     [root] #  sudo -u vmcatcher /usr/bin/vmcatcher_subscribe \
           -s https://cernvm.cern.ch/releases/image.list \
-          -d sqlite:////var/lib/vmcatcher/vmcatcher.db
+          -d sqlite:///var/lib/vmcatcher/vmcatcher.db
 
 make a cron job
 
 
-    [root] #  cat   /etc/cron.d/vmcatcher
-    export VMCATCHER_RDBMS="sqlite:////var/lib/vmcatcher/vmcatcher.db"
+    [root] #  cat /etc/cron.d/vmcatcher
+    export VMCATCHER_RDBMS="sqlite:///var/lib/vmcatcher/vmcatcher.db"
     export VMCATCHER_CACHE_DIR_CACHE="/var/cache/vmimages/endorsed/"
     export VMCATCHER_CACHE_DIR_DOWNLOAD="/var/cache/vmimages/partial/"
     export VMCATCHER_CACHE_DIR_EXPIRE="/var/cache/vmimages/expired/"
@@ -1002,15 +978,15 @@ application `vmcatcher_eventHndlExplscript` will append the data to /tmp/foo
 Now at any time users with file permissions can get a list of valid images.
 
 
-    [user] $ VMCATCHER_RDBMS="sqlite:////var/lib/vmcatcher/vmcatcher.db" vmcatcher_image -l
+    [user] $ VMCATCHER_RDBMS="sqlite:///var/lib/vmcatcher/vmcatcher.db" vmcatcher_image -l
 
 
 
 #### Replacing the event handler
 
 `vmcatcher_cache` produces "events" in the form of launching an application
-when a new image is downloaded or expired, this application is then launched
-with environment variables that include the image ID,date, etc etc. Since all
+when a new image is downloaded or expired, this application is launched
+with environment variables that include the image ID, date, etc... Since all
 the information about current images is available from other vmcatcher
 commands you don't need to handle events but it does make it simpler for some
 setups.
@@ -1019,7 +995,7 @@ So with a cron job like:
 
 
     [root] #  cat   /etc/cron.d/vmcatcher
-    export VMCATCHER_RDBMS="sqlite:////var/lib/vmcatcher/vmcatcher.db"
+    export VMCATCHER_RDBMS="sqlite:///var/lib/vmcatcher/vmcatcher.db"
     export VMCATCHER_CACHE_DIR_CACHE="/var/cache/vmimages/endorsed/"
     export VMCATCHER_CACHE_DIR_DOWNLOAD="/var/cache/vmimages/partial/"
     export VMCATCHER_CACHE_DIR_EXPIRE="/var/cache/vmimages/expired/"
@@ -1045,14 +1021,14 @@ handling is more complex, it may be wise to use a message queue, or storing
 the event and processing after, rather than just using a simple fork.
 
 
-#### Data base migration from versions 0.5.X to 0.6.X
+#### Database migration from versions 0.5.X to 0.6.X
 
 Backup your old database:
 
-    #mv vmcatcher.db vmcatcher.db.old
-    #sqlite3 vmcatcher.db.old .dump > dump
+    # mv vmcatcher.db vmcatcher.db.old
+    # sqlite3 vmcatcher.db.old .dump > dump
 
-regenerate your data base
+regenerate your database
 
     # vmcatcher_subscribe  -l
 
@@ -1060,20 +1036,20 @@ Restore your database content
 
     # sqlite3 vmcatcher.db < dump
 
-You will get some errors that tables already exist dont worry about these.
+You will get some errors that tables already exist don't worry about these.
 
-#### Data base migration from versions 0.4.X to 0.5.X
+#### Database migration from versions 0.4.X to 0.5.X
 
 Backup your old database:
 
-    #mv vmcatcher.db vmcatcher.db.old
-    #sqlite3 vmcatcher.db.old .dump > dump
+    # mv vmcatcher.db vmcatcher.db.old
+    # sqlite3 vmcatcher.db.old .dump > dump
 
 edit the dump file with each line starting
 
     INSERT INTO "subscription" VALUES
 
-Add One extra column with the value, 0
+Add One extra column with the value: 0
 
 for example:
 
@@ -1083,7 +1059,7 @@ becomes:
 
     INSERT INTO "subscription" VALUES(2,'87576537-59cd-47e0-9777-e061e178435f','This is a demo Virtual Appliance Version','https://vmcaster.appdb.egi.eu/store/vappliance/demo.va.public/image.list',1,5,'2014-05-29 19:59:05.305093',0,NULL,NULL,0);
 
-regenerate your data base
+regenerate your database
 
     # vmcatcher_subscribe  -l
 
@@ -1091,21 +1067,20 @@ Restore your database content
 
     # sqlite3 vmcatcher.db < dump
 
-You will get some errors that tables already exist dont worry about these.
+You will get some errors that tables already exist don't worry about these.
 
-
-#### Data base migration from versions prior to 0.4.X
+#### Database migration from versions prior to 0.4.X
 
 Backup your old database:
 
-    #mv vmcatcher.db vmcatcher.db.old
-    #sqlite3 vmcatcher.db.old .dump > dump
+    # mv vmcatcher.db vmcatcher.db.old
+    # sqlite3 vmcatcher.db.old .dump > dump
 
-edit thew dump file with each line starting
+edit the dump file with each line starting
 
     INSERT INTO "subscription" VALUES
 
-Add four extra columns with the values, 0,'','',0
+Add four extra columns with the values: 0,'','',0
 
 for example:
 
@@ -1115,7 +1090,7 @@ becomes:
 
     INSERT INTO "subscription" VALUES(1,'e55c1afe-0a62-4d31-a8d7-fb8c825f92a2','Endorsed list of CernVM Images','https://cernvm.cern.ch/releases/image.list',1,1,'2014-01-25 22:20:29.859405',0,'','',0);
 
-regenerate your data base
+regenerate your database
 
     # vmcatcher_subscribe  -l
 
@@ -1123,34 +1098,33 @@ Restore your database content
 
     # sqlite3 vmcatcher.db < dump
 
-You will get some errors that tables already exist dont worry about these.
+You will get some errors that tables already exist don't worry about these.
 
-#### Data base migration from versions prior to 0.2.X
+#### Database migration from versions prior to 0.2.X
 
-
-First back up your data base
+First back up your database
 
     $ cp vmcatcher.db vmcatcher.db.bak
 
-Now dump the data base content
+Now dump the database content
 
     $ sqlite3 vmcatcher.db .dump > dump
 
-Remove old data base.
+Remove old database.
 
     $ rm vmcatcher.db
 
-Now regenerate the data base.
+Now regenerate the database.
 
     $ vmcatcher_image -l
 
-Then after checking the data base is restored, add the content.
+Then after checking the database is restored, add the content.
 
     $ sqlite3 vmcatcher.db < dump
 
 #### Logging configuration
 
-All scripts have a logging option. This is used to configure pythons logging
+All scripts have a logging option. This is used to configure python's logging
 library. An example is shown below.
 
 
@@ -1162,7 +1136,7 @@ with different log levels.
 
 #### Running Units tests.
 
-Checkout the source code from git hub.
+Checkout the source code from github.
 
     $ python setup.py  nosetests
 
