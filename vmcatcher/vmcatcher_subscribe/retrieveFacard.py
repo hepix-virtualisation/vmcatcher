@@ -17,7 +17,7 @@ class retrieveFacardError(Exception):
         self.parameter = value
     def __str__(self):
         return repr(self.parameter)
-        
+
 class retrieveFacard(object):
     def __init__(self, *args, **kwargs):
         self.log = logging.getLogger("retrieveFacard")
@@ -34,7 +34,7 @@ class retrieveFacard(object):
         # Set implementation
         self.uri = kwargs.get('uri', None)
         self.protocol = kwargs.get('protocol', None)
-        
+
     @Property
     def protocol():
         doc = "retrieve protocol"
@@ -45,7 +45,7 @@ class retrieveFacard(object):
             self._protocol = name
             retrieveImpTmp = None
             if name == "https":
-                retrieveImpTmp = retrieveHttpsFacard.retrieve()    
+                retrieveImpTmp = retrieveHttpsFacard.retrieve()
             elif name == "http":
                 retrieveImpTmp = retrieveHttp.retrieve()
             elif name == "file":
@@ -72,7 +72,7 @@ class retrieveFacard(object):
             del self._protocol
             self._retrieveImp = None
         return locals()
-    
+
     @Property
     def server():
         doc = "server to retrieve from"
@@ -321,7 +321,7 @@ class retrieveFacard(object):
         def fdel(self):
             pass
         return locals()
-    
+
     def requestAsString(self):
         if hasattr(self, '_retrieveImp'):
             if self._retrieveImp != None:

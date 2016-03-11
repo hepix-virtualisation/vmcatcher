@@ -82,7 +82,7 @@ def main():
     p.add_option('-q', '--quiet', action ='count',help='Change global log level, decreasing log output.')
     p.add_option('--log-config', action ='store',help='Logfile configuration file, (overrides command line).', metavar='LOG_CONFIG')
     p.add_option('--log-sql-info', action ='store_true',help='Echo all SQL commands.', metavar='LOGFILE')
-    
+
     options, arguments = p.parse_args()
     autoEndorse = False
     anchor_needed = False
@@ -104,7 +104,7 @@ def main():
         'imagelist_newimage'])
     outputformats = set(['SMIME','message','lines','json'])
     output_format_selected = 'lines'
-    
+
     inputformats = set(['uuid','url'])
     input_format_selected = set([])
     outputfiles = []
@@ -131,7 +131,7 @@ def main():
     if 'VMCATCHER_SUB_EVENT' in os.environ:
         eventExecutionString = os.environ['VMCATCHER_SUB_EVENT']
     if 'VMCATCHER_OUTPUT_FORMAT' in os.environ:
-        output_format_selected = os.environ['VMCATCHER_OUTPUT_FORMAT']  
+        output_format_selected = os.environ['VMCATCHER_OUTPUT_FORMAT']
     # Set up log file
     LoggingLevel = logging.WARNING
     LoggingLevelCounter = 2
@@ -155,7 +155,7 @@ def main():
         LoggingLevel = logging.FATAL
     if LoggingLevelCounter >= 5:
         LoggingLevel = logging.CRITICAL
-    
+
     if options.log_config:
         logFile = str(options.log_config)
     if logFile != None:
@@ -167,10 +167,10 @@ def main():
             log.error("Logfile configuration file '%s' was not found." % (options.log_config))
             sys.exit(1)
     else:
-        
+
         logging.basicConfig(level=LoggingLevel)
     log = logging.getLogger("main")
-    # Now logging is set up process other options    
+    # Now logging is set up process other options
     if options.log_sql_info:
         debugSqlEcho = True
     if options.cert_dir:
@@ -189,7 +189,7 @@ def main():
     if options.image_refuse:
         actions.add('image_refuse')
         images_refused = options.image_refuse
-        
+
     if options.subscribe:
         anchor_needed = True
         actions.add('subscribe')
@@ -275,7 +275,7 @@ def main():
     if eventExecutionString != None:
         EventInstance = EventObj(eventExecutionString)
         database.callbackEventImageNew = EventInstance.eventImageNew
-    
+
     # 2 Initate CA's to manage files
     if anchor_needed:
         if certDir == None:
@@ -303,7 +303,7 @@ def main():
             if len(subscriptions_selected) == 0:
                 log.error('No subscription selections made.')
                 sys.exit(1)
-        
+
     # Handle conflicting identifiers
 
     selectors_types = inputformats.intersection(input_format_selected)
@@ -316,19 +316,19 @@ def main():
 
     if selectors_types_len == 1:
         selector_str = input_format_selected.pop()
-    
+
     selectorMapper = {'uuid' : 'sub_uuid',
             'url' : 'sub_uri',
         }
     if not selector_str in selectorMapper.keys():
         log.error('Invalid selector.')
         sys.exit(1)
-    
+
     rc = database.set_selector(selectorMapper[selector_str])
     if rc != True:
         log.error("Invalid format set : %s" % (selector_str))
         sys.exit(1)
-        
+
     if uri_trustanchor_str != None:
         if uri_trustanchor_str in uri_trustanchor_str_valid.keys():
             uri_trustanchor = uri_trustanchor_str_valid[uri_trustanchor_str]
@@ -338,12 +338,12 @@ def main():
             sys.exit(1)
     # Handle the output_view
 
-        
+
     if not output_format_selected in outputformats:
         log.error("Invalid format '%s' allowed formats are '%s'" % (output_format_selected,outputformats))
         sys.exit(1)
     database.setup_view_format(output_format_selected)
-    
+
     # set default return code
     rc = 0
     if 'subscribe' in actions:

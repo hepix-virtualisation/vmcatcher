@@ -7,7 +7,7 @@ import os
 import re
 import logging
 import optparse
-import  smimeX509validation 
+import smimeX509validation
 from vmcatcher.__version__ import version
 import vmcatcher
 import urllib
@@ -134,7 +134,7 @@ class db_actions(object):
         return imagedefList
 
 
- 
+
 class db_controler(object):
     def __init__(self,dboptions,dblog = False):
         self.log = logging.getLogger("db_controler")
@@ -152,13 +152,13 @@ class db_controler(object):
 
     def _retiver_uri(self,metadata):
         retriever = retrieveFacard.retrieveFacard()
-        
+
         if "uri" in metadata.keys():
             if metadata["uri"] != None:
                 if len(metadata["uri"]) > 0:
                    uri = metadata["uri"]
                    retriever.uri = uri
-       
+
         if "userName" in metadata.keys():
             if metadata["userName"] != None:
                 if len(metadata["userName"]) > 0:
@@ -184,23 +184,23 @@ class db_controler(object):
                 if len(metadata["protocol"]) > 0:
                    protocol = metadata["protocol"]
                    retriever.protocol = protocol
-        
+
                    self.log.debug("protocol=%s" % (protocol))
         if "server" in metadata.keys():
             if metadata["server"] != None:
                 if len(metadata["server"]) > 0:
                    server = metadata["server"]
                    retriever.server = server
-        
+
                    self.log.debug("server=%s" % (server))
-        
+
         resultDict = retriever.requestAsString()
-        
+
         if resultDict == None:
             return {'code' : 800}
         resultDict['uri'] = uriNormaliseAnonymous(retriever.uri)
         return resultDict
-        
+
     def set_selector(self,selector_string):
         self.selector_curent = None
         if not selector_string in self.selectors_available:
@@ -211,7 +211,7 @@ class db_controler(object):
         elif selector_string == 'sub_uri':
             self.selector_curent = vmcatcher.queryby.query_subscriptions_by_uri
         return True
-        
+
     def setup_trust_anchor(self,directory):
         self.anchor = smimeX509validation.LoadDirChainOfTrust(directory)
 
@@ -231,16 +231,16 @@ class db_controler(object):
         Session.commit()
     def sessions_list(self):
         Session = self.SessionFactory()
-        
+
         self._outputter.fpOutput = sys.stdout
         self._outputter.saSession = Session
         self._outputter.x509anchor = self.anchor
-        
+
         self._outputter.list_vmcatcher_subscribe()
         #view = self.factory_view(sys.stdout,Session,self.anchor)
         #view.subscriptions_lister()
         return True
-    
+
     def subscriptions_delete(self,subscriptions_selected):
         foundOne = False
         Session = self.SessionFactory()
@@ -330,7 +330,7 @@ class db_controler(object):
                 self._outputter.display_subscription(item)
             if output_file_name != None:
                 output_fileptr.close()
-            
+
     def setEventObj(self,obj):
         self.eventObj = obj
     def subscribe_file(self,Session,inmetadata):
@@ -346,7 +346,7 @@ class db_controler(object):
             metadata["trustAnchor"] = inmetadata["trustAnchor"]
         else:
             metadata[u'il.transfer.protocol:trustAnchor'] = self.anchor
-        
+
         if 'userName' in inmetadata:
             metadata["userName"] = inmetadata["userName"]
             metadata[u'il.transfer.protocol:userName'] = inmetadata["userName"]
@@ -360,8 +360,8 @@ class db_controler(object):
         if 'protocol' in inmetadata:
             metadata["protocol"] = inmetadata["protocol"]
             metadata[u'il.transfer.protocol'] = inmetadata["protocol"]
-        
-        
+
+
         resultDict = self._retiver_uri(inmetadata)
         rc = resultDict['code']
         if rc != 0:
@@ -374,7 +374,7 @@ class db_controler(object):
                 return rc
             else:
                 return 10
-        
+
         smimeProcessor = smimeX509validation.smimeX509validation(metadata["trustAnchor"])
         try:
             smimeProcessor.Process(resultDict['responce'])
@@ -432,7 +432,7 @@ class db_controler(object):
                 newmetadata[u'dc:identifier'] = unicode(uuid.uuid4())
                 endorser_list = db.endorser_create(newmetadata)
                 self.log.warning("Endorser '%s':'%s' added to database." % (metadata[u'hv:dn'],metadata[u'hv:ca']))
-                
+
                 if endorser_list.count() == 0:
                     self.log.error('Failed to create an authorised endorser in Database.')
                     return False
@@ -456,8 +456,8 @@ class db_controler(object):
         if len(failedToCreateImages) > 0:
             return False
         return True
-    
-    
+
+
     def subscript_update_image(self,Session,subscription,imagelistref,imageObj):
         subscriptionKey = subscription.id
         ProcessingSubscriptionUuid = subscription.identifier
@@ -467,13 +467,13 @@ class db_controler(object):
             return 31
         db = db_actions(Session)
         imageDefQuery = db.ImageDefinition_get(subscriptionKey,imageObj.metadata)
-        if imageDefQuery.count() != 1:            
+        if imageDefQuery.count() != 1:
             if self.callbackEventImageNew != None:
                 # Triggor an event for new image.
                 self.callbackEventImageNew(imageObj.metadata)
             # Now we see the updatemode
             if (subscription.updateMode & 1 != 1):
-                # We should not create the image referance            
+                # We should not create the image referance
                 self.log.info("ImageId '%s' refused by subscription '%s'" %
                     (imageObj.metadata[u'dc:identifier'],ProcessingSubscriptionUuid))
                 # Error code - image dc:identifier invalid.
@@ -509,9 +509,9 @@ class db_controler(object):
             self.log.debug(E.params)
             Session.rollback()
             return 0
-        # So now we have done the updating of the database and just need to update 
+        # So now we have done the updating of the database and just need to update
         # the latest image instance record in the database.
-        
+
         latestimageInstanceQuery = Session.query(model.ImageInstance).\
             filter(model.ImageInstance.fkimagelistinstance == imagelistref).\
             filter(model.ImageInstance.fkIdentifier == ThisImageDefId)
@@ -528,13 +528,13 @@ class db_controler(object):
         Session.add(ThisImageDef)
         Session.commit()
         return 0
-    
+
 
     def subscription_update(self,Session,subscription):
         subscriptionKey = int(subscription.id)
         ProcessingSubscriptionUuid = str(subscription.identifier)
         self.log.info("Updating:%s" % (ProcessingSubscriptionUuid))
-        
+
         retriever = retrieveFacard.retrieveFacard()
         retriever.uri = subscription.uri
         resultDict = self._retiver_uri({"uri" : subscription.uri,
@@ -542,8 +542,8 @@ class db_controler(object):
             "userName" : subscription.userName,
             "password" : subscription.password,
             })
-        
-        
+
+
         rc = resultDict['code']
         if rc != 0:
             if 'error' in resultDict:
@@ -554,7 +554,7 @@ class db_controler(object):
                 return rc
             else:
                 return 10
-        
+
         update_unprocessed = resultDict['responce']
         #update_unprocessed = str(f.read())
         # Now we have the update lets first check its hash
@@ -597,16 +597,16 @@ class db_controler(object):
             self.log.error('Database Error processing subq:%s' % (ProcessingSubscriptionUuid))
             assert (False)
         subscription, auth = subq.one()
-        
-        
-        # Sets 
+
+
+        # Sets
         VersionCompare = 0
         qeryJunction = Session.query(model.ImageListInstance).\
             filter(model.Subscription.imagelist_latest == model.ImageListInstance.id).\
             filter(model.Subscription.id == subscription.id)
-        
-        
-        
+
+
+
         if qeryJunction.count() == 0:
             #"we have no older version"
             self.log.info("First version of:%s" % (ProcessingSubscriptionUuid))
@@ -634,21 +634,21 @@ class db_controler(object):
                     imageList.expired = now
                     Session.commit()
                 return 0
-            
-                
-                 
+
+
+
             messageVersion = checker.Json[u'hv:imagelist'][u'hv:version']
             self.log.debug('Downloaded version:%s' % (messageVersion))
             VersionCompare = split_numeric_sort(imageList.version,messageVersion)
             if VersionCompare == 0:
-                self.log.warning('Downloaded version "%s" version "%s" has the same version number than the old version "%s".' % (ProcessingSubscriptionUuid,messageVersion, imageList.version))                
+                self.log.warning('Downloaded version "%s" version "%s" has the same version number than the old version "%s".' % (ProcessingSubscriptionUuid,messageVersion, imageList.version))
                 #return 16 #  16 New version number is same as old version number.
             if VersionCompare < 0:
                 self.log.error('Downloaded version "%s" version "%s" has lower version number than the old version "%s".' % (ProcessingSubscriptionUuid,messageVersion, imageList.version))
                 return 17 #  17 New version number is less than old version number.
-        
+
         metadata[u'hv:uri'] = uriNormaliseAnonymous(metadata[u'hv:uri'])
-        
+
         imagelist = model.ImageListInstance(auth.id,metadata)
         Session.add(imagelist)
         try:
@@ -675,13 +675,13 @@ class db_controler(object):
                 imagelist.authorised = False
                 Session.add(imagelist)
         subscription.updated = datetime.datetime.utcnow()
-        
+
         subscription.uri = metadata[u'hv:uri']
         subscription.imagelist_latest = imagelistref
         Session.add(subscription)
         Session.commit()
         return globalRc
-        
+
     def subscriptions_update(self):
         if self.anchor == None:
             self.log.warning("No enabled certificates, check your x509 dir.")
@@ -717,7 +717,7 @@ class db_controler(object):
             self._outputter.fpOutput = output_fileptr
             self._outputter.saSession = Session
             self._outputter.x509anchor = self.anchor
-            
+
             for item in query_subscription:
                 self._outputter.display_subscription(item)
                 query_image_def = Session.query(model.ImageDefinition).\
@@ -737,7 +737,7 @@ class db_controler(object):
         Session = self.SessionFactory()
         errors = 0
         for sub_uuid, image_uuid in pairs:
-            
+
             image_known = Session.query(model.ImageDefinition.identifier,model.Subscription.identifier).\
                 filter(model.ImageDefinition.identifier == image_uuid).\
                 filter(model.ImageDefinition.subscription == model.Subscription.id)
@@ -755,7 +755,7 @@ class db_controler(object):
             subscription = sub_known.one()
             subscription.imagelist_latest = None
             key = subscription.id
-            
+
             metadata = { 'dc:identifier' : image_uuid,
                 'cache' : 0}
             newlist = model.ImageDefinition(key,metadata)
@@ -803,7 +803,7 @@ class db_controler(object):
         errorhappened = False
         Session = self.SessionFactory()
         for subscription_filter in subscriptions:
-            
+
             query_subscription = self.selector_curent(Session,subscription_filter)
             if query_subscription.count() == 0:
                 self.log.warning("Selections '%s' does not match any known subscriptions." % (selector_filter))
@@ -816,12 +816,12 @@ class db_controler(object):
         if errorhappened:
             return False
         return True
-        
+
     def subscriptions_username_set(self,subscriptions, username):
         errorhappened = False
         Session = self.SessionFactory()
         for subscription_filter in subscriptions:
-            
+
             query_subscription = self.selector_curent(Session,subscription_filter)
             if query_subscription.count() == 0:
                 self.log.warning("Selections '%s' does not match any known subscriptions." % (subscription_filter))
@@ -834,12 +834,12 @@ class db_controler(object):
         if errorhappened:
             return False
         return True
-        
+
     def subscriptions_password_set(self,subscriptions, password):
         errorhappened = False
         Session = self.SessionFactory()
         for subscription_filter in subscriptions:
-            
+
             query_subscription = self.selector_curent(Session,subscription_filter)
             if query_subscription.count() == 0:
                 self.log.warning("Selections '%s' does not match any known subscriptions." % (subscription_filter))
@@ -857,7 +857,7 @@ class db_controler(object):
         errorhappened = False
         Session = self.SessionFactory()
         for subscription_filter in subscriptions:
-            
+
             query_subscription = self.selector_curent(Session,subscription_filter)
             if query_subscription.count() == 0:
                 self.log.warning("Selections '%s' does not match any known subscriptions." % (subscription_filter))

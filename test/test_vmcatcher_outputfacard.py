@@ -15,17 +15,17 @@ class TestOutputFacard(unittest.TestCase):
     def setUp(self):
         self.outputfacard = vmcatcher.outputfacard.outputFacade()
         self.outputfacard.fpOutput = "/dev/null"
-        
-        
+
+
         # make in memorrydb
         databaseConnectionString = 'sqlite://'
         database = db_controler(databaseConnectionString,False)
         Session = database.SessionFactory()
-        
-        
+
+
         self.outputfacard.saSession = Session
         self.outputfacard.format = "lines"
-    
+
     def tearDown(self):
         pass
     def test_format_set_lines(self):
@@ -47,27 +47,27 @@ class TestOutputFacard(unittest.TestCase):
 
     def test_list_vmcatcher_subscribe(self):
         self.outputfacard.list_vmcatcher_subscribe()
-    
+
     def test_list_vmcatcher_endorser_cred(self):
         self.outputfacard.list_vmcatcher_endorser_cred()
-    
+
     def test_list_vmcatcher_endorser_link(self):
         self.outputfacard.list_vmcatcher_endorser_link()
-    
+
     def test_list_vmcatcher_image(self):
         self.outputfacard.list_vmcatcher_image()
 
-# Skipping tests not supported on SL5       
+# Skipping tests not supported on SL5
 #    @unittest.skip("not finsihed")
 #    def test_display_subscription(self):
 #        self.outputfacard.display_subscription("dfsdfsdf")
 #    @unittest.skip("not finsihed")
 #    def test_display_endorser(self):
 #        self.display_endorseroutputfacard.display_endorser("dfsdfsdf")
-#    @unittest.skip("not finsihed") 
+#    @unittest.skip("not finsihed")
 #    def test_display_imagedef(self):
 #        self.outputfacard.display_imagedef("dfsdfsdf")
-    
+
     def test_info(self):
         self.outputfacard.info()
 

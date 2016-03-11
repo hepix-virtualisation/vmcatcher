@@ -6,7 +6,7 @@ import retrieveFacard
 
 def Property(func):
     return property(**func())
-    
+
 
 class retrieve(retrieveBase.retrieve):
     def __init__(self, *args, **kwargs):
@@ -77,7 +77,7 @@ class retrieve(retrieveBase.retrieve):
         def fdel(self):
             del self._trustanchor_type
         return locals()
-    
+
     @Property
     def server():
         doc = "server to retrieve from"
@@ -236,4 +236,4 @@ class retrieve(retrieveBase.retrieve):
         else:
             self.log.critical("programming error no protocol implementation")
         return None
-        
+

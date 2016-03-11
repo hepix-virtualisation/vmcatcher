@@ -138,7 +138,7 @@ class db_controler:
         self.selector_curent = None
         self.selectors_available = ['image_uuid','image_sha512']
         self._outputter = vmcatcher.outputfacard.outputFacade()
-        
+
     def setup_trust_anchor(self,directory):
         self.anchor = LoadDirChainOfTrust(directory)
 
@@ -152,14 +152,14 @@ class db_controler:
         elif selector_string == 'image_sha512':
             self.selector_curent = vmcatcher.queryby.query_imageDef_by_sha512
         return True
-        
+
     def setup_view_factory(self,factory):
         self.factory_view = factory
-    
+
     def setup_view_format(self,format):
         self._outputter.format = format
-    
-    
+
+
     def images_info(self,images_selected,outputfiles):
         pairs, extra_selectors ,extra_paths = pairsNnot(images_selected,outputfiles)
 
@@ -168,7 +168,7 @@ class db_controler:
 
         NoErrorHappened = True
         Session = self.SessionFactory()
-        
+
         for pair in pairs:
             selector_filter = pair[0]
             output_file_name = pair[1]
@@ -194,16 +194,16 @@ class db_controler:
         return NoErrorHappened
 
     def image_list(self):
-        
+
         Session = self.SessionFactory()
         self._outputter.fpOutput = sys.stdout
         self._outputter.saSession = Session
         self._outputter.x509anchor = self.anchor
         self._outputter.list_vmcatcher_image()
-        
+
     def images_subscribe(self,images_selected,subscribe):
         Session = self.SessionFactory()
-        
+
         for image in images_selected:
             queryImageDef = self.selector_curent(Session, image)
             for ImageDef in queryImageDef:

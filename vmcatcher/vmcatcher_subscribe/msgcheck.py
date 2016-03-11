@@ -16,8 +16,7 @@ class fileView(object):
         self.MatchMetadata = MatchMetadata
         self.Json = None
         self.checkmessage()
-        
-        
+
     def checkmessage(self):
         # hello
         #print str(self.MatchMetadata)
@@ -67,7 +66,7 @@ class fileView(object):
             # Error code - metadata and certificate dont match.
             self.errorNo =  12
             return
-            
+
         if vmilist.metadata[u'hv:uri'] != self.MatchMetadata[u'hv:uri']:
             self.log.warning("list hv:uri does not match subscription uri for '%s'" % (self.MatchMetadata[u'dc:identifier']))
             self.log.info("Expected URI '%s'" % (self.MatchMetadata[u'hv:uri']))
@@ -75,7 +74,7 @@ class fileView(object):
         #    # Error code - metadata and certificate dont match.
         #    self.errorNo =  12
         #    return
-        
+
         if vmilist.metadata[u'dc:identifier'] != self.MatchMetadata[u'dc:identifier']:
             self.log.info("Expected identifier '%s'" % (self.MatchMetadata[u'dc:identifier']))
             self.log.info("Downloaded identifier '%s'" % (vmilist.metadata[u'dc:identifier']))

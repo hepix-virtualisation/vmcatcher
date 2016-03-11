@@ -84,8 +84,8 @@ def main():
     if 'VMCATCHER_DIR_CERT' in os.environ:
         certDir = os.environ['VMCATCHER_DIR_CERT']
     if 'VMCATCHER_OUTPUT_FORMAT' in os.environ:
-        output_format_selected = os.environ['VMCATCHER_OUTPUT_FORMAT']   
-        
+        output_format_selected = os.environ['VMCATCHER_OUTPUT_FORMAT']
+
     # Set up log file
     LoggingLevel = logging.WARNING
     LoggingLevelCounter = 2
@@ -109,7 +109,7 @@ def main():
         LoggingLevel = logging.FATAL
     if LoggingLevelCounter >= 5:
         LoggingLevel = logging.CRITICAL
-    
+
     if options.log_config:
         logFile = str(options.log_config)
     if logFile != None:
@@ -121,8 +121,8 @@ def main():
             log.error("Logfile configuration file '%s' was not found." % (options.log_config))
             sys.exit(1)
     else:
-        
         logging.basicConfig(level=LoggingLevel)
+
     log = logging.getLogger("main")
     # Now logging is set up process other options
     if options.log_sql_info:
@@ -199,7 +199,7 @@ def main():
     if not selector_str in selectorMapper.keys():
         log.error('Invalid selector.')
         sys.exit(1)
-    
+
     rc = database.set_selector(selectorMapper[selector_str])
     # Handle the output_view
 
@@ -254,7 +254,7 @@ def main():
         database.images_subscribe(images_selected,1)
     if 'remove' in actions:
         database.images_subscribe(images_selected,0)
-    
+
 if __name__ == "__main__":
     main()
     sys.exit(0)

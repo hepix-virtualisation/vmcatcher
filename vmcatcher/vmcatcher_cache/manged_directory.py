@@ -30,7 +30,7 @@ def uglyUriParser(uri):
             "hostname" : parsedUri.hostname,
             "port" : parsedUri.port,
         }
-        
+
 
 class BaseDir(object):
     def __init__(self, directory):
@@ -41,8 +41,8 @@ class BaseDir(object):
         # self.files = { 'uuid' : { 'sha512' : 'hash', 'message' : 'signed message' , 'date' : }
         self.indexUnknownClear()
         self.log = logging.getLogger("BaseDir")
- 
-        
+
+
     def getFiles(self):
         output = set()
         directoryList = os.listdir(self.directory)
