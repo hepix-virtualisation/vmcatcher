@@ -1,22 +1,20 @@
 import logging
+
 from vmcatcher.output_json import output_driver_json
 from vmcatcher.output_lines import output_driver_lines
 from vmcatcher.output_smime import output_driver_smime
 from vmcatcher.output_msg import output_driver_message
 
-
 availableFormats = set([ "SMIME", "message", "lines", "json"])
-
 
 def Property(func):
     return property(**func())
 
 
-
-
 class outputFacadeException(Exception):
     """Base class for exceptions in this module."""
     pass
+
 
 class outputFacadeInputError(outputFacadeException):
     """Exception raised for errors in the input.
@@ -27,7 +25,7 @@ class outputFacadeInputError(outputFacadeException):
 
     def __init__(self, msg):
         self.msg = msg
-        
+
 
 class outputFacade(object):
     """Facade class for mulitple implementations of uploader,
@@ -54,10 +52,11 @@ class outputFacade(object):
             self._fpOutput = name
             if hasattr(self, '_uploaderImp'):
                 if self._uploaderImp != None:
-                    self._uploaderImp.fpOutput = name 
+                    self._uploaderImp.fpOutput = name
         def fdel(self):
             del self._fpOutput
         return locals()
+
     @Property
     def saSession():
         doc = "SQL alchamy session."
@@ -72,10 +71,11 @@ class outputFacade(object):
             self._saSession = name
             if hasattr(self, '_uploaderImp'):
                 if self._uploaderImp != None:
-                    self._uploaderImp.saSession = name 
+                    self._uploaderImp.saSession = name
         def fdel(self):
             del self._saSession
         return locals()
+
     @Property
     def x509anchor():
         doc = "x509 achor"
@@ -90,11 +90,11 @@ class outputFacade(object):
             self._x509anchor = name
             if hasattr(self, '_uploaderImp'):
                 if self._uploaderImp != None:
-                    self._uploaderImp.x509anchor = name 
+                    self._uploaderImp.x509anchor = name
         def fdel(self):
             del self._x509anchor
-        return locals()        
-    
+        return locals()
+
     @Property
     def format():
         doc = "Ouput format"
@@ -134,9 +134,8 @@ class outputFacade(object):
         def fdel(self):
             del (self._uploaderImp)
             del (self._outputFormatName)
-        return locals()  
-    
-    
+        return locals()
+
     def list_vmcatcher_subscribe(self):
         self.log.debug("list_vmcatcher_subscribe")
         if not hasattr(self, '_uploaderImp'):

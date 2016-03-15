@@ -7,11 +7,11 @@ def query_subscriptions_by_identifier(session, identifier):
 def query_subscriptions_by_uri(session, uri):
     return session.query(model.Subscription).\
                 filter(model.Subscription.uri == uri)
-    
+
 def query_imageDef_by_identifier(session, identifier):
     return session.query(model.ImageDefinition).\
                 filter(model.ImageDefinition.identifier == identifier)
-    
+
 def query_imageDef_by_sha512(session, sha512):
     return session.query(model.ImageDefinition).\
                 filter(model.ImageListInstance.id==model.ImageInstance.fkimagelistinstance).\

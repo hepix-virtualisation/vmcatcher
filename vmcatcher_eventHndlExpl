@@ -38,7 +38,7 @@ EnvEvent = set(['VMCATCHER_EVENT_TYPE',
     'VMCATCHER_EVENT_IL_DC_IDENTIFIER',
     'VMCATCHER_EVENT_HV_FORMAT',
     'VMCATCHER_EVENT_VO'])
-    
+
 EnvConf = set(['VMCATCHER_RDBMS',
     'VMCATCHER_CACHE_EVENT',
     'VMCATCHER_LOG_CONF',
@@ -67,19 +67,19 @@ def nullEnvDict(enviromentDict = generateEnvDict(),NullValue = ""):
     for item in missing:
         FoundEnviroment[item] = NullValue
     return FoundEnviroment
-  
+
 
 def main():
     reload(sys)
     sys.setdefaultencoding('utf-8')
     log = logging.getLogger("main")
-    p = optparse.OptionParser(version = "%prog " + "0.0.1")    
+    p = optparse.OptionParser(version = "%prog " + "0.0.1")
     p.add_option('--output_file', action ='store',help='Output file to log event.', metavar='OUTPUT_LOGFILE')
     p.add_option('--generator',  action ='store',help='Set the dictionary Generator.', metavar='minium')
     p.add_option('--datetime',  action ='store_true',help='Add a datetime stamp.')
-    
+
     p.add_option('--log-config', action ='store',help='Logfile configuration file.', metavar='LOG_CONFIG')
-    
+
     options, arguments = p.parse_args()
     if options.log_config:
         if os.path.isfile(str(options.log_config)):
@@ -90,7 +90,7 @@ def main():
             log.error("Logfile configuration file '%s' was not found." % (options.log_config))
             sys.exit(1)
     else:
-        logging.basicConfig(level=logging.INFO)    
+        logging.basicConfig(level=logging.INFO)
     outputDict = None
     generator = nullEnvDict()
     if options.generator:
@@ -105,6 +105,6 @@ def main():
     else:
         log.info("'--help' for options.")
 if __name__ == "__main__":
-    
+
     main()
 

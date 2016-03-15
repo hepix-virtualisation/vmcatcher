@@ -37,7 +37,7 @@ class EventObj(object):
                 break
             time.sleep(1)
         return (processRc,stdout,stderr)
-    
+
     def eventProcess(self,EventStr,metadata):
         # Note keys 'sha512', 'uuid','size' are depricated.
         mappingdict = {'sha512' : 'VMCATCHER_EVENT_SL_CHECKSUM_SHA512',

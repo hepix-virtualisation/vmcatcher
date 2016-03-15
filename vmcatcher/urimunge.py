@@ -40,7 +40,7 @@ def setUri(value):
                 if asInt != 0:
                     newPort = asInt
                     target["port"] = newPort
-            target["server"] = newServer    
+            target["server"] = newServer
     if len(parsed.path) > 0:
         target["path"] = parsed.path
     else:
@@ -50,7 +50,7 @@ def setUri(value):
 
 
 def getUri(target):
-    
+
     if target["protocol"] == None:
         return None
     userPass = u""
@@ -60,7 +60,7 @@ def getUri(target):
             userPass = target["username"]
         else:
             userPass = u"%s:%s" % (target["username"], target["password"])
-    
+
     if "server" in target:
         hostPort = ""
         if target["server"] != None:
@@ -84,9 +84,9 @@ def getUri(target):
             path = target["path"]
         output = u"%s://%s" % (target["protocol"],path)
     return output
-    
+
 def getUriAnonymous(target):
-    
+
     if target["protocol"] == None:
         return None
     if "server" in target:

@@ -2,11 +2,11 @@ import retrieveBase
 import logging
 import os.path
 
-
-
 class retrieve(retrieveBase.retrieve):
+
     def __init__(self, *args, **kwargs):
         retrieveBase.retrieve.__init__(self,args,kwargs)
+
     def requestAsString(self):
         if self.path == None:
             output['error'] = 'Path not defined'
@@ -23,4 +23,3 @@ class retrieve(retrieveBase.retrieve):
         output['responce'] = content
         output['code'] = 0
         return output
- 

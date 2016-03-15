@@ -107,7 +107,7 @@ class CacheMan(object):
             if self.cacheDir.index[key][u'size'] != DbImageInst.size:
                 uuids2expire[uuid] = self.cacheDir.index[key]
                 continue
-            # If the Image list instance has changed then update 
+            # If the Image list instance has changed then update
             # Image list instance metadata from DB.
             if DbImageListInst.data_hash != self.cacheDir.index[uuid]['msgHash']:
                 self.cacheDir.index[key]['message'] = DbImageListInst.data
@@ -142,7 +142,7 @@ class CacheMan(object):
             imageListInst = line[2]
             ImageInst = line[3]
             uuid = imageDef.identifier
-            
+
             details = {'hv:uri' : str(ImageInst.uri),
                     'sl:checksum:sha512' : str(ImageInst.sha512),
                     'hv:size': int(ImageInst.size),
@@ -164,10 +164,10 @@ class CacheMan(object):
                     'size': int(ImageInst.size),
                     'uuid' : uuid,
                     }
-            
-            
+
+
             # read message
-            
+
             buf = BIO.MemoryBuffer(str(imageListInst.data))
             sk = X509.X509_Stack()
             p7, data = SMIME.smime_load_pkcs7_bio(buf)
@@ -199,7 +199,7 @@ class CacheMan(object):
                 for metafield in matchingImage.metadata.keys():
                     newfield = "hv:image.%s" % (metafield)
                     details[newfield] = matchingImage.metadata[metafield]
-            
+
             if not uuid in self.cacheDir.index.keys():
                 downloadsneeded[uuid] = details
                 continue

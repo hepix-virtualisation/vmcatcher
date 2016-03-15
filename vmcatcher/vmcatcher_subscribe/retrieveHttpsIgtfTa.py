@@ -8,7 +8,7 @@ import smimeX509validation
 
 def Property(func):
     return property(**func())
-    
+
 
 class retrieve(retrieveBase.retrieve):
     def __init__(self, *args, **kwargs):
@@ -44,7 +44,7 @@ class retrieve(retrieveBase.retrieve):
 
         cetlist = [itemdictionary]
 
-        
+
         try:
             m2x509hostcertStack = self.trustanchor.GetM2CryptoX509_Stack(cetlist)
         except smimeX509validation.smimeX509ValidationError, E:
@@ -61,7 +61,7 @@ class retrieve(retrieveBase.retrieve):
             output['error'] = 'Unrecognised host certificate'
             output['code'] = 50
             return output
-        
+
         # create contect
         ctx = M2Crypto.SSL.Context()
         # create store
@@ -69,7 +69,7 @@ class retrieve(retrieveBase.retrieve):
         # fill store
         for item in x509Stack:
             store.add_x509(item)
-        
+
         ctx.set_allow_unknown_ca(False)
         # verify peer's certificate
         ctx.set_verify(M2Crypto.SSL.verify_peer, x509StackLen)

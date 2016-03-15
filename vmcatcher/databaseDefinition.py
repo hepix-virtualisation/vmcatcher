@@ -113,7 +113,7 @@ class Subscription(Base):
             self.updateMode = details[u'il.transfer.updatemode']
         else:
             self.updateMode = 0
-            
+
     def __repr__(self):
         return "<Subscription('%s','%s', '%s')>" % (self.identifier, self.uri, self.description)
 
@@ -168,7 +168,7 @@ class ImageDefinition(Base):
 
 class ImageListInstance(Base):
     """This table stores the Instances of images lists subscribed to.
-    Including the message, its x509 checksum, 
+    Including the message, its x509 checksum,
     """
     __tablename__ = 'imageListInstance'
     id = Column(Integer, primary_key=True)
@@ -201,8 +201,8 @@ class ImageListInstance(Base):
         return "<ImageListInstance ('%s','%s')>" % (self.id, self.imported)
 
 class ImageInstance(Base):
-    """Subscribers work with images not imagelists, 
-    this table makes processing images easier, and enfocing 
+    """Subscribers work with images not imagelists,
+    this table makes processing images easier, and enfocing
     image UUID uniqueness."""
     __tablename__ = 'ImageInstance'
     # Stores the parsed Images status

@@ -65,7 +65,7 @@ def main():
     p.add_option('-q', '--quiet', action ='count',help='Change global log level, decreasing log output.')
     p.add_option('--log-config', action ='store',help='Logfile configuration file, (overrides command line).', metavar='LOG_CONFIG')
     p.add_option('--log-sql-info', action ='store_true',help='Echo all SQL commands.', metavar='LOGFILE')
-    
+
     options, arguments = p.parse_args()
 
     dir_cache = None
@@ -88,7 +88,6 @@ def main():
         dir_expired = os.environ['VMCATCHER_CACHE_DIR_EXPIRE']
     if 'VMCATCHER_CACHE_EVENT' in os.environ:
         eventExecutionString = os.environ['VMCATCHER_CACHE_EVENT']
-    
     if 'VMCATCHER_CACHE_ACTION_DOWNLOAD' in os.environ:
         if os.environ['VMCATCHER_CACHE_ACTION_DOWNLOAD'] == "1":
             actions.add("download")
@@ -98,7 +97,7 @@ def main():
     if 'VMCATCHER_CACHE_ACTION_EXPIRE' in os.environ:
         if os.environ['VMCATCHER_CACHE_ACTION_EXPIRE'] == "1":
             actions.add("expire")
-        
+
     # Set up log file
     LoggingLevel = logging.WARNING
     LoggingLevelCounter = 2
@@ -122,7 +121,7 @@ def main():
         LoggingLevel = logging.FATAL
     if LoggingLevelCounter >= 5:
         LoggingLevel = logging.CRITICAL
-    
+
     if options.log_config:
         logFile = options.log_config
     if logFile != None:
@@ -134,8 +133,8 @@ def main():
             log.error("Logfile configuration file '%s' was not found." % (options.log_config))
             sys.exit(1)
     else:
-        
         logging.basicConfig(level=LoggingLevel)
+
     log = logging.getLogger("main")
     # Now logging is set up process other options
     if options.log_sql_info:
@@ -192,7 +191,6 @@ def main():
     if not directories_good:
         sys.exit(1)
 
-
     ThisCacheManager = CacheMan(databaseConnectionString,debugSqlEcho,dir_cache, dir_partial, dir_expired)
     EventInstance = None
     EventInstance = EventObj(eventExecutionString)
@@ -206,6 +204,7 @@ def main():
     ThisCacheManager.callbackEventExpirePostfix = EventInstance.eventExpirePosfix
     ThisCacheManager.load()
     EventInstance.eventProcessPrefix({})
+
     if "expire" in actions:
         if not ThisCacheManager.expire():
             log.error("Failed to expire old images")
@@ -218,7 +217,9 @@ def main():
         if not ThisCacheManager.download():
             log.error("Failed to download new images")
             sys.exit(1)
+
     ThisCacheManager.save()
     EventInstance.eventProcessPostfix({})
+
 if __name__ == "__main__":
     main()
