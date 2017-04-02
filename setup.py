@@ -3,10 +3,8 @@ from sys import version_info
 
 if version_info < (2, 6):
     import sys
-    print "Please use a newer version of python"
+    print ("Please use a newer version of python")
     sys.exit(1)
-
-
 
 try:
     from setuptools import setup, find_packages
@@ -24,6 +22,25 @@ try:
 except ImportError:
     # its not critical if this fails though.
     pass
+
+from setuptools.command.test import test as TestCommand
+import sys
+
+
+class PyTest(TestCommand):
+    user_options = [('pytest-args=', 'a', "Arguments to pass to pytest")]
+
+    def initialize_options(self):
+        TestCommand.initialize_options(self)
+        self.pytest_args = []
+
+    def run_tests(self):
+        import shlex
+        #import here, cause outside the eggs aren't loaded
+        import pytest
+        errno = pytest.main(shlex.split(self.pytest_args))
+        sys.exit(errno)
+
 
 setup(name='vmcatcher',
     version=version,
@@ -43,6 +60,7 @@ back end, and caches available image lists.""",
         'vmcatcher/vmcatcher_image',
         'vmcatcher/vmcatcher_endorser',
         'vmcatcher/vmcatcher_cache',
+        'vmcatcher/tests',
         ],
     classifiers=[
         'Development Status :: 5 - Production/Stable',
@@ -59,13 +77,15 @@ back end, and caches available image lists.""",
     data_files=[('share/doc/vmcatcher-%s' % (version),['README.md','LICENSE','logger.conf','ChangeLog','vmcatcher_eventHndlExpl'])],
     tests_require=[
         'coverage >= 3.0',
-        'nose >= 0.10.0',
+        'pytest',
         'mock',
         'SQLAlchemy >= 0.7.8',
+        'M2Crypto',
     ],
     setup_requires=[
-        'nose',
+        'pytest',
         'SQLAlchemy >= 0.7.8',
+        'M2Crypto',
     ],
-    test_suite = 'nose.collector',
+    cmdclass = {'test': PyTest},
     )
