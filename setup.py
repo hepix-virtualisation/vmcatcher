@@ -1,7 +1,7 @@
 from vmcatcher.__version__ import version
-from sys import version_info
+import sys
 
-if version_info < (2, 6):
+if sys.version_info < (2, 6):
     import sys
     print ("Please use a newer version of python")
     sys.exit(1)
@@ -24,8 +24,7 @@ except ImportError:
     pass
 
 from setuptools.command.test import test as TestCommand
-import sys
-
+from nose.commands import nosetests
 
 class PyTest(TestCommand):
     user_options = [('pytest-args=', 'a', "Arguments to pass to pytest")]
@@ -40,7 +39,6 @@ class PyTest(TestCommand):
         import pytest
         errno = pytest.main(shlex.split(self.pytest_args))
         sys.exit(errno)
-
 
 setup(name='vmcatcher',
     version=version,
@@ -77,6 +75,7 @@ back end, and caches available image lists.""",
     data_files=[('share/doc/vmcatcher-%s' % (version),['README.md','LICENSE','logger.conf','ChangeLog','vmcatcher_eventHndlExpl'])],
     tests_require=[
         'coverage >= 3.0',
+        'nose',
         'pytest',
         'mock',
         'SQLAlchemy >= 0.7.8',
@@ -84,8 +83,11 @@ back end, and caches available image lists.""",
     ],
     setup_requires=[
         'pytest',
+        'nose',
         'SQLAlchemy >= 0.7.8',
         'M2Crypto',
     ],
-    cmdclass = {'test': PyTest},
+    cmdclass = {
+        'test': PyTest,
+        'nosetests' : nosetests},
     )
