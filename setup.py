@@ -24,7 +24,6 @@ except ImportError:
     pass
 
 from setuptools.command.test import test as TestCommand
-from nose.commands import nosetests
 
 class PyTest(TestCommand):
     user_options = [('pytest-args=', 'a', "Arguments to pass to pytest")]
@@ -75,7 +74,7 @@ back end, and caches available image lists.""",
     data_files=[('share/doc/vmcatcher-%s' % (version),['README.md','LICENSE','logger.conf','ChangeLog','vmcatcher_eventHndlExpl'])],
     tests_require=[
         'coverage >= 3.0',
-        'nose',
+        'nose >= 0.10.0',
         'pytest',
         'mock',
         'SQLAlchemy >= 0.7.8',
@@ -83,11 +82,10 @@ back end, and caches available image lists.""",
     ],
     setup_requires=[
         'pytest',
-        'nose',
+        'nose >= 0.10.0',
         'SQLAlchemy >= 0.7.8',
         'M2Crypto',
     ],
-    cmdclass = {
-        'test': PyTest,
-        'nosetests' : nosetests},
+    cmdclass = {'test': PyTest},
+    test_suite = 'nose.collector',
     )
