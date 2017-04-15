@@ -35,7 +35,7 @@ class fileView(object):
             self.errorNo =  11
             return
         if not smimeProcessor.verified:
-            self.log.error("Failed to validate text for '%s' produced error '%s'" % (subscriptionKey,E))
+            self.log.error("Failed to validate text")
             self.errorNo =  11
             return
         data = smimeProcessor.InputDaraStringIO.getvalue()
@@ -43,12 +43,12 @@ class fileView(object):
         self.issuer = smimeProcessor.InputCertMetaDataList[0]['issuer']
         jsonData = json.loads(data)
         if jsonData == None:
-            self.log.error("Downlaoded metadata from '%s' was not valid JSON." % (subscriptionKey))
+            self.log.error("Downlaoded data from was not valid JSON.")
             self.errorNo =  37
             return
         vmilist = VMimageListDecoder(jsonData)
         if vmilist == None:
-            self.log.error("Downlaoded metadata from '%s' was not valid image list Object." % (subscriptionKey))
+            self.log.error("Downlaoded metadata from was not valid image list Object.")
             self.errorNo =  38
             return
         self.vmilist = vmilist
