@@ -30,7 +30,7 @@ class output_driver_message(output_driver_display_message,output_driver_lister,o
             self.log.error("Failed to validate text for '%s' produced error '%s'" % (imagelist, expt))
             return False
         if not smimeProcessor.verified:
-            self.log.error("Failed to validate text for '%s' produced error '%s'" % (subscriptionKey,E))
+            self.log.error("Failed to validate text for '%s'" % (imagelist))
             return False
         self.fpOutput.write (smimeProcessor.InputDaraStringIO.getvalue())
         return True
