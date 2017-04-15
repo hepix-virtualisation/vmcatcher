@@ -3,6 +3,7 @@ import os
 import logging
 import time
 import uuid
+import signal
 
 class EventObj(object):
     def __init__(self,eventExecutionString):
