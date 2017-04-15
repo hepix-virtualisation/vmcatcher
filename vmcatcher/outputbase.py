@@ -203,7 +203,7 @@ class output_driver_lister(output_driver_base):
         self.log.debug("display_endorser")
         self.fpOutput.write ("endorser.dc:identifier=%s\n" % (endorser.identifier))
         if len(endorser.princibles) == 0:
-            self.log.warning("endorser '%s' has no princibles" % (selector_filter))
+            self.log.warning("endorser '%s' has no princibles" % (endorser))
             return False
         for princible in endorser.princibles:
             self.fpOutput.write("endorser.hv:dn=%s\n" % (princible.hv_dn))
@@ -294,7 +294,7 @@ class output_driver_display_message(output_driver_base):
             self.log.error("Failed to validate text for '%s' produced error '%s'" % (imagelist,expt))
             return False
         if not smimeProcessor.verified:
-            self.log.error("Failed to validate text for '%s' produced error '%s'" % (subscriptionKey,E))
+            self.log.error("Failed to validate text for '%s'" % (imagelist))
             return False
         self.fpOutput.write (smimeProcessor.InputDaraStringIO.getvalue())
         return True
