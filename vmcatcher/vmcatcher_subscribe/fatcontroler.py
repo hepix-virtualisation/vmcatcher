@@ -108,9 +108,9 @@ class db_actions(object):
         self.session.add(new_auth)
         try:
             self.session.commit()
-        except IntegrityError,E:
-             self.log.error("Database integrity error '%s' while subscribing to  '%s'." % (E.args,metadata))
-             self.log.debug(E.params)
+        except IntegrityError as expt:
+             self.log.error("Database integrity error '%s' while subscribing to  '%s'." % (expt.args, metadata))
+             self.log.debug(expt.params)
              self.session.rollback()
         return self.subscription_get(metadata)
 
@@ -224,7 +224,7 @@ class db_controler(object):
         Session = self.SessionFactory()
         db = db_actions(Session)
         for instruction in instructions:
-            print instruction
+            print (instruction)
 
         for selection_uuid in subscriptions_selected:
             db.sdsdsd(selection_uuid)
@@ -378,12 +378,12 @@ class db_controler(object):
         smimeProcessor = smimeX509validation.smimeX509validation(metadata["trustAnchor"])
         try:
             smimeProcessor.Process(resultDict['responce'])
-        except smimeX509validation.truststore.TrustStoreError,E:
-            self.log.error("Validate text '%s' produced error '%s'" % (metadata["uri"],E))
+        except smimeX509validation.truststore.TrustStoreError as expt:
+            self.log.error("Validate text '%s' produced error '%s'" % (metadata["uri"], expt))
             self.log.debug("Downloaded=%s" % (resultDict['responce']))
             return False
-        except smimeX509validation.smimeX509ValidationError,E:
-            self.log.error("Validate text '%s' produced error '%s'" % (metadata["uri"],E))
+        except smimeX509validation.smimeX509ValidationError as expt:
+            self.log.error("Validate text '%s' produced error '%s'" % (metadata["uri"], expt))
             self.log.debug("Downloaded=%s" % (resultDict['responce']))
             return False
         if not smimeProcessor.verified:
@@ -497,16 +497,16 @@ class db_controler(object):
         #print ("ThisImageDefId=%s" % (ThisImageDefId))
         try:
             imageinstance = model.ImageInstance(imagelistref,ThisImageDefId,imageObj.metadata)
-        except KeyError, E:
-            self.log.error("missing parameters '%s'" % E.message)
+        except KeyError as expt:
+            self.log.error("missing parameters '%s'" % expt.message)
             Session.rollback()
             return 34
         Session.add(imageinstance)
         try:
             Session.commit()
-        except IntegrityError,E:
-            self.log.error("Database integrity error '%s' processing '%s'." % (E.args,ProcessingSubscriptionUuid))
-            self.log.debug(E.params)
+        except IntegrityError as expt:
+            self.log.error("Database integrity error '%s' processing '%s'." % (expt.args, ProcessingSubscriptionUuid))
+            self.log.debug(expt.params)
             Session.rollback()
             return 0
         # So now we have done the updating of the database and just need to update
@@ -653,9 +653,9 @@ class db_controler(object):
         Session.add(imagelist)
         try:
             Session.commit()
-        except IntegrityError,E:
-            self.log.error("Database integrity error '%s' processing '%s'." % (E.args,ProcessingSubscriptionUuid))
-            self.log.debug(E.params)
+        except IntegrityError as expt:
+            self.log.error("Database integrity error '%s' processing '%s'." % (expt.args,ProcessingSubscriptionUuid))
+            self.log.debug(expt.params)
             Session.rollback()
             # Error code - Database integrity error.
             return 15
