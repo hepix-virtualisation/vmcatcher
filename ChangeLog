@@ -1,5 +1,14 @@
 Changelog
 
+vmcatcher-0.6.2
+
+ * Bugfixes in Error paths
+ * Unicode now python 3 compatible
+ * Removal of some undefined variables
+ * Fixed signal handling on time out of handler
+ * Cleanup patches by Vincent Legoll
+   - Documentation fixes spelling errors
+
 vmcatcher-0.6.1
 
  * Bugfix #10 "subscribe --info" updateMode displayed.
