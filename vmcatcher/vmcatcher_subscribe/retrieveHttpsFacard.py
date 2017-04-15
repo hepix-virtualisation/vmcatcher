@@ -43,7 +43,7 @@ class retrieve(retrieveBase.retrieve):
             if not value in [retrieveFacard.TRUST_ANCHOR_NONE,
                 retrieveFacard.TRUST_ANCHOR_BROWSER,
                  retrieveFacard.TRUST_ANCHOR_IGTF]:
-                raise retrieveFacardError("Invalid trustanchor_type='%s'" % (value))
+                raise retrieveFacard.retrieveFacardError("Invalid trustanchor_type='%s'" % (value))
             retrieveImpTmp = None
             if self.trustanchor_type == retrieveFacard.TRUST_ANCHOR_NONE:
                 retrieveImpTmp = retrieveHttps.retrieve()
@@ -55,7 +55,7 @@ class retrieve(retrieveBase.retrieve):
             elif self.trustanchor_type == None:
                 pass
             else:
-                self.log.error("Invalid trustanchor_type selected '%s'" % (name))
+                self.log.error("Invalid trustanchor_type selected '%s'" % (value))
             if retrieveImpTmp != None:
                 retrieveImpTmp.server = self._server
                 retrieveImpTmp.port = self._port
