@@ -183,7 +183,8 @@ class CacheMan(object):
                 continue
             vmilist = VMimageListDecoder(jsonData)
             if vmilist == None:
-                self.log.error("Downlaoded metadata from '%s' was not valid image list Object." % (subscriptionKey))
+                self.log.error("Downlaoded metadata for '%s' was not valid image list." % (uuid))
+                continue
             # For Vo handling
             imagelist_vo = vmilist.metadata.get(u'ad:vo')
             if imagelist_vo != None:
