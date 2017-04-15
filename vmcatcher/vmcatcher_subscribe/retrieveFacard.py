@@ -3,6 +3,16 @@ import retrieveHttp
 import retrieveFile
 import retrieveHttpsFacard
 import logging
+import sys
+
+
+PY2 = False
+if sys.version_info[0] < (3):
+   PY2 = True
+
+text_type = str
+if PY2:
+    text_type = unicode # noqa
 
 
 def Property(func):
@@ -276,7 +286,7 @@ class retrieveFacard(object):
             return output
 
         def fset(self, value):
-            if isinstance(value,  unicode):
+            if isinstance(value, text_type):
                 value = str(value)
             if not isinstance(value,  str):
                 value = ""
