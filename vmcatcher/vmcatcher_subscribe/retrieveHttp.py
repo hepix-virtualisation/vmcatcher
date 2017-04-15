@@ -19,8 +19,8 @@ class retrieve(retrieveBase.retrieve):
             headers["Authorization"] = "Basic %s" % (auth)
         try:
             con.request("GET" , self.path, headers=headers)
-        except socket.gaierror, E:
-            output['error'] = E.strerror
+        except socket.gaierror as expt:
+            output['error'] = expt.strerror
             output['code'] = 404
             return output
         responce =  con.getresponse()
