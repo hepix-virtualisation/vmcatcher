@@ -55,9 +55,13 @@ from vmcatcher.urimunge import uriNormalise,uriNormaliseAnonymous
 #  39 Creation of ImageDefinition referance failed
 
 
+PY2 = False
+if sys.version_info[0] < (3):
+   PY2 = True
 
-
-
+text_type = str
+if PY2:
+    text_type = unicode # noqa
 
 
 class db_actions(object):
@@ -218,17 +222,7 @@ class db_controler(object):
 
     def setup_view_format(self,format):
         self._outputter.format = format
-    def unsigned_message_by_identifier_tofilepath(self,instructions):
 
-
-        Session = self.SessionFactory()
-        db = db_actions(Session)
-        for instruction in instructions:
-            print (instruction)
-
-        for selection_uuid in subscriptions_selected:
-            db.sdsdsd(selection_uuid)
-        Session.commit()
     def sessions_list(self):
         Session = self.SessionFactory()
 
@@ -429,7 +423,7 @@ class db_controler(object):
             else:
                 # We can create an endorser.
                 newmetadata = dict(metadata)
-                newmetadata[u'dc:identifier'] = unicode(uuid.uuid4())
+                newmetadata[u'dc:identifier'] = text_type(uuid.uuid4())
                 endorser_list = db.endorser_create(newmetadata)
                 self.log.warning("Endorser '%s':'%s' added to database." % (metadata[u'hv:dn'],metadata[u'hv:ca']))
 
@@ -487,8 +481,7 @@ class db_controler(object):
                     metadata['cache'] = 1
                 ImageDefinition_query = db.ImageDefinition_create(subscriptionKey,metadata)
                 if ImageDefinition_query.count() != 1:
-                    self.log.error('Creation of ImageDefinition referance failed.')
-                    failedToCreateImages.append(imageReferance)
+                    self.log.error('Finding ImageDefinition failed.')
                     return 39
                 imageDefQuery = db.ImageDefinition_get(subscriptionKey,imageObj.metadata)
         ThisImageDef = imageDefQuery.one()
@@ -806,7 +799,7 @@ class db_controler(object):
 
             query_subscription = self.selector_curent(Session,subscription_filter)
             if query_subscription.count() == 0:
-                self.log.warning("Selections '%s' does not match any known subscriptions." % (selector_filter))
+                self.log.warning("Selection '%s' does not match any known subscriptions." % (subscription_filter))
                 errorhappened = True
                 continue
             firstSubscription = query_subscription.first()
