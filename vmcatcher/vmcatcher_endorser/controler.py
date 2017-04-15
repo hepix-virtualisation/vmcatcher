@@ -189,7 +189,7 @@ class db_controler:
                 Session.commit()
             except IntegrityError as expt:
                 self.log.error("Database integrity error while adding '%s' credentials to  '%s'." % (dn,endorser))
-                self.log.debug(E.params)
+                self.log.debug(expt.params)
                 Session.rollback()
                 error = True
                 break
