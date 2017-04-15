@@ -1,4 +1,5 @@
 import urlparse
+import six
 
 def uriNormalise(value):
     output = setUri( value)
@@ -11,8 +12,8 @@ def uriNormaliseAnonymous(value):
 def setUri(value):
     target = {}
     if isinstance(value,  str):
-        value = unicode(value)
-    if not isinstance(value,  unicode):
+        value = six.text_type(value)
+    if not isinstance(value, six.text_type):
         value = u""
     parsed = urlparse.urlparse(value)
     target["protocol"] = parsed.scheme
