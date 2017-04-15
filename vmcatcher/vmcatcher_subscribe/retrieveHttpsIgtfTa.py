@@ -29,8 +29,8 @@ class retrieve(retrieveBase.retrieve):
         output = {'code' : 0}
         try:
             hostcert = ssl.get_server_certificate((self.server, self.port))
-        except socket.gaierror, E:
-            output['error'] = E.strerror
+        except socket.gaierror as expt:
+            output['error'] = expt.strerror
             output['code'] = 404
             return output
         m2x509Hostcert = M2Crypto.X509.load_cert_string(hostcert)
@@ -47,8 +47,8 @@ class retrieve(retrieveBase.retrieve):
 
         try:
             m2x509hostcertStack = self.trustanchor.GetM2CryptoX509_Stack(cetlist)
-        except smimeX509validation.smimeX509ValidationError, E:
-            output['error'] = E.parameter
+        except smimeX509validation.smimeX509ValidationError as expt:
+            output['error'] = expt.parameter
             output['code'] = 55
             return output
         x509Stack = []
