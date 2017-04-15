@@ -37,8 +37,8 @@ class retrieve(retrieveBase.retrieve):
             return output
         try:
             hostcert = ssl.get_server_certificate((self.server, self.port))
-        except socket.gaierror, E:
-            output['error'] = E.strerror
+        except socket.gaierror as expt:
+            output['error'] = expt.strerror
             output['code'] = 404
             return output
 
