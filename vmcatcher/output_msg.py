@@ -26,8 +26,8 @@ class output_driver_message(output_driver_display_message,output_driver_lister,o
         smimeProcessor =  smimeX509validation(self.x509anchor)
         try:
             smimeProcessor.Process(str(imagelist.data))
-        except smimeX509ValidationError,E:
-            self.log.error("Failed to validate text for '%s' produced error '%s'" % (imagelist,E))
+        except smimeX509ValidationError as expt:
+            self.log.error("Failed to validate text for '%s' produced error '%s'" % (imagelist, expt))
             return False
         if not smimeProcessor.verified:
             self.log.error("Failed to validate text for '%s' produced error '%s'" % (subscriptionKey,E))
