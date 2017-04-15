@@ -24,13 +24,13 @@ class fileView(object):
         smimeProcessor =  smimeX509validation.smimeX509validation(self.anchor)
         try:
             smimeProcessor.Process(str(self.data))
-        except smimeX509validation.truststore.TrustStoreError,E:
-            self.log.error(E)
+        except smimeX509validation.truststore.TrustStoreError as expt:
+            self.log.error(expt)
             # Error code - failed to validate image list.
             self.errorNo =  11
             return
-        except smimeX509validation.smimeX509ValidationError,E:
-            self.log.error(E)
+        except smimeX509validation.smimeX509ValidationError as expt:
+            self.log.error(expt)
             # Error code - failed to validate image list.
             self.errorNo =  11
             return
