@@ -1,9 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy import Table, Column, Integer, String, MetaData, ForeignKey, Boolean, DateTime,LargeBinary
 from sqlalchemy.orm import mapper
-
-from sqlalchemy import ForeignKey
-
 from sqlalchemy.orm import backref
 try:
     from sqlalchemy.orm import relationship
