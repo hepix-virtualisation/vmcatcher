@@ -10,7 +10,6 @@ trustAnchorMap =  ['None','Browser','IGTF']
 class output_driver_base(object):
     def __init__(self):
         self.log = logging.getLogger("output_driver_base")
-    def __init__(self):
         self.fpOutput = None
         self.saSession = None
         self.x509anchor = None
