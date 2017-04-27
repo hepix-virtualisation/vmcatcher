@@ -59,7 +59,6 @@ class CacheMan(object):
             if file_metadata == None:
                 uuid2del.add(uuid)
                 continue
-            MatchingUuid = None
             if int(file_metadata[u'hv:size']) != int(self.cacheDir.index[uuid]['size']):
                 self.log.error("Image '%s' size incorrect." % (uuid))
                 uuid2del.add(uuid)
