@@ -76,17 +76,19 @@ class CacheMan(object):
                 self.log.error("Image '%s' was corrupted deleting." % (uuid))
             del self.cacheDir.index[uuid]
         return True
+
+
     def expire(self):
         rc = True
         self.cacheDir.indexUnknownClear()
         uuids2expire = {}
         for key in self.cacheDir.index.keys():
-            uuid = self.cacheDir.index[key]['uuid']
+            image_uuid = self.cacheDir.index[key]['uuid']
             CachedSha512 = self.cacheDir.index[key]['sha512']
             QueryResults = self.Session.query(model.Subscription,model.ImageDefinition,model.ImageListInstance,model.ImageInstance).\
                 filter(model.ImageInstance.sha512 == CachedSha512).\
                 filter(model.ImageDefinition.cache == 1).\
-                filter(model.ImageDefinition.identifier == uuid).\
+                filter(model.ImageDefinition.identifier == image_uuid).\
                 filter(model.ImageDefinition.latest == model.ImageInstance.id).\
                 filter(model.ImageDefinition.id == model.ImageInstance.fkIdentifier).\
                 filter(model.Subscription.authorised == True).\
@@ -95,35 +97,37 @@ class CacheMan(object):
                 filter(model.ImageListInstance.expired == None).\
                 filter(model.ImageListInstance.id == model.ImageInstance.fkimagelistinstance)
             if QueryResults.count() != 1:
-                uuids2expire[uuid] = self.cacheDir.index[key]
+                uuids2expire[image_uuid] = self.cacheDir.index[key]
                 continue
             dbSub, sbImageDef, DbImageListInst, DbImageInst = QueryResults.one()
             # If the image hash has changed expire old image
             if self.cacheDir.index[key][u'sha512'] != DbImageInst.sha512:
-                uuids2expire[uuid] = self.cacheDir.index[key]
+                uuids2expire[image_uuid] = self.cacheDir.index[key]
                 continue
             # Is the size has changed expire old image
             if self.cacheDir.index[key][u'size'] != DbImageInst.size:
-                uuids2expire[uuid] = self.cacheDir.index[key]
+                uuids2expire[image_uuid] = self.cacheDir.index[key]
                 continue
             # If the Image list instance has changed then update
             # Image list instance metadata from DB.
-            if DbImageListInst.data_hash != self.cacheDir.index[uuid]['msgHash']:
+            if DbImageListInst.data_hash != self.cacheDir.index[image_uuid]['msgHash']:
                 self.cacheDir.index[key]['message'] = DbImageListInst.data
                 self.cacheDir.index[key]['msgHash'] = DbImageListInst.data_hash
-        for uuid in uuids2expire.keys():
+        for image_uuid in uuids2expire.keys():
             if self.callbackEventExpirePrefix != None:
-                self.callbackEventExpirePrefix(uuids2expire[uuid])
-            if self.ExpireDir.moveFrom(self.cacheDir,uuid):
-                self.log.info("Expired image '%s'" % (uuid))
+                self.callbackEventExpirePrefix(uuids2expire[image_uuid])
+            if self.ExpireDir.moveFrom(self.cacheDir,image_uuid):
+                self.log.info("Expired image '%s'" % (image_uuid))
             else:
-                self.log.error("Failed to move file %s to expired directory" % (uuid))
+                self.log.error("Failed to move file %s to expired directory" % (image_uuid))
                 rc = False
             self.cacheDir.indexSave()
             self.ExpireDir.indexSave()
             if self.callbackEventExpirePostfix != None:
-                self.callbackEventExpirePostfix(uuids2expire[uuid])
+                self.callbackEventExpirePostfix(uuids2expire[image_uuid])
         return rc
+
+
     def download(self):
         downloadsneeded = {}
         QueryResults = self.Session.query(model.Subscription,model.ImageDefinition,model.ImageListInstance,model.ImageInstance).\
