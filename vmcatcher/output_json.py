@@ -138,24 +138,6 @@ class output_driver_lister_json(output_driver_lister):
         return True
 
 
-    def info_Subscription(self,subscription):
-        upddated = False
-        if subscription.updated:
-            upddated = subscription.updated.strftime(time_format_definition)
-
-        output = {"identifier" : subscription.identifier,
-            "description" : subscription.description,
-            "authorised" : subscription.authorised,
-            "uri" : subscription.uri,
-            "updated" : upddated}
-        if (subscription.userName != None):
-            if len(subscription.userName) > 0:
-                output["uri.username"] = subscription.userName
-        if (subscription.password != None):
-            if len(subscription.password) > 0:
-                output["uri.password"] = subscription.password
-        return output
-
     def info_ImageListInstance(self,argImageListInstance):
         #self.fpOutput.write ('imagelist.dc:date:imported=%s\n' % (argImageListInstance.imported.strftime(time_format_definition)))
         #self.fpOutput.write ('imagelist.dc:date:created=%s\n' % (argImageListInstance.created.strftime(time_format_definition)))
