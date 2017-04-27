@@ -1,7 +1,6 @@
 import logging
 from vmcatcher.outputbase import output_driver_base
 from vmcatcher.outputbase import output_driver_lister
-from vmcatcher.outputbase import output_driver_lister
 from vmcatcher.outputbase import output_driver_display_metadata
 
 from vmcatcher.outputbase import output_driver_display_message
