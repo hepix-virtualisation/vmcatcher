@@ -34,7 +34,7 @@ class TestOutputFacard(unittest.TestCase):
     def test_format_set_json(self):
         self.outputfacard.format = "json"
 
-    def test_format_set_json(self):
+    def test_format_set_message(self):
         self.outputfacard.format = "message"
 
     def test_format_set_smime(self):
