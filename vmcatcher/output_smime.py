@@ -13,13 +13,6 @@ class output_driver_smime(output_driver_display_message,output_driver_lister,out
         self.log = logging.getLogger("output_driver_smime")
 
     def info(self, *args, **kwargs):
-        expectedkeys = set([
-                "ImageDefinition",
-                "ImageInstance",
-                "ImageListInstance",
-                "Subscription",
-                ])
-
         found = set(kwargs.keys())
         if "ImageListInstance" in found:
             argImageInstance = kwargs.get('ImageListInstance', None)
