@@ -82,8 +82,6 @@ class EventObj(object):
         return
     def eventAvailablePrefix(self,metadata):
         self.eventProcess("AvailablePrefix",metadata)
-    def eventAvailablePrefix(self,metadata):
-        self.eventProcess("AvailablePrefix",metadata)
     def eventAvailablePostfix(self,metadata):
         self.eventProcess("AvailablePostfix",metadata)
     def eventExpirePrefix(self, metadata):
