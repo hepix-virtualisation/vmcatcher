@@ -37,16 +37,6 @@ class output_driver_message(output_driver_display_message,output_driver_lister,o
 
 
     def info(self, *args, **kwargs):
-        expectedkeys = set([
-                "Endorser",
-                "EndorserPrincible",
-                "ImageDefinition",
-                "ImageInstance",
-                "ImageListInstance",
-                "Subscription",
-                "SubscriptionAuth",
-                ])
-
         found = set(kwargs.keys())
         if "ImageListInstance" in found:
             argImageInstance = kwargs.get('ImageListInstance', None)
