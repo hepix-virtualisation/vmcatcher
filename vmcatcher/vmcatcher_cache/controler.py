@@ -144,12 +144,12 @@ class CacheMan(object):
             imageDef = line[1]
             imageListInst = line[2]
             ImageInst = line[3]
-            uuid = imageDef.identifier
+            image_uuid = imageDef.identifier
 
             details = {'hv:uri' : str(ImageInst.uri),
                     'sl:checksum:sha512' : str(ImageInst.sha512),
                     'hv:size': int(ImageInst.size),
-                    'dc:identifier' : uuid,
+                    'dc:identifier' : image_uuid,
                     'message' : str(imageListInst.data),
                     'hv:imagelist.dc:identifier' : str(sub.identifier),
                     'msgHash' : str(imageListInst.data_hash),
@@ -165,7 +165,7 @@ class CacheMan(object):
                     'uri' : str(ImageInst.uri),
                     'sha512' : str(ImageInst.sha512),
                     'size': int(ImageInst.size),
-                    'uuid' : uuid,
+                    'uuid' : image_uuid,
                     }
 
 
@@ -186,7 +186,7 @@ class CacheMan(object):
                 continue
             vmilist = VMimageListDecoder(jsonData)
             if vmilist == None:
-                self.log.error("Downlaoded metadata for '%s' was not valid image list." % (uuid))
+                self.log.error("Downlaoded metadata for '%s' was not valid image list." % (image_uuid))
                 continue
             # For Vo handling
             imagelist_vo = vmilist.metadata.get(u'ad:vo')
@@ -196,7 +196,7 @@ class CacheMan(object):
             matchingImage = None
             for image in vmilist.images:
                 if "dc:identifier" in image.metadata.keys():
-                    if uuid == image.metadata["dc:identifier"]:
+                    if image_uuid == image.metadata["dc:identifier"]:
                         matchingImage = image
 
             if matchingImage != None:
@@ -204,11 +204,11 @@ class CacheMan(object):
                     newfield = "hv:image.%s" % (metafield)
                     details[newfield] = matchingImage.metadata[metafield]
 
-            if not uuid in self.cacheDir.index.keys():
-                downloadsneeded[uuid] = details
+            if not image_uuid in self.cacheDir.index.keys():
+                downloadsneeded[image_uuid] = details
                 continue
-            if self.cacheDir.index[uuid]['sha512'] != str(ImageInst.sha512):
-                downloadsneeded[uuid] = details
+            if self.cacheDir.index[image_uuid]['sha512'] != str(ImageInst.sha512):
+                downloadsneeded[image_uuid] = details
                 continue
         for key in downloadsneeded.keys():
             if not self.DownloadDir.indexAdd(downloadsneeded[key]):
