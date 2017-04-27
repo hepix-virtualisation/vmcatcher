@@ -172,7 +172,6 @@ class CacheMan(object):
             # read message
 
             buf = BIO.MemoryBuffer(str(imageListInst.data))
-            sk = X509.X509_Stack()
             p7, data = SMIME.smime_load_pkcs7_bio(buf)
             data_str = data.read()
 
