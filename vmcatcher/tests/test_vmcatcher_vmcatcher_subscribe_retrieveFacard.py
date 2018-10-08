@@ -11,20 +11,21 @@ class TestRetrieveFacard(unittest.TestCase):
         self.log = logging.getLogger("TestRetrieveFacard")
         self.trustAnchordirectory = "/etc/grid-security/certificates"
 
-    def test_http(self):
-        anchor = smimeX509validation.LoadDirChainOfTrust(self.trustAnchordirectory)
-        foo = vmcatcher.vmcatcher_subscribe.retrieveFacard.retrieveFacard()
-        foo.trustanchor = anchor
-        #uri = "http://http.fritz.box/repos/public/imagelist/yokel.imagelist.smime"'
-        uri = "http://www.yokel.org/pub/software/yokel.org/imagelist/yokel.imagelist.smime"
-        foo.uri = uri
-        #print ("trustanchor=%s" % (foo.trustanchor))
-        responce = foo.requestAsString()
-        self.log.error("output=%s" % (foo.requestAsString()))
-        # self.assertIn is not available in SL5
-        self.assertTrue("code" in responce.keys())
-        self.assertTrue("responce" in responce.keys())
-        #raise exception
+# Commented out for now
+#    def test_http(self):
+#        anchor = smimeX509validation.LoadDirChainOfTrust(self.trustAnchordirectory)
+#        foo = vmcatcher.vmcatcher_subscribe.retrieveFacard.retrieveFacard()
+#        foo.trustanchor = anchor
+#        #uri = "http://http.fritz.box/repos/public/imagelist/yokel.imagelist.smime"'
+#        uri = "http://www.yokel.org/pub/software/yokel.org/imagelist/yokel.imagelist.smime"
+#        foo.uri = uri
+#        #print ("trustanchor=%s" % (foo.trustanchor))
+#        responce = foo.requestAsString()
+#        self.log.error("output=%s" % (foo.requestAsString()))
+#        # self.assertIn is not available in SL5
+#        self.assertTrue("code" in responce.keys())
+#        self.assertTrue("responce" in responce.keys())
+#        #raise exception
 
 
 
