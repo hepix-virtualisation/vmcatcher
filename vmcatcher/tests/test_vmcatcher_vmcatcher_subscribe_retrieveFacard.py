@@ -19,7 +19,6 @@ class TestRetrieveFacard(unittest.TestCase):
 #        #uri = "http://http.fritz.box/repos/public/imagelist/yokel.imagelist.smime"'
 #        uri = "http://www.yokel.org/pub/software/yokel.org/imagelist/yokel.imagelist.smime"
 #        foo.uri = uri
-#        #print ("trustanchor=%s" % (foo.trustanchor))
 #        responce = foo.requestAsString()
 #        self.log.error("output=%s" % (foo.requestAsString()))
 #        # self.assertIn is not available in SL5
