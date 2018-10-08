@@ -1,8 +1,6 @@
 import sys, os
 sys.path = [os.path.abspath(os.path.dirname(os.path.dirname(__file__)))] + sys.path
-import vmcatcher.vmcatcher_subscribe.retrieveFacard
 import logging
-import smimeX509validation
 import unittest
 import nose
 
