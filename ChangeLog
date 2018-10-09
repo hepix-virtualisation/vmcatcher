@@ -1,5 +1,10 @@
 Changelog
 
+vmcatcher-0.6.3
+
+ * Code formating
+ * Removed unused test
+
 vmcatcher-0.6.2
 
  * Bugfixes in Error paths
